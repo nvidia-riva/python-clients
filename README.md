@@ -1,4 +1,4 @@
-[![CircleCI](https://circleci.com/gh/nvidia-riva/cli-clients.svg?style=shield)](https://circleci.com/gh/nvidia-riva/cli-clients) | ![GitHub](https://img.shields.io/github/license/nvidia-riva/cli-clients)
+[![CircleCI](https://circleci.com/gh/nvidia-riva/cpp-clients.svg?style=shield)](https://circleci.com/gh/nvidia-riva/cpp-clients) [![License](https://img.shields.io/badge/license-MIT-green)](https://opensource.org/licenses/MIT)
 # NVIDIA Riva Clients
 
 NVIDIA Riva is a GPU-accelerated SDK for building Speech AI applications that are customized for your use case and deliver real-time performance. This repo provides performant client example command-line clients.
