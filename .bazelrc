@@ -1,0 +1,35 @@
+# SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: MIT
+
+try-import %workspace%/user.bazelrc
+build --show_timestamps --keep_going --color=yes --cxxopt='-std=c++1z' --linkopt='-lstdc++fs'
+build --workspace_status_command=scripts/workspace_status.sh
+
+build:debug --compilation_mode dbg
+
+build:release --compilation_mode=opt
+build:release --linkopt=-Wl,--strip-all
+build:release --stamp
+
+build:asan --strip=never
+build:asan --copt=-fsanitize=address
+build:asan --copt=-O0
+build:asan --copt=-fno-omit-frame-pointer
+build:asan --copt=-DGPR_NO_DIRECT_SYSCALLS
+build:asan --copt=-DGRPC_ASAN
+build:asan --copt=-DADDRESS_SANITIZER  # used by absl
+build:asan --linkopt=-fsanitize=address
+build:asan --action_env=ASAN_OPTIONS=detect_leaks=1:color=always
+build:asan --action_env=LSAN_OPTIONS=suppressions=test/core/util/lsan_suppressions.txt:report_objects=1
+
+build:tsan --strip=never
+build:tsan --copt=-fsanitize=thread
+build:tsan --copt=-O2
+build:tsan --linkopt=-fsanitize=thread
+
+build:msan --strip=never
+build:msan --copt=-fsanitize=memory
+build:msan --linkopt=-fsanitize=memory
+build:msan --copt=-fPIE
+build:msan --linkopt=-pie
+build:msan --copt=-fno-omit-frame-pointer

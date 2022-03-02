@@ -1,0 +1,14 @@
+"""
+SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+SPDX-License-Identifier: MIT
+"""
+
+package(
+    default_visibility = ["//visibility:public"],
+)
+
+cc_library(
+   name = "libasound",
+   srcs = ["libasound.so"],
+   visibility = ["//visibility:public"],
+)
