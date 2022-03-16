@@ -9,9 +9,10 @@ FROM base AS builddep
 ARG BAZEL_VERSION=5.0.0
 
 RUN apt-get update && apt-get install -y \
-	wget \
-	unzip \
-	build-essential \
+    git \
+    wget \
+    unzip \
+    build-essential \
     libasound2-dev
 
 RUN wget https://github.com/bazelbuild/bazel/releases/download/${BAZEL_VERSION}/bazel-${BAZEL_VERSION}-installer-linux-x86_64.sh && \
@@ -25,21 +26,17 @@ ENV PATH="/root/bin:${PATH}"
 FROM builddep as builder
 
 WORKDIR /work
-COPY .bazelrc WORKSPACE ./
-COPY ./third_party/ /work/third_party
-COPY ./riva /work/riva
+COPY .bazelrc .gitignore WORKSPACE ./
+COPY .git /work/.git
+COPY scripts /work/scripts
+COPY third_party /work/third_party
+COPY riva /work/riva
 ARG BAZEL_CACHE_ARG=""
-RUN --mount=type=cache,sharing=locked,target=/root/.cache/bazel bazel build $BAZEL_CACHE_ARG \
-        //riva/clients/asr:riva_asr_client \
-        //riva/clients/asr:riva_streaming_asr_client \
-        //riva/clients/tts:riva_tts_client \
-        //riva/clients/tts:riva_tts_perf_client \
-        //riva/clients/nlp:riva_nlp_classify_tokens \
-        //riva/clients/nlp:riva_nlp_qa \
-        //riva/clients/nlp:riva_nlp_punct \
-        //riva/clients/asr/... && \
-    bazel test $BAZEL_CACHE_ARG //riva/clients/... --test_summary=detailed --test_output=all && \
+RUN bazel test $BAZEL_CACHE_ARG //riva/clients/... --test_summary=detailed --test_output=all
+RUN bazel build --stamp --config=release $BAZEL_CACHE_ARG //... && \
     cp -R /work/bazel-bin/riva /opt
+
+RUN ls -lah /work; ls-lah /work/.git; cat /work/.bazelrc
 
 FROM base as riva-clients
 
