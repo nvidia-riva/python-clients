@@ -54,7 +54,8 @@ StreamingRecognizeClient::StreamingRecognizeClient(
     const std::string& language_code, int32_t max_alternatives, bool word_time_offsets,
     bool automatic_punctuation, bool separate_recognition_per_channel, bool print_transcripts,
     int32_t chunk_duration_ms, bool interim_results, std::string output_filename,
-    std::string model_name, bool simulate_realtime, bool verbatim_transcripts)
+    std::string model_name, bool simulate_realtime, bool verbatim_transcripts,
+    const std::string& boosted_words_file, float boosted_words_score)
     : print_latency_stats_(true), stub_(nr_asr::RivaSpeechRecognition::NewStub(channel)),
       language_code_(language_code), max_alternatives_(max_alternatives),
       word_time_offsets_(word_time_offsets), automatic_punctuation_(automatic_punctuation),
@@ -62,7 +63,7 @@ StreamingRecognizeClient::StreamingRecognizeClient(
       print_transcripts_(print_transcripts), chunk_duration_ms_(chunk_duration_ms),
       interim_results_(interim_results), total_audio_processed_(0.), num_streams_started_(0),
       model_name_(model_name), simulate_realtime_(simulate_realtime),
-      verbatim_transcripts_(verbatim_transcripts)
+      verbatim_transcripts_(verbatim_transcripts), boosted_words_score_(boosted_words_score)
 {
   num_active_streams_.store(0);
   num_streams_finished_.store(0);
@@ -70,6 +71,14 @@ StreamingRecognizeClient::StreamingRecognizeClient(
 
   if (print_transcripts_) {
     output_file_.open(output_filename);
+  }
+
+  if (!boosted_words_file.empty()) {
+    std::ifstream infile(boosted_words_file);
+    std::string boosted_word;
+    while (infile >> boosted_word) {
+      boosted_words_.push_back(boosted_word);
+    }
   }
 }
 
@@ -127,6 +136,10 @@ StreamingRecognizeClient::GenerateRequests(std::shared_ptr<ClientCall> call)
       if (model_name_ != "") {
         config->set_model(model_name_);
       }
+
+      nr_asr::SpeechContext* speech_context = config->add_speech_contexts();
+      *(speech_context->mutable_phrases()) = {boosted_words_.begin(), boosted_words_.end()};
+      speech_context->set_boost(boosted_words_score_);
 
       call->streamer->Write(request);
       first_write = false;

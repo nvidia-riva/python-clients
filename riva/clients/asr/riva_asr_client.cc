@@ -24,6 +24,7 @@
 
 #include "riva/clients/utils/grpc.h"
 #include "riva/proto/riva_asr.grpc.pb.h"
+#include "riva/utils/files/files.h"
 #include "riva/utils/stamping.h"
 #include "riva/utils/wav/wav_reader.h"
 #include "riva_asr_client_helper.h"
@@ -50,11 +51,15 @@ DEFINE_bool(print_transcripts, true, "Print final transcripts");
 DEFINE_string(output_filename, "", "Filename to write output transcripts");
 DEFINE_string(model_name, "", "Name of the TRTIS model to use");
 DEFINE_bool(output_ctm, false, "If true, output format should be NIST CTM");
+DEFINE_string(language_code, "en-US", "Language code of the model to use");
+DEFINE_string(boosted_words_file, "", "File with a list of words to boost. One line per word.");
+DEFINE_double(boosted_words_score, 10., "Score by which to boost the boosted words");
 DEFINE_bool(
     verbatim_transcripts, true,
     "True returns text exactly as it was said with no normalization.  False applies text inverse "
     "normalization");
-
+DEFINE_string(ssl_cert, "", "Path to SSL client certificatates file");
+DEFINE_bool(use_ssl, false, "Boolean to control if SSL/TLS encryption should be used.");
 
 class RecognizeClient {
  public:
@@ -62,7 +67,8 @@ class RecognizeClient {
       std::shared_ptr<grpc::Channel> channel, const std::string& language_code,
       int32_t max_alternatives, bool word_time_offsets, bool automatic_punctuation,
       bool separate_recognition_per_channel, bool print_transcripts, std::string output_filename,
-      std::string model_name, bool ctm, bool verbatim_transcripts)
+      std::string model_name, bool ctm, bool verbatim_transcripts,
+      const std::string& boosted_words_file, float boosted_words_score)
       : stub_(nr_asr::RivaSpeechRecognition::NewStub(channel)), language_code_(language_code),
         max_alternatives_(max_alternatives), word_time_offsets_(word_time_offsets),
         automatic_punctuation_(automatic_punctuation),
@@ -70,7 +76,7 @@ class RecognizeClient {
         print_transcripts_(print_transcripts), done_sending_(false), num_requests_(0),
         num_responses_(0), num_failed_requests_(0), total_audio_processed_(0.),
         model_name_(model_name), output_filename_(output_filename),
-        verbatim_transcripts_(verbatim_transcripts)
+        verbatim_transcripts_(verbatim_transcripts), boosted_words_score_(boosted_words_score)
   {
     if (!output_filename.empty()) {
       output_file_.open(output_filename);
@@ -78,6 +84,14 @@ class RecognizeClient {
         write_fn_ = &RecognizeClient::WriteCTM;
       } else {
         write_fn_ = &RecognizeClient::WriteJSON;
+      }
+    }
+
+    if (!boosted_words_file.empty()) {
+      std::ifstream infile(boosted_words_file);
+      std::string boosted_word;
+      while (infile >> boosted_word) {
+        boosted_words_.push_back(boosted_word);
       }
     }
   }
@@ -217,6 +231,11 @@ class RecognizeClient {
       config->set_model(model_name_);
     }
 
+    nr_asr::SpeechContext* speech_context = config->add_speech_contexts();
+    *(speech_context->mutable_phrases()) = {boosted_words_.begin(), boosted_words_.end()};
+    speech_context->set_boost(boosted_words_score_);
+
+
     request.set_audio(&wav->data[0], wav->data.size());
 
     {
@@ -352,6 +371,9 @@ class RecognizeClient {
   std::string model_name_;
   std::string output_filename_;
   bool verbatim_transcripts_;
+
+  std::vector<std::string> boosted_words_;
+  float boosted_words_score_;
   void (RecognizeClient::*write_fn_)(
       const nr_asr::SpeechRecognitionResult& result, const std::string& filename);
 };
@@ -375,6 +397,11 @@ main(int argc, char** argv)
   str_usage << "           --output_filename=<string>" << std::endl;
   str_usage << "           --output-ctm=<true|false>" << std::endl;
   str_usage << "           --verbatim_transcripts=<true|false>" << std::endl;
+  str_usage << "           --language_code=<bcp 47 language code (such as en-US)>" << std::endl;
+  str_usage << "           --boosted_words_file=<string>" << std::endl;
+  str_usage << "           --boosted_words_score=<float>" << std::endl;
+  str_usage << "           --ssl_cert=<filename>" << std::endl;
+  str_usage << "           --use_ssl=<true|false>" << std::endl;
   gflags::SetUsageMessage(str_usage.str());
   gflags::SetVersionString(::riva::utils::kBuildScmRevision);
 
@@ -403,14 +430,35 @@ main(int argc, char** argv)
     FLAGS_riva_uri = riva_uri;
   }
 
-  auto grpc_channel =
-      riva::clients::CreateChannelBlocking(FLAGS_riva_uri, grpc::InsecureChannelCredentials());
+  std::shared_ptr<grpc::Channel> grpc_channel;
+  try {
+    std::shared_ptr<grpc::ChannelCredentials> creds;
+    if (FLAGS_use_ssl || !FLAGS_ssl_cert.empty()) {
+      grpc::SslCredentialsOptions ssl_opts;
+      if (!FLAGS_ssl_cert.empty()) {
+        auto cacert = riva::utils::files::ReadFileContentAsString(FLAGS_ssl_cert);
+        ssl_opts.pem_root_certs = cacert;
+      }
+      LOG(INFO) << "Using SSL Credentials";
+      creds = grpc::SslCredentials(ssl_opts);
+    } else {
+      LOG(INFO) << "Using Insecure Server Credentials";
+      creds = grpc::InsecureChannelCredentials();
+    }
+
+    grpc_channel = riva::clients::CreateChannelBlocking(FLAGS_riva_uri, creds);
+  }
+  catch (const std::exception& e) {
+    std::cerr << "Error creating GRPC channel: " << e.what() << std::endl;
+    std::cerr << "Exiting." << std::endl;
+    return 1;
+  }
 
   RecognizeClient recognize_client(
-      grpc_channel, "en-US", FLAGS_max_alternatives, FLAGS_word_time_offsets,
+      grpc_channel, FLAGS_language_code, FLAGS_max_alternatives, FLAGS_word_time_offsets,
       FLAGS_automatic_punctuation, /* separate_recognition_per_channel*/ false,
       FLAGS_print_transcripts, FLAGS_output_filename, FLAGS_model_name, FLAGS_output_ctm,
-      FLAGS_verbatim_transcripts);
+      FLAGS_verbatim_transcripts, FLAGS_boosted_words_file, (float)FLAGS_boosted_words_score);
 
   // Preload all wav files, sort by size to reduce tail effects
   std::vector<std::shared_ptr<WaveData>> all_wav;

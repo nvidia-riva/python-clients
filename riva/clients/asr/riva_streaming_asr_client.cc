@@ -27,6 +27,7 @@
 #include "client_call.h"
 #include "riva/clients/utils/grpc.h"
 #include "riva/proto/riva_asr.grpc.pb.h"
+#include "riva/utils/files/files.h"
 #include "riva/utils/stamping.h"
 #include "riva/utils/wav/wav_reader.h"
 #include "riva_asr_client_helper.h"
@@ -59,10 +60,15 @@ DEFINE_string(
     output_filename, "final_transcripts.json",
     "Filename of .json file containing output transcripts");
 DEFINE_string(model_name, "", "Name of the TRTIS model to use");
+DEFINE_string(language_code, "en-US", "Language code of the model to use");
+DEFINE_string(boosted_words_file, "", "File with a list of words to boost. One line per word.");
+DEFINE_double(boosted_words_score, 10., "Score by which to boost the boosted words");
 DEFINE_bool(
     verbatim_transcripts, true,
     "True returns text exactly as it was said with no normalization.  False applies text inverse "
     "normalization");
+DEFINE_string(ssl_cert, "", "Path to SSL client certificatates file");
+DEFINE_bool(use_ssl, false, "Boolean to control if SSL/TLS encryption should be used.");
 
 void
 signal_handler(int signal_num)
@@ -99,6 +105,11 @@ main(int argc, char** argv)
   str_usage << "           --print_transcripts=<true|false> " << std::endl;
   str_usage << "           --output_filename=<string>" << std::endl;
   str_usage << "           --verbatim_transcripts=<true|false>" << std::endl;
+  str_usage << "           --language_code=<bcp 47 language code (such as en-US)>" << std::endl;
+  str_usage << "           --boosted_words_file=<string>" << std::endl;
+  str_usage << "           --boosted_words_score=<float>" << std::endl;
+  str_usage << "           --ssl_cert=<filename>" << std::endl;
+  str_usage << "           --use_ssl=<true|false>" << std::endl;
   gflags::SetUsageMessage(str_usage.str());
   gflags::SetVersionString(::riva::utils::kBuildScmRevision);
 
@@ -128,15 +139,36 @@ main(int argc, char** argv)
     FLAGS_riva_uri = riva_uri;
   }
 
-  auto grpc_channel =
-      riva::clients::CreateChannelBlocking(FLAGS_riva_uri, grpc::InsecureChannelCredentials());
+  std::shared_ptr<grpc::Channel> grpc_channel;
+  try {
+    std::shared_ptr<grpc::ChannelCredentials> creds;
+    if (FLAGS_use_ssl || !FLAGS_ssl_cert.empty()) {
+      grpc::SslCredentialsOptions ssl_opts;
+      if (!FLAGS_ssl_cert.empty()) {
+        auto cacert = riva::utils::files::ReadFileContentAsString(FLAGS_ssl_cert);
+        ssl_opts.pem_root_certs = cacert;
+      }
+      LOG(INFO) << "Using SSL Credentials";
+      creds = grpc::SslCredentials(ssl_opts);
+    } else {
+      LOG(INFO) << "Using Insecure Server Credentials";
+      creds = grpc::InsecureChannelCredentials();
+    }
+
+    grpc_channel = riva::clients::CreateChannelBlocking(FLAGS_riva_uri, creds);
+  }
+  catch (const std::exception& e) {
+    std::cerr << "Error creating GRPC channel: " << e.what() << std::endl;
+    std::cerr << "Exiting." << std::endl;
+    return 1;
+  }
 
   StreamingRecognizeClient recognize_client(
-      grpc_channel, FLAGS_num_parallel_requests, "en-US", FLAGS_max_alternatives,
+      grpc_channel, FLAGS_num_parallel_requests, FLAGS_language_code, FLAGS_max_alternatives,
       FLAGS_word_time_offsets, FLAGS_automatic_punctuation,
       /* separate_recognition_per_channel*/ false, FLAGS_print_transcripts, FLAGS_chunk_duration_ms,
       FLAGS_interim_results, FLAGS_output_filename, FLAGS_model_name, FLAGS_simulate_realtime,
-      FLAGS_verbatim_transcripts);
+      FLAGS_verbatim_transcripts, FLAGS_boosted_words_file, FLAGS_boosted_words_score);
 
   if (FLAGS_audio_file.size()) {
     return recognize_client.DoStreamingFromFile(
