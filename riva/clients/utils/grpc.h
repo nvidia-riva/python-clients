@@ -9,6 +9,7 @@
 #include <glog/logging.h>
 #include <grpcpp/grpcpp.h>
 #include <strings.h>
+#include "riva/utils/files/files.h"
 
 #include <chrono>
 #include <string>
@@ -46,5 +47,31 @@ CreateChannelBlocking(
 
   return channel;
 }
+
+/// Utility function to create GRPC credentials
+/// Returns shared ptr to GrpcChannelCredentials
+/// @param use_ssl Boolean flag that controls if ssl encryption should be used
+/// @param ssl_cert Path to the certificate file
+std::shared_ptr<grpc::ChannelCredentials>
+CreateChannelCredentials(bool use_ssl, const std::string& ssl_cert)
+{
+  std::shared_ptr<grpc::ChannelCredentials> creds;
+
+  if (use_ssl || !ssl_cert.empty()) {
+    grpc::SslCredentialsOptions ssl_opts;
+    if (!ssl_cert.empty()) {
+      auto cacert = riva::utils::files::ReadFileContentAsString(ssl_cert);
+      ssl_opts.pem_root_certs = cacert;
+    }
+    LOG(INFO) << "Using SSL Credentials";
+    creds = grpc::SslCredentials(ssl_opts);
+  } else {
+    LOG(INFO) << "Using Insecure Server Credentials";
+    creds = grpc::InsecureChannelCredentials();
+  }
+
+  return creds;
+}
+
 
 }  // namespace riva::clients

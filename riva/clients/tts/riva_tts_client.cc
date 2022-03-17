@@ -34,6 +34,8 @@ DEFINE_string(
     language, "en-US",
     "Language code as per [BCP-47](https://www.rfc-editor.org/rfc/bcp/bcp47.txt) language tag.");
 DEFINE_string(voice_name, "ljspeech", "Desired voice name");
+DEFINE_bool(use_ssl, false, "Boolean to control if SSL/TLS encryption should be used.");
+DEFINE_string(ssl_cert, "", "Path to SSL client certificatates file");
 
 static const std::string LC_enUS = "en-US";
 
@@ -52,6 +54,8 @@ main(int argc, char** argv)
   str_usage << "           --language=<language-code> " << std::endl;
   str_usage << "           --voice_name=<voice-name> " << std::endl;
   str_usage << "           --online=<true|false> " << std::endl;
+  str_usage << "           --use_ssl=<true|false>" << std::endl;
+  str_usage << "           --ssl_cert=<filename>" << std::endl;
   gflags::SetUsageMessage(str_usage.str());
   gflags::SetVersionString(::riva::utils::kBuildScmRevision);
 
@@ -81,11 +85,18 @@ main(int argc, char** argv)
     FLAGS_riva_uri = riva_uri;
   }
 
-  auto channel =
-      riva::clients::CreateChannelBlocking(FLAGS_riva_uri, grpc::InsecureChannelCredentials());
+  std::shared_ptr<grpc::Channel> grpc_channel;
+  try {
+    auto creds = riva::clients::CreateChannelCredentials(FLAGS_use_ssl,FLAGS_ssl_cert);
+    grpc_channel = riva::clients::CreateChannelBlocking(FLAGS_riva_uri, creds);
+  } catch (const std::exception& e) {
+    std::cerr << "Error creating GRPC channel: " << e.what() << std::endl;
+    std::cerr << "Exiting." << std::endl;
+    return 1;
+  }
 
   std::unique_ptr<nr_tts::RivaSpeechSynthesis::Stub> tts(
-      nr_tts::RivaSpeechSynthesis::NewStub(channel));
+      nr_tts::RivaSpeechSynthesis::NewStub(grpc_channel));
 
   // Parse command line arguments.
   nr_tts::SynthesizeSpeechRequest request;

@@ -141,23 +141,9 @@ main(int argc, char** argv)
 
   std::shared_ptr<grpc::Channel> grpc_channel;
   try {
-    std::shared_ptr<grpc::ChannelCredentials> creds;
-    if (FLAGS_use_ssl || !FLAGS_ssl_cert.empty()) {
-      grpc::SslCredentialsOptions ssl_opts;
-      if (!FLAGS_ssl_cert.empty()) {
-        auto cacert = riva::utils::files::ReadFileContentAsString(FLAGS_ssl_cert);
-        ssl_opts.pem_root_certs = cacert;
-      }
-      LOG(INFO) << "Using SSL Credentials";
-      creds = grpc::SslCredentials(ssl_opts);
-    } else {
-      LOG(INFO) << "Using Insecure Server Credentials";
-      creds = grpc::InsecureChannelCredentials();
-    }
-
+    auto creds = riva::clients::CreateChannelCredentials(FLAGS_use_ssl,FLAGS_ssl_cert);
     grpc_channel = riva::clients::CreateChannelBlocking(FLAGS_riva_uri, creds);
-  }
-  catch (const std::exception& e) {
+  } catch (const std::exception& e) {
     std::cerr << "Error creating GRPC channel: " << e.what() << std::endl;
     std::cerr << "Exiting." << std::endl;
     return 1;

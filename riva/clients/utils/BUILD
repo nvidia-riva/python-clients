@@ -12,6 +12,7 @@ cc_library(
     hdrs = ["grpc.h"],
     linkopts = ["-lm"],
     deps = [
+        "//riva/utils/files:files",
         "@com_github_gflags_gflags//:gflags",
         "@glog//:glog",
         "@com_github_grpc_grpc//:grpc++"
