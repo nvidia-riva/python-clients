@@ -148,7 +148,7 @@ Other options and information can be found by running the clients with `-help`
 
 ## Documentation
 
-Additional documentation on the Riva Speech Skills SDK can be found [here](https://docs.nvidia.com/deeplearning/riva/user-guide/docs/)
+Additional documentation on the Riva Speech Skills SDK can be found [here](https://docs.nvidia.com/deeplearning/riva/user-guide/docs/).
 
 
 ## License
