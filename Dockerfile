@@ -84,8 +84,7 @@ ENV PATH="/:${PATH}"
 FROM builddep as builder
 
 WORKDIR /work
-COPY .bazelrc WORKSPACE VERSION ./
-COPY ./external/ /work/external
+COPY .bazelrc WORKSPACE ./
 COPY ./riva/proto /work/riva/proto
 COPY ./riva/utils /work/riva/utils
 COPY ./riva/clients /work/riva/clients
@@ -147,8 +146,8 @@ COPY --from=builder /opt/riva/clients/nlp/riva_nlp_qa /usr/local/bin/
 COPY --from=builder /opt/riva/clients/nlp/riva_nlp_punct /usr/local/bin/
 COPY --from=builder /work/riva/proto/ /work/riva/proto/
 
-COPY ./docs/source/notebooks/ notebooks/
 COPY ./scripts/ scripts
+COPY third_party /work/third_party
 COPY ./python/clients/nlp/riva_nlp/test_qa.py ./examples/
 COPY ./python/clients/asr/*.py ./examples/
 COPY ./python/clients/tts/*.py ./examples/
