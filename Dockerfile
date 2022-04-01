@@ -122,8 +122,6 @@ COPY --from=builder /work/riva/proto/ /work/riva/proto/
 COPY --from=builder /work/dist /work
 RUN pip install *.whl
 RUN python3 -m pip uninstall -y pip
-COPY ./test_files/asr/public wav/
-COPY ./docs/source/notebooks/ notebooks/
 COPY ./scripts/calc_wer.py utils/calc_wer.py
 COPY ./python/clients/asr/*.py ./examples/
 COPY ./python/clients/nlp/riva_nlp/test_qa.py ./examples/
@@ -149,13 +147,8 @@ COPY --from=builder /opt/riva/clients/nlp/riva_nlp_qa /usr/local/bin/
 COPY --from=builder /opt/riva/clients/nlp/riva_nlp_punct /usr/local/bin/
 COPY --from=builder /work/riva/proto/ /work/riva/proto/
 
-COPY ./test_files/asr/wav/ wav/
 COPY ./docs/source/notebooks/ notebooks/
 COPY ./scripts/ scripts
-COPY ./scripts/calc_wer.py utils/calc_wer.py
-COPY ./scripts/tests/riva_qa_accuracy_test utils/
-COPY ./test_files/nlu/ /work/test_files/nlu/
-COPY ./test_files/tts/ /work/test_files/tts/
 COPY ./python/clients/nlp/riva_nlp/test_qa.py ./examples/
 COPY ./python/clients/asr/*.py ./examples/
 COPY ./python/clients/tts/*.py ./examples/
