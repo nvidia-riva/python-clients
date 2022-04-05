@@ -89,6 +89,7 @@ COPY ./riva/proto /work/riva/proto
 COPY ./riva/utils /work/riva/utils
 COPY ./riva/clients /work/riva/clients
 COPY third_party /work/third_party
+COPY ./scripts/ scripts
 ARG BAZEL_CACHE_ARG=""
 RUN --mount=type=cache,sharing=locked,target=/root/.cache/bazel bazel build $BAZEL_CACHE_ARG \
         //riva/clients/asr:riva_asr_client \
@@ -122,7 +123,6 @@ COPY --from=builder /work/riva/proto/ /work/riva/proto/
 COPY --from=builder /work/dist /work
 RUN pip install *.whl
 RUN python3 -m pip uninstall -y pip
-COPY ./scripts/calc_wer.py utils/calc_wer.py
 COPY ./python/clients/asr/*.py ./examples/
 COPY ./python/clients/nlp/riva_nlp/test_qa.py ./examples/
 COPY ./python/clients/tts/talk_stream.py ./examples/
@@ -147,7 +147,6 @@ COPY --from=builder /opt/riva/clients/nlp/riva_nlp_qa /usr/local/bin/
 COPY --from=builder /opt/riva/clients/nlp/riva_nlp_punct /usr/local/bin/
 COPY --from=builder /work/riva/proto/ /work/riva/proto/
 
-COPY ./scripts/ scripts
 COPY ./python/clients/nlp/riva_nlp/test_qa.py ./examples/
 COPY ./python/clients/asr/*.py ./examples/
 COPY ./python/clients/tts/*.py ./examples/
