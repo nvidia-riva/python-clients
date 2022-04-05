@@ -91,16 +91,8 @@ COPY ./riva/clients /work/riva/clients
 COPY third_party /work/third_party
 COPY ./scripts/ scripts
 ARG BAZEL_CACHE_ARG=""
-RUN --mount=type=cache,sharing=locked,target=/root/.cache/bazel bazel build $BAZEL_CACHE_ARG \
-        //riva/clients/asr:riva_asr_client \
-        //riva/clients/asr:riva_streaming_asr_client \
-        //riva/clients/tts:riva_tts_client \
-        //riva/clients/tts:riva_tts_perf_client \
-        //riva/clients/nlp:riva_nlp_classify_tokens \
-        //riva/clients/nlp:riva_nlp_qa \
-        //riva/clients/nlp:riva_nlp_punct \
-        //riva/clients/asr/... && \
-    bazel test $BAZEL_CACHE_ARG //riva/clients/... --test_summary=detailed --test_output=all && \
+RUN bazel test $BAZEL_CACHE_ARG //riva/clients/... --test_summary=detailed --test_output=all
+RUN bazel build --stamp --config=release $BAZEL_CACHE_ARG //... && \
     cp -R /work/bazel-bin/riva /opt
 
 COPY python /work/python
