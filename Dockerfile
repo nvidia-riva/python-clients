@@ -84,7 +84,8 @@ ENV PATH="/:${PATH}"
 FROM builddep as builder
 
 WORKDIR /work
-COPY .bazelrc WORKSPACE ./
+COPY .bazelrc .gitignore WORKSPACE ./
+COPY .git /work/.git
 COPY ./riva/proto /work/riva/proto
 COPY ./riva/utils /work/riva/utils
 COPY ./riva/clients /work/riva/clients
