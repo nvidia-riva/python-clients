@@ -88,6 +88,7 @@ COPY .bazelrc WORKSPACE ./
 COPY ./riva/proto /work/riva/proto
 COPY ./riva/utils /work/riva/utils
 COPY ./riva/clients /work/riva/clients
+COPY third_party /work/third_party
 ARG BAZEL_CACHE_ARG=""
 RUN --mount=type=cache,sharing=locked,target=/root/.cache/bazel bazel build $BAZEL_CACHE_ARG \
         //riva/clients/asr:riva_asr_client \
@@ -147,7 +148,6 @@ COPY --from=builder /opt/riva/clients/nlp/riva_nlp_punct /usr/local/bin/
 COPY --from=builder /work/riva/proto/ /work/riva/proto/
 
 COPY ./scripts/ scripts
-COPY third_party /work/third_party
 COPY ./python/clients/nlp/riva_nlp/test_qa.py ./examples/
 COPY ./python/clients/asr/*.py ./examples/
 COPY ./python/clients/tts/*.py ./examples/
