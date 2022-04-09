@@ -87,8 +87,6 @@ WORKDIR /work
 COPY .bazelrc .gitignore WORKSPACE VERSION ./
 COPY .git /work/.git
 COPY ./riva/proto /work/riva/proto
-COPY ./riva/utils /work/riva/utils
-COPY ./riva/clients /work/riva/clients
 COPY third_party /work/third_party
 COPY ./scripts/ scripts
 ARG BAZEL_CACHE_ARG=""
