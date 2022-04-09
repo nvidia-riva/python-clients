@@ -90,7 +90,6 @@ COPY ./riva/proto /work/riva/proto
 COPY third_party /work/third_party
 COPY ./scripts/ scripts
 ARG BAZEL_CACHE_ARG=""
-RUN bazel test $BAZEL_CACHE_ARG //riva/clients/... --test_summary=detailed --test_output=all
 RUN bazel build --stamp --config=release $BAZEL_CACHE_ARG //... && \
     cp -R /work/bazel-bin/riva /opt
 
