@@ -6,7 +6,6 @@ FROM ubuntu:20.04 AS builddep_light
 ARG DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y \
-    build-essential \
     curl \
     python3 \
     python3-numpy \
