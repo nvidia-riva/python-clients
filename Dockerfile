@@ -13,18 +13,6 @@ RUN apt-get update && apt-get install -y \
     python3-dev \
     python3-pyaudio \
     python-dev \
-    libasound2 \
-#The following 2 lines are to address CVE. Might not be needed when we change base image
-    libexpat1 \
-    libexpat1-dev \
-    libsndfile1 \
-    libglib2.0-0 \
-    zlib1g \
-    libbz2-1.0 \
-    liblzma5 \
-    libboost-system-dev \
-    libboost-thread-dev \
-    libboost-program-options-dev \
     && rm -rf /var/lib/apt/lists/*
 
 RUN curl -O https://bootstrap.pypa.io/get-pip.py && \
