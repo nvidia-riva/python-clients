@@ -65,8 +65,6 @@ RUN apt-get update && apt-get install -y \
 
 RUN pip3 install --upgrade sklearn transformers
 
-ENV PATH="/root/bin:${PATH}"
-
 #Install NGC client.
 RUN wget https://ngc.nvidia.com/downloads/ngccli_bat_linux.zip && unzip ngccli_bat_linux.zip && chmod u+x ngc && \
     echo "PATH=/:$PATH\n" >> /root/.bashrc
