@@ -109,10 +109,10 @@ COPY --from=builder /work/riva/proto/ /work/riva/proto/
 COPY --from=builder /work/dist /work
 RUN pip install *.whl
 RUN python3 -m pip uninstall -y pip
-COPY ./python/clients/asr/*.py ./examples/
-COPY ./python/clients/nlp/riva_nlp/test_qa.py ./examples/
-COPY ./python/clients/tts/talk_stream.py ./examples/
-COPY ./python/clients/tts/talk.py ./examples/
+COPY ./python/clients/asr/*.py ./python/
+COPY ./python/clients/nlp/riva_nlp/test_qa.py ./python/
+COPY ./python/clients/tts/talk_stream.py ./python/
+COPY ./python/clients/tts/talk.py ./python/
 
 # create client image for CI and devel
 FROM builddep AS riva-api-client-dev
@@ -126,8 +126,10 @@ RUN pip install *.whl
 RUN python3 -m pip uninstall -y pip
 COPY --from=builder /work/riva/proto/ /work/riva/proto/
 
-COPY ./python/clients/nlp/riva_nlp/test_qa.py ./examples/
-COPY ./python/clients/asr/*.py ./examples/
-COPY ./python/clients/tts/*.py ./examples/
-COPY ./python/clients/nlp/*.py ./examples/
+COPY ./python/clients/nlp/riva_nlp/test_qa.py ./python/
+COPY ./python/clients/asr/*.py ./python/
+COPY ./python/clients/tts/*.py ./python/
+COPY ./python/clients/nlp/*.py ./python/
+
+COPY examples /work/examples
 
