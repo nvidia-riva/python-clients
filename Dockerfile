@@ -65,12 +65,6 @@ RUN apt-get update && apt-get install -y \
 
 RUN pip3 install --upgrade sklearn transformers
 
-RUN wget https://github.com/bazelbuild/bazel/releases/download/${BAZEL_VERSION}/bazel-${BAZEL_VERSION}-installer-linux-x86_64.sh && \
-    chmod +x bazel-${BAZEL_VERSION}-installer-linux-x86_64.sh && \
-    ./bazel-${BAZEL_VERSION}-installer-linux-x86_64.sh --user && \
-    echo "PATH=/root/bin:$PATH\n" >> /root/.bashrc && \
-    echo "source /root/.bazel/bin/bazel-complete.bash" >> /root/.bashrc && \
-    rm ./bazel-${BAZEL_VERSION}-installer-linux-x86_64.sh
 ENV PATH="/root/bin:${PATH}"
 
 #Install NGC client.
@@ -84,7 +78,7 @@ ENV PATH="/:${PATH}"
 FROM builddep as builder
 
 WORKDIR /work
-COPY .bazelrc .gitignore WORKSPACE VERSION ./
+COPY VERSION ./
 COPY .git /work/.git
 COPY ./riva/proto /work/riva/proto
 COPY third_party /work/third_party
