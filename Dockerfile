@@ -105,13 +105,6 @@ FROM builddep_light AS riva-api-client
 ENV PYTHONPATH="${PYTHONPATH}:/work/"
 
 WORKDIR /work
-COPY --from=builder /opt/riva/clients/asr/riva_asr_client /usr/local/bin/
-COPY --from=builder /opt/riva/clients/asr/riva_streaming_asr_client /usr/local/bin/
-COPY --from=builder /opt/riva/clients/tts/riva_tts_client /usr/local/bin
-COPY --from=builder /opt/riva/clients/tts/riva_tts_perf_client /usr/local/bin
-COPY --from=builder /opt/riva/clients/nlp/riva_nlp_classify_tokens /usr/local/bin/
-COPY --from=builder /opt/riva/clients/nlp/riva_nlp_qa /usr/local/bin/
-COPY --from=builder /opt/riva/clients/nlp/riva_nlp_punct /usr/local/bin/
 COPY --from=builder /work/riva/proto/ /work/riva/proto/
 COPY --from=builder /work/dist /work
 RUN pip install *.whl
@@ -131,13 +124,6 @@ COPY --from=builder /work/dist /work
 RUN pip install *.whl
 #Uninstall pip to address CVE-2018-20225
 RUN python3 -m pip uninstall -y pip
-COPY --from=builder /opt/riva/clients/asr/riva_asr_client /usr/local/bin/
-COPY --from=builder /opt/riva/clients/asr/riva_streaming_asr_client /usr/local/bin/
-COPY --from=builder /opt/riva/clients/tts/riva_tts_client /usr/local/bin/
-COPY --from=builder /opt/riva/clients/tts/riva_tts_perf_client /usr/local/bin
-COPY --from=builder /opt/riva/clients/nlp/riva_nlp_classify_tokens /usr/local/bin/
-COPY --from=builder /opt/riva/clients/nlp/riva_nlp_qa /usr/local/bin/
-COPY --from=builder /opt/riva/clients/nlp/riva_nlp_punct /usr/local/bin/
 COPY --from=builder /work/riva/proto/ /work/riva/proto/
 
 COPY ./python/clients/nlp/riva_nlp/test_qa.py ./examples/
