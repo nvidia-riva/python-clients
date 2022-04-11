@@ -27,7 +27,6 @@ FROM builddep_light AS builddep
 ARG BAZEL_VERSION=3.7.2
 
 RUN apt-get update && apt-get install -y \
-    pkg-config \
     unzip \
     zip \
     wget \
