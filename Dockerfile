@@ -15,9 +15,7 @@ RUN apt-get update && apt-get install -y \
     python-dev \
     && rm -rf /var/lib/apt/lists/*
 
-RUN curl -O https://bootstrap.pypa.io/get-pip.py && \
-    python3 get-pip.py && \
-    rm get-pip.py
+RUN curl -O https://bootstrap.pypa.io/get-pip.py && python3 get-pip.py && rm get-pip.py
 
 RUN pip3 install --upgrade requests grpcio-tools notebook librosa editdistance "ipython>=7.31.1"
 RUN pip3 uninstall -y click
@@ -26,14 +24,7 @@ RUN pip3 uninstall -y click
 FROM builddep_light AS builddep
 ARG BAZEL_VERSION=3.7.2
 
-RUN apt-get update && apt-get install -y \
-    unzip \
-    zip \
-    wget \
-    git \
-    vim \
-    sox \
-    && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y unzip zip wget git vim && rm -rf /var/lib/apt/lists/*
 
 RUN pip3 install --upgrade sklearn transformers
 
@@ -67,10 +58,6 @@ COPY --from=builder /work/riva/proto/ /work/riva/proto/
 COPY --from=builder /work/dist /work
 RUN pip install *.whl
 RUN python3 -m pip uninstall -y pip
-COPY ./python/clients/asr/*.py ./python/
-COPY ./python/clients/nlp/riva_nlp/test_qa.py ./python/
-COPY ./python/clients/tts/talk_stream.py ./python/
-COPY ./python/clients/tts/talk.py ./python/
 
 # create client image for CI and devel
 FROM builddep AS riva-api-client-dev
@@ -84,10 +71,7 @@ RUN pip install *.whl
 RUN python3 -m pip uninstall -y pip
 COPY --from=builder /work/riva/proto/ /work/riva/proto/
 
-COPY ./python/clients/nlp/riva_nlp/test_qa.py ./python/
-COPY ./python/clients/asr/*.py ./python/
-COPY ./python/clients/tts/*.py ./python/
-COPY ./python/clients/nlp/*.py ./python/
+COPY ./python/clients/* ./python/
 
 COPY examples /work/examples
 
