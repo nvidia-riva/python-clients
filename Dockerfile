@@ -42,7 +42,6 @@ WORKDIR /work
 COPY VERSION ./
 COPY .git /work/.git
 COPY ./riva/proto /work/riva/proto
-COPY third_party /work/third_party
 
 COPY python /work/python
 RUN python3 python/clients/setup.py bdist_wheel
