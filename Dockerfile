@@ -71,7 +71,5 @@ RUN pip install *.whl
 RUN python3 -m pip uninstall -y pip
 COPY --from=builder /work/riva/proto/ /work/riva/proto/
 
-COPY ./python/clients/* ./python/
-
 COPY examples /work/examples
 
