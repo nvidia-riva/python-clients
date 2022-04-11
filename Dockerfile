@@ -30,20 +30,6 @@ RUN apt-get update && apt-get install -y \
     unzip \
     zip \
     wget \
-    flac \
-    libflac++-dev \
-    parallel \
-    alsa-base \
-    libasound2-dev \
-    linux-libc-dev \
-    alsa-utils \
-    bc \
-    build-essential \
-    cmake \
-    libboost-test-dev \
-    zlib1g-dev \
-    libbz2-dev \
-    liblzma-dev \
     git \
     vim \
     sox \
