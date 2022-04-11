@@ -70,6 +70,7 @@ RUN pip install *.whl
 #Uninstall pip to address CVE-2018-20225
 RUN python3 -m pip uninstall -y pip
 COPY --from=builder /work/riva/proto/ /work/riva/proto/
-COPY python /work/python
+COPY python/clients /work/python
+RUN rm /work/python/setup.py /work/python/nlp/setup.py
 COPY examples /work/examples
 
