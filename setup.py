@@ -46,7 +46,7 @@ class BuildPyCommand(build_py):
 
 
 def get_version():
-    version_file = setup_py_dir / ".." / ".." / "VERSION"
+    version_file = setup_py_dir / "VERSION"
     versions = open(version_file, "r").readlines()
     version = "devel"
     for v in versions:
