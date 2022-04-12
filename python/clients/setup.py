@@ -29,7 +29,7 @@ class BuildPyCommand(build_py):
                 grpc_tools.protoc.main(
                     [
                         'grpc_tools.protoc',
-                        '-I=' + str(setup_py_dir) + '/../../',
+                        '-I=' + str(setup_py_dir) + '/../../common/',
                         '--python_out=' + target_dir,
                         '--grpc_python_out=' + target_dir,
                         proto,
