@@ -26,7 +26,7 @@ NVIDIA Riva is a GPU-accelerated SDK for building Speech AI applications that ar
 pip install -r requirements.txt
 git clone https://github.com/nvidia-riva/common
 python3 python/clients/setup.py bdist_wheel
-pip install *.whl
+pip install dist/*.whl
 ```
 
 ## Requirements
