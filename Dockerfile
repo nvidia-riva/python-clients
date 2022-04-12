@@ -18,7 +18,6 @@ RUN apt-get update && apt-get install -y \
 RUN curl -O https://bootstrap.pypa.io/get-pip.py && python3 get-pip.py && rm get-pip.py
 
 RUN pip3 install --upgrade requests grpcio-tools notebook librosa editdistance "ipython>=7.31.1"
-RUN pip3 uninstall -y click
 
 # Dependencies for building
 FROM builddep_light AS builddep
@@ -27,12 +26,6 @@ ARG BAZEL_VERSION=3.7.2
 RUN apt-get update && apt-get install -y unzip zip wget git vim && rm -rf /var/lib/apt/lists/*
 
 RUN pip3 install --upgrade sklearn transformers
-
-#Install NGC client.
-RUN wget https://ngc.nvidia.com/downloads/ngccli_bat_linux.zip && unzip ngccli_bat_linux.zip && chmod u+x ngc && \
-    echo "PATH=/:$PATH\n" >> /root/.bashrc
-RUN md5sum -c ngc.md5
-ENV PATH="/:${PATH}"
 
 
 # copy the source and run build
@@ -54,8 +47,6 @@ ENV PYTHONPATH="${PYTHONPATH}:/work/"
 WORKDIR /work
 COPY --from=builder /work/riva/proto/ /work/riva/proto/
 COPY --from=builder /work/dist /work
-RUN pip install *.whl
-RUN python3 -m pip uninstall -y pip
 
 # create client image for CI and devel
 FROM builddep AS riva-api-client-dev

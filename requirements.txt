@@ -1,0 +1,8 @@
+requests
+grpcio-tools
+notebook
+librosa
+editdistance
+ipython>=7.31.1
+sklearn
+transformers

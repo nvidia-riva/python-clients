@@ -26,8 +26,8 @@ class BuildPyCommand(build_py):
                 os.mkdir(target_dir)
             except:
                 print('riva_api directory exists, rewriting files')
-            print("glob dir: ", str(setup_py_dir) + '/../../riva/proto/*.proto')
-            for proto in glob(str(setup_py_dir) + '/../../riva/proto/*.proto'):
+            print("glob dir: ", str(setup_py_dir) + '/../../common/riva/proto/*.proto')
+            for proto in glob(str(setup_py_dir) + '/../../common/riva/proto/*.proto'):
                 print(proto)
                 grpc_tools.protoc.main(
                     [
