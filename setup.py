@@ -17,6 +17,8 @@ class BuildPyCommand(build_py):
     def run(self):
         if not self.dry_run:
             target_dir = setup_py_dir / 'riva' / 'riva_api'
+            if target_dir.exists():
+                shutil.rmtree(target_dir)
             target_dir.mkdir(parents=True, exist_ok=True)
             print("glob dir: ", str(setup_py_dir / 'common/riva/proto/*.proto'))
             for proto in glob(str(setup_py_dir / 'common/riva/proto/*.proto')):
