@@ -22,10 +22,7 @@ class BuildPyCommand(build_py):
             import os, subprocess, shutil
 
             target_dir = os.path.join(str(setup_py_dir), '..', '..', 'riva', 'riva_api')
-            try:
-                os.mkdir(target_dir)
-            except:
-                print('riva_api directory exists, rewriting files')
+            os.makedirs(target_dir, exist_ok=True)
             print("glob dir: ", str(setup_py_dir) + '/../../common/riva/proto/*.proto')
             for proto in glob(str(setup_py_dir) + '/../../common/riva/proto/*.proto'):
                 print(proto)
