@@ -12,14 +12,6 @@ while read file1_line <&3 && read file2_line <&4; do
   fi
 done 3<"${new_output}" 4<"${expected_output}"
 
-if cmp -s "${new_output}" "${expected_output}"; then
-    printf 'OK riva_streaming_asr_client.py'
-else
-    printf 'Output of `riva-streaming_asr_client.py` is not identical to expected output.'
-    diff "${new_output}" "${expected_output}"
-    exit 1
-fi
-
 
 new_output=tests/transcribe_file_en-US.txt
 python clients/asr/transcribe_file.py --audio-file examples/en-US_sample.wav > "${new_output}"
