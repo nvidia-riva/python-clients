@@ -1,0 +1,10 @@
+results {
+  alternatives {
+    transcript: "what is natural language processing"
+    confidence: 1.0
+  }
+  channel_tag: 1
+  audio_processed: 4.1519999504089355
+}
+
+Final transcript:  what is natural language processing

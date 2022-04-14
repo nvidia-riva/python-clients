@@ -19,10 +19,13 @@ NVIDIA Riva is a GPU-accelerated SDK for building Speech AI applications that ar
 ## Installation
 
 1. Create a ``conda`` environment and activate it
-2. Change to the repo root
+2. Clone ``riva-python-clients`` repo and change to the repo root
 3. Run commands
 
 ```bash
+git submodule init
+git submodule update
+conda install -c anaconda pyaudio
 pip install -r requirements.txt
 python3 setup.py bdist_wheel
 pip install dist/*.whl

@@ -51,10 +51,6 @@ install/
 /.project
 /.settings
 /.vscode/
-/bazel.iml
-# Ignore all bazel-* symlinks. There is no full list since this can change
-# based on the name of the directory bazel is cloned into.
-/bazel-*
 # Ignore outputs generated during Bazel bootstrapping.
 /output/
 # Ignore jekyll build output.
@@ -71,6 +67,7 @@ __pycache__/
 
 # Distribution / packaging
 .Python
+riva/
 build/
 develop-eggs/
 dist/
@@ -185,4 +182,6 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+tests/asr_ouptuts
 

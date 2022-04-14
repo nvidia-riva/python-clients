@@ -1,6 +1,6 @@
 import pathlib
+import re
 import shutil
-import subprocess
 from glob import glob
 
 import grpc_tools.protoc
@@ -11,6 +11,8 @@ from setuptools.command.build_py import build_py
 setup_py_dir = pathlib.Path(__file__).parent.absolute()
 
 long_description = ""
+
+CHANGE_PB2_LOC_PATTERN = re.compile('from riva.proto import (.+_pb2.*)')
 
 
 class BuildPyCommand(build_py):
@@ -32,12 +34,11 @@ class BuildPyCommand(build_py):
                         proto,
                     ]
                 )
-            subprocess.check_output(
-                [
-                    "sed -i -r 's/from riva.proto import (.+_pb2.*)/from . import \\1/g' riva/riva_api/riva/proto/*_pb2*.py"
-                ],
-                shell=True,
-            )
+            for fn in glob(str(target_dir / 'riva' / 'proto' / '*_pb2*.py')):
+                with open(fn) as f:
+                    text = f.read()
+                with open(fn, 'w') as f:
+                    f.write(CHANGE_PB2_LOC_PATTERN.sub(r'from . import \1', text))
             # Move Python files to src/riva_api
             for f in glob(str(target_dir / 'riva' / 'proto' / '*.py')):
                 shutil.move(f, target_dir)

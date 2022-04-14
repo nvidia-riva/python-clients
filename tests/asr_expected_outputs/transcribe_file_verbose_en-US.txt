@@ -1,0 +1,72 @@
+Partial transcript: b'what'
+Stability:    0.1000
+----
+Partial transcript: b'what'
+Stability:    0.1000
+----
+Partial transcript: b'what is'
+Stability:    0.1000
+----
+Partial transcript: b'what is'
+Stability:    0.1000
+----
+Partial transcript: b'what is'
+Stability:    0.1000
+----
+Partial transcript: b'what is now'
+Stability:    0.1000
+----
+Partial transcript: b'what is natural'
+Stability:    0.1000
+----
+Partial transcript: b'what is natural'
+Stability:    0.1000
+----
+Partial transcript: b'what is natural language'
+Stability:    0.1000
+----
+Partial transcript: b'what is natural language'
+Stability:    0.1000
+----
+Partial transcript: b'what is natural language'
+Stability:    0.1000
+----
+Partial transcript: b'what is natural language'
+Stability:    0.1000
+----
+Partial transcript: b'is natural language process'
+Stability:    0.1000
+----
+Partial transcript: b'what '
+Stability:    0.9000
+Partial transcript: b'is natural language processing'
+Stability:    0.1000
+----
+Partial transcript: b'what is '
+Stability:    0.9000
+Partial transcript: b'natural language processing'
+Stability:    0.1000
+----
+Partial transcript: b'what is '
+Stability:    0.9000
+Partial transcript: b'natural language processing'
+Stability:    0.1000
+----
+Partial transcript: b'what is '
+Stability:    0.9000
+Partial transcript: b'natural language processing'
+Stability:    0.1000
+----
+Partial transcript: b'what is '
+Stability:    0.9000
+Partial transcript: b'language processing'
+Stability:    0.1000
+----
+Partial transcript: b'what is '
+Stability:    0.9000
+Partial transcript: b'language processing'
+Stability:    0.1000
+----
+Final transcript: b'What is natural language processing? '
+Confidence:    1.0000
+----
