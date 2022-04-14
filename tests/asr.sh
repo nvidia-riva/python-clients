@@ -4,6 +4,14 @@ mkdir -p tests/asr_outputs
 mv output_0.txt tests/asr_outputs/riva_streaming_asr_client_en-US.txt
 new_output=tests/asr_outputs/riva_streaming_asr_client_en-US.txt
 expected_output=tests/asr_expected_outputs/riva_streaming_asr_client_en-US.txt
+line_number=0
+while read file1_line <&3 && read file2_line <&4; do
+  if [[ "${file1_line#*s:}" != "${file2_line#*s:}" ]] ; then
+    printf "Output of \`riva-streaming_asr_client.py\` is not identical to expected output for line ${line_number}."
+    exit 1
+  fi
+done 3<"${new_output}" 4<"${expected_output}"
+
 if cmp -s "${new_output}" "${expected_output}"; then
     printf 'OK riva_streaming_asr_client.py'
 else
