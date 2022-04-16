@@ -6,9 +6,9 @@ import wave
 from threading import Thread
 
 import grpc
-import riva_api.riva_asr_pb2 as rasr
-import riva_api.riva_asr_pb2_grpc as rasr_srv
-import riva_api.riva_audio_pb2 as ra
+import riva_api.proto.riva_asr_pb2 as rasr
+import riva_api.proto.riva_asr_pb2_grpc as rasr_srv
+import riva_api.proto.riva_audio_pb2 as ra
 
 
 def get_args():

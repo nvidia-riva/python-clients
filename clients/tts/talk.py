@@ -35,9 +35,9 @@ import wave
 import grpc
 import numpy as np
 import pyaudio
-import riva_api.riva_audio_pb2 as ra
-import riva_api.riva_tts_pb2 as rtts
-import riva_api.riva_tts_pb2_grpc as rtts_srv
+import riva_api.proto.riva_audio_pb2 as ra
+import riva_api.proto.riva_tts_pb2 as rtts
+import riva_api.proto.riva_tts_pb2_grpc as rtts_srv
 
 
 def get_args():

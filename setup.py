@@ -18,10 +18,7 @@ CHANGE_PB2_LOC_PATTERN = re.compile('from riva.proto import (.+_pb2.*)')
 class BuildPyCommand(build_py):
     def run(self):
         if not self.dry_run:
-            target_dir = setup_py_dir / 'riva' / 'riva_api'
-            if target_dir.exists():
-                shutil.rmtree(target_dir)
-            target_dir.mkdir(parents=True, exist_ok=True)
+            target_dir = setup_py_dir / 'riva_api' / 'proto'
             print("glob dir: ", str(setup_py_dir / 'common/riva/proto/*.proto'))
             for proto in glob(str(setup_py_dir / 'common/riva/proto/*.proto')):
                 print(proto)
@@ -66,7 +63,6 @@ setuptools.setup(
     description="Python implementation of the Riva API",
     long_description=long_description,
     url="nvidia.com",
-    package_dir={'': 'riva'},
     packages=["riva_api"],
     cmdclass={"build_py": BuildPyCommand},
     classifiers=[

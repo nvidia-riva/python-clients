@@ -10,8 +10,8 @@ import argparse
 import os
 
 import grpc
-import riva_api.riva_nlp_pb2 as rnlp
-import riva_api.riva_nlp_pb2_grpc as rnlp_srv
+import riva_api.proto.riva_nlp_pb2 as rnlp
+import riva_api.proto.riva_nlp_pb2_grpc as rnlp_srv
 
 
 class BertNERClient(object):
