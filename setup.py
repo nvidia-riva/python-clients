@@ -45,6 +45,7 @@ class BuildPyCommand(build_py):
             # Remove leftover empty dirs
             shutil.rmtree(target_dir / 'riva' / 'proto')
             shutil.rmtree(target_dir / 'riva')
+            open(target_dir / '__init__.py', 'w').close()
             super(BuildPyCommand, self).run()
 
 
