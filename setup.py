@@ -67,7 +67,7 @@ setuptools.setup(
     description="Python implementation of the Riva API",
     long_description=long_description,
     url="nvidia.com",
-    packages=["riva_api"],
+    packages=setuptools.find_packages(),
     cmdclass={"build_py": BuildPyCommand},
     classifiers=[
         "Development Status :: 3 - Alpha",
