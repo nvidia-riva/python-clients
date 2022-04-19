@@ -1,4 +1,4 @@
-set -x
+set -x -e
 python clients/asr/riva_streaming_asr_client.py --input-file examples/en-US_sample.wav
 mkdir -p tests/asr_outputs
 mv output_0.txt tests/asr_outputs/riva_streaming_asr_client_en-US.txt
@@ -61,4 +61,4 @@ else
 fi
 
 
-set +x
+set +x +e
