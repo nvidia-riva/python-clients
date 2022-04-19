@@ -19,9 +19,12 @@ class BuildPyCommand(build_py):
     def run(self):
         if not self.dry_run:
             target_dir = setup_py_dir / 'riva_api' / 'proto'
-            if target_dir.exists():
-                shutil.rmtree(target_dir)
-            target_dir.mkdir()
+            for elem in target_dir.iterdir():
+                if elem.name != '__init__.py':
+                    if elem.is_dir():
+                        shutil.rmtree(str(elem))
+                    else:
+                        elem.unlink()
             print("glob dir: ", str(setup_py_dir / 'common/riva/proto/*.proto'))
             for proto in glob(str(setup_py_dir / 'common/riva/proto/*.proto')):
                 print(proto)
@@ -77,4 +80,5 @@ setuptools.setup(
     python_requires='>=3.6',
     install_requires=['grpcio-tools'],
     setup_requires=['grpcio-tools'],
+    exclude=['tests'],
 )
