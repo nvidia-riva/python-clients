@@ -5,15 +5,11 @@ import time
 import wave
 from threading import Thread
 
-import grpc
-import riva_api.proto.riva_asr_pb2 as rasr
-import riva_api.proto.riva_asr_pb2_grpc as rasr_srv
-import riva_api.proto.riva_audio_pb2 as ra
 from riva_api.asr import ASR_Client, get_wav_file_frames_rate_duration
 from riva_api.channel import create_channel
 
 
-def get_args():
+def get_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Streaming transcription via Riva AI Services")
     parser.add_argument("--num-clients", default=1, type=int, help="Number of client threads")
     parser.add_argument("--num-iterations", default=1, type=int, help="Number of iterations over the file")
@@ -55,157 +51,52 @@ def get_args():
     parser.add_argument(
         "--use_ssl", default=False, action='store_true', help="Boolean to control if SSL/TLS encryption should be used"
     )
-    return parser.parse_args()
+    args = parser.parse_args()
+    if args.max_alternatives < 1:
+        parser.error("`--max-alternatives` must be greater than or equal to 1")
+    return args
 
 
-def print_to_file(responses, output_file, max_alternatives, word_time_offsets):
-    start_time = time.time()
-    with open(output_file, "w") as f:
-        for response in responses:
-            if not response.results:
-                continue
-            partial_transcript = ""
-            for result in response.results:
-                if result.is_final:
-                    for index, alternative in enumerate(result.alternatives):
-                        f.write(
-                            "Time %.2fs: Transcript %d: %s\n"
-                            % (time.time() - start_time, index, alternative.transcript)
-                        )
+def main() -> None:
+    parser = get_args()
 
-                    if word_time_offsets:
-                        f.write("Timestamps:\n")
-                        f.write("%-40s %-16s %-16s\n" % ("Word", "Start (ms)", "End (ms)"))
-                        for word_info in result.alternatives[0].words:
-                            f.write(
-                                "%-40s %-16.0f %-16.0f\n" % (word_info.word, word_info.start_time, word_info.end_time)
-                            )
-                else:
-                    transcript = result.alternatives[0].transcript
-                    partial_transcript += transcript
+    print("Number of clients:", parser.num_clients)
+    print("Number of iteration:", parser.num_iterations)
+    print("Input file:", parser.input_file)
 
-            f.write(">>>Time %.2fs: %s\n" % (time.time() - start_time, partial_transcript))
+    threads = []
+    output_filenames = []
+    for i in range(parser.num_clients):
+        _, _, duration = get_wav_file_frames_rate_duration(parser.input_file)
+        if i == 0:
+            print(f"File duration: {duration:.2f}s")
+        output_filenames.append(f"output_{i:d}.txt")
+        channel = create_channel(parser.ssl_cert, parser.use_ssl, parser.riva_uri)
+        asr_client = ASR_Client(channel)
+        t = Thread(
+            target=asr_client.streaming_recognize_file_print,
+            kwargs={
+                "output_file": output_filenames[-1],
+                "input_file": parser.input_file,
+                "num_iterations": parser.num_iterations,
+                "simulate_realtime": parser.simulate_realtime,
+                "max_alternatives": parser.max_alternatives,
+                "automatic_punctuation": parser.automatic_punctuation,
+                "word_time_offsets": parser.word_time_offsets,
+                "verbatim_transcripts": not parser.no_verbatim_transcripts,
+                "language_code": parser.language_code,
+                "boosted_lm_words": parser.boosted_lm_words,
+                "boosted_lm_score": parser.boosted_lm_score,
+            },
+        )
+        t.start()
+        threads.append(t)
 
+    for i, t in enumerate(threads):
+        t.join()
 
-def asr_client(
-    id,
-    output_file,
-    input_file,
-    num_iterations,
-    simulate_realtime,
-    riva_uri,
-    max_alternatives,
-    automatic_punctuation,
-    word_time_offsets,
-    verbatim_transcripts,
-    language_code,
-    boosted_lm_words,
-    boosted_lm_score,
-    use_ssl,
-    ssl_cert,
-):
-
-    CHUNK = 1600
-    if ssl_cert != "" or use_ssl:
-        root_certificates = None
-        if ssl_cert != "" and os.path.exists(ssl_cert):
-            with open(ssl_cert, 'rb') as f:
-                root_certificates = f.read()
-        creds = grpc.ssl_channel_credentials(root_certificates)
-        channel = grpc.secure_channel(riva_uri, creds)
-    else:
-        channel = grpc.insecure_channel(riva_uri)
-
-    wf = wave.open(input_file, 'rb')
-
-    frames = wf.getnframes()
-    rate = wf.getframerate()
-    duration = frames / float(rate)
-    if id == 0:
-        print("File duration: %.2fs" % duration)
-
-    client = rasr_srv.RivaSpeechRecognitionStub(channel)
-    config = rasr.RecognitionConfig(
-        encoding=ra.AudioEncoding.LINEAR_PCM,
-        sample_rate_hertz=wf.getframerate(),
-        language_code=language_code,
-        max_alternatives=max_alternatives,
-        enable_automatic_punctuation=automatic_punctuation,
-        enable_word_time_offsets=word_time_offsets,
-        verbatim_transcripts=verbatim_transcripts,
-    )
-
-    if boosted_lm_words is not None:
-        speech_context = rasr.SpeechContext()
-        speech_context.phrases.extend(boosted_lm_words)
-        speech_context.boost = boosted_lm_score
-        config.speech_contexts.append(speech_context)
-
-    streaming_config = rasr.StreamingRecognitionConfig(config=config, interim_results=True)  # read data
-
-    def generator(w, s, num_iterations, output_file):
-        try:
-            for i in range(num_iterations):
-                w = wave.open(input_file, 'rb')
-                start_time = time.time()
-                yield rasr.StreamingRecognizeRequest(streaming_config=s)
-                num_requests = 0
-                while 1:
-                    d = w.readframes(CHUNK)
-                    if len(d) <= 0:
-                        break
-                    num_requests += 1
-                    if simulate_realtime:
-                        time_to_sleep = max(0.0, CHUNK / rate * num_requests - (time.time() - start_time))
-                        time.sleep(time_to_sleep)
-                    yield rasr.StreamingRecognizeRequest(audio_content=d)
-                w.close()
-        except Exception as e:
-            print(e)
-
-    responses = client.StreamingRecognize(generator(wf, streaming_config, num_iterations, output_file))
-    print_to_file(responses, output_file, max_alternatives, word_time_offsets)
+    print(str(parser.num_clients), "threads done, output written to output_<thread_id>.txt")
 
 
-parser = get_args()
-
-print("Number of clients:", parser.num_clients)
-print("Number of iteration:", parser.num_iterations)
-print("Input file:", parser.input_file)
-
-if parser.max_alternatives < 1:
-    print("max-alternatives must be greater than or equal to 1")
-    exit(1)
-
-threads = []
-output_filenames = []
-for i in range(parser.num_clients):
-    _, _, duration = get_wav_file_frames_rate_duration(parser.input_file)
-    if i == 0:
-        print(f"File duration: {duration:.2f}s")
-    output_filenames.append(f"output_{i:d}.txt")
-    channel = create_channel(parser.ssl_cert, parser.use_ssl, parser.riva_uri)
-    asr_client = ASR_Client(channel)
-    t = Thread(
-        target=asr_client.streaming_recognize_file_print,
-        kwargs={
-            "output_file": output_filenames[-1],
-            "input_file": parser.input_file,
-            "num_iterations": parser.num_iterations,
-            "simulate_realtime": parser.simulate_realtime,
-            "max_alternatives": parser.max_alternatives,
-            "automatic_punctuation": parser.automatic_punctuation,
-            "word_time_offsets": parser.word_time_offsets,
-            "verbatim_transcripts": not parser.no_verbatim_transcripts,
-            "language_code": parser.language_code,
-            "boosted_lm_words": parser.boosted_lm_words,
-            "boosted_lm_score": parser.boosted_lm_score,
-        },
-    )
-    t.start()
-    threads.append(t)
-
-for i, t in enumerate(threads):
-    t.join()
-
-print(str(parser.num_clients), "threads done, output written to output_<thread_id>.txt")
+if __name__ == "__main__":
+    main()
