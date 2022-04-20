@@ -27,7 +27,6 @@
 import argparse
 import os
 import sys
-import time
 import wave
 
 import grpc
@@ -35,8 +34,11 @@ import riva_api.proto.riva_asr_pb2 as rasr
 import riva_api.proto.riva_asr_pb2_grpc as rasr_srv
 import riva_api.proto.riva_audio_pb2 as ra
 
+from riva_api.asr import ASR_Client
+from riva_api.channel import create_channel
 
-def get_args():
+
+def get_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Streaming transcription via Riva AI Services")
     parser.add_argument("--server", default="localhost:50051", type=str, help="URI to GRPC server endpoint")
     parser.add_argument("--audio-file", required=True, help="path to local file to stream")
@@ -52,6 +54,7 @@ def get_args():
     parser.add_argument(
         "--use_ssl", default=False, action='store_true', help="Boolean to control if SSL/TLS encryption should be used"
     )
+    parser.add_argument("--file_streaming_chunk", type=int, default=1600)
     return parser.parse_args()
 
 
@@ -92,48 +95,68 @@ def listen_print_loop(responses, show_intermediate=False):
             num_chars_printed = len(partial_transcript) + 3
 
 
-CHUNK = 1024
-args = get_args()
-wf = wave.open(args.audio_file, 'rb')
-
-if args.ssl_cert != "" or args.use_ssl:
-    root_certificates = None
-    if args.ssl_cert != "" and os.path.exists(args.ssl_cert):
-        with open(args.ssl_cert, 'rb') as f:
-            root_certificates = f.read()
-    creds = grpc.ssl_channel_credentials(root_certificates)
-    channel = grpc.secure_channel(args.server, creds)
-else:
-    channel = grpc.insecure_channel(args.server)
-
-client = rasr_srv.RivaSpeechRecognitionStub(channel)
-config = rasr.RecognitionConfig(
-    encoding=ra.AudioEncoding.LINEAR_PCM,
-    sample_rate_hertz=wf.getframerate(),
-    language_code=args.language_code,
-    max_alternatives=1,
-    enable_automatic_punctuation=True,
-)
-
-# Append boosted words/score
-if args.boosted_lm_words is not None:
-    speech_context = rasr.SpeechContext()
-    speech_context.phrases.extend(args.boosted_lm_words)
-    speech_context.boost = args.boosted_lm_score
-    config.speech_contexts.append(speech_context)
-
-streaming_config = rasr.StreamingRecognitionConfig(config=config, interim_results=True)
-
-# read data
+def main() -> None:
+    args = get_args()
+    channel = create_channel(args.ssl_cert, args.use_ssl, args.riva_uri)
+    asr_client = ASR_Client(channel)
+    asr_client.streaming_recognize_file_print(
+        input_file=args.input_file,
+        language_code=args.language_code,
+        simulate_realtime=False,
+        output_file=sys.stdout,
+        pretty_overwrite=True,
+        boosted_lm_words=args.boosted_lm_words,
+        boosted_lm_score=args.boosted_lm_score,
+        file_streaming_chunk=args.file_streaming_chunk,
+    )
 
 
-def generator(w, s):
-    yield rasr.StreamingRecognizeRequest(streaming_config=s)
-    d = w.readframes(CHUNK)
-    while len(d) > 0:
-        yield rasr.StreamingRecognizeRequest(audio_content=d)
-        d = w.readframes(CHUNK)
+if __name__ == "__main__":
+    main()
 
 
-responses = client.StreamingRecognize(generator(wf, streaming_config))
-listen_print_loop(responses, show_intermediate=args.show_intermediate)
+def old_main() -> None:
+    args = get_args()
+    wf = wave.open(args.audio_file, 'rb')
+
+    if args.ssl_cert != "" or args.use_ssl:
+        root_certificates = None
+        if args.ssl_cert != "" and os.path.exists(args.ssl_cert):
+            with open(args.ssl_cert, 'rb') as f:
+                root_certificates = f.read()
+        creds = grpc.ssl_channel_credentials(root_certificates)
+        channel = grpc.secure_channel(args.server, creds)
+    else:
+        channel = grpc.insecure_channel(args.server)
+
+    client = rasr_srv.RivaSpeechRecognitionStub(channel)
+    config = rasr.RecognitionConfig(
+        encoding=ra.AudioEncoding.LINEAR_PCM,
+        sample_rate_hertz=wf.getframerate(),
+        language_code=args.language_code,
+        max_alternatives=1,
+        enable_automatic_punctuation=True,
+    )
+
+    # Append boosted words/score
+    if args.boosted_lm_words is not None:
+        speech_context = rasr.SpeechContext()
+        speech_context.phrases.extend(args.boosted_lm_words)
+        speech_context.boost = args.boosted_lm_score
+        config.speech_contexts.append(speech_context)
+
+    streaming_config = rasr.StreamingRecognitionConfig(config=config, interim_results=True)
+
+    # read data
+
+
+    def generator(w, s):
+        yield rasr.StreamingRecognizeRequest(streaming_config=s)
+        d = w.readframes(args.file_streaming_chunk)
+        while len(d) > 0:
+            yield rasr.StreamingRecognizeRequest(audio_content=d)
+            d = w.readframes(args.file_streaming_chunk)
+
+
+    responses = client.StreamingRecognize(generator(wf, streaming_config))
+    listen_print_loop(responses, show_intermediate=args.show_intermediate)

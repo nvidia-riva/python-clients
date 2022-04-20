@@ -1,8 +1,4 @@
 import argparse
-import os
-import sys
-import time
-import wave
 from threading import Thread
 
 from riva_api.asr import ASR_Client, get_wav_file_frames_rate_duration
@@ -51,6 +47,7 @@ def get_args() -> argparse.Namespace:
     parser.add_argument(
         "--use_ssl", default=False, action='store_true', help="Boolean to control if SSL/TLS encryption should be used"
     )
+    parser.add_argument("--file_streaming_chunk", type=int, default=1600)
     args = parser.parse_args()
     if args.max_alternatives < 1:
         parser.error("`--max-alternatives` must be greater than or equal to 1")
@@ -87,6 +84,7 @@ def main() -> None:
                 "language_code": parser.language_code,
                 "boosted_lm_words": parser.boosted_lm_words,
                 "boosted_lm_score": parser.boosted_lm_score,
+                "file_streaming_chunk": parser.file_streaming_chunk,
             },
         )
         t.start()
