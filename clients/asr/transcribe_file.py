@@ -40,7 +40,7 @@ from riva_api.channel import create_channel
 
 def get_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Streaming transcription via Riva AI Services")
-    parser.add_argument("--server", default="localhost:50051", type=str, help="URI to GRPC server endpoint")
+    parser.add_argument("--riva-uri", default="localhost:50051", type=str, help="URI to GRPC server endpoint")
     parser.add_argument("--audio-file", required=True, help="path to local file to stream")
     parser.add_argument(
         "--show-intermediate", action="store_true", help="show intermediate transcripts as they are available"
