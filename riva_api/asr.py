@@ -143,7 +143,7 @@ class ASR_Client:
         boosted_lm_score: float,
     ) -> rasr.RecognitionConfig:
         inner_config: rasr.RecognitionConfig = config if isinstance(config, rasr.RecognitionConfig) else config.config
-        inner_config.rate = rate
+        inner_config.sample_rate_hertz = rate
         if boosted_lm_words is not None:
             speech_context = rasr.SpeechContext()
             speech_context.phrases.extend(boosted_lm_words)
