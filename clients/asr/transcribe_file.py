@@ -30,10 +30,10 @@ import sys
 import wave
 
 import grpc
+
 import riva_api.proto.riva_asr_pb2 as rasr
 import riva_api.proto.riva_asr_pb2_grpc as rasr_srv
 import riva_api.proto.riva_audio_pb2 as ra
-
 from riva_api.asr import ASR_Client
 from riva_api.channel import create_channel
 
@@ -99,9 +99,21 @@ def main() -> None:
     args = get_args()
     channel = create_channel(args.ssl_cert, args.use_ssl, args.riva_uri)
     asr_client = ASR_Client(channel)
+    config = rasr.StreamingRecognitionConfig(
+        config=rasr.RecognitionConfig(
+            encoding=ra.AudioEncoding.LINEAR_PCM,
+            language_code=args.language_code,
+            max_alternatives=args.max_alternatives,
+            enable_automatic_punctuation=args.automatic_punctuation,
+            enable_word_time_offsets=args.word_time_offsets,
+            verbatim_transcripts=args.verbatim_transcripts,
+        ),
+        interim_results=True,
+    )
+
     asr_client.streaming_recognize_file_print(
         input_file=args.audio_file,
-        language_code=args.language_code,
+        streaming_config=config,
         simulate_realtime=False,
         output_file=sys.stdout,
         pretty_overwrite=True,

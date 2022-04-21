@@ -1,6 +1,8 @@
 import argparse
 from threading import Thread
 
+import riva_api.proto.riva_asr_pb2 as rasr
+import riva_api.proto.riva_audio_pb2 as ra
 from riva_api.asr import ASR_Client, get_wav_file_frames_rate_duration
 from riva_api.channel import create_channel
 
@@ -70,18 +72,25 @@ def main() -> None:
         output_filenames.append(f"output_{i:d}.txt")
         channel = create_channel(parser.ssl_cert, parser.use_ssl, parser.riva_uri)
         asr_client = ASR_Client(channel)
+        config = rasr.StreamingRecognitionConfig(
+            config=rasr.RecognitionConfig(
+                encoding=ra.AudioEncoding.LINEAR_PCM,
+                language_code=parser.language_code,
+                max_alternatives=parser.max_alternatives,
+                enable_automatic_punctuation=parser.automatic_punctuation,
+                enable_word_time_offsets=parser.word_time_offsets,
+                verbatim_transcripts=not parser.no_verbatim_transcripts,
+            ),
+            interim_results=True,
+        )
         t = Thread(
             target=asr_client.streaming_recognize_file_print,
             kwargs={
                 "output_file": output_filenames[-1],
+                "streaming_config": config,
                 "input_file": parser.input_file,
                 "num_iterations": parser.num_iterations,
                 "simulate_realtime": parser.simulate_realtime,
-                "max_alternatives": parser.max_alternatives,
-                "automatic_punctuation": parser.automatic_punctuation,
-                "word_time_offsets": parser.word_time_offsets,
-                "verbatim_transcripts": not parser.no_verbatim_transcripts,
-                "language_code": parser.language_code,
                 "boosted_lm_words": parser.boosted_lm_words,
                 "boosted_lm_score": parser.boosted_lm_score,
                 "file_streaming_chunk": parser.file_streaming_chunk,
