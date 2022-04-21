@@ -4,7 +4,7 @@ from threading import Thread
 import riva_api.proto.riva_asr_pb2 as rasr
 import riva_api.proto.riva_audio_pb2 as ra
 from riva_api.asr import ASR_Client, get_wav_file_frames_rate_duration
-from riva_api.channel import create_channel
+from riva_api.auth import Auth
 
 
 def get_args() -> argparse.Namespace:
@@ -70,8 +70,8 @@ def main() -> None:
         if i == 0:
             print(f"File duration: {duration:.2f}s")
         output_filenames.append(f"output_{i:d}.txt")
-        channel = create_channel(parser.ssl_cert, parser.use_ssl, parser.riva_uri)
-        asr_client = ASR_Client(channel)
+        auth = Auth(parser.ssl_cert, parser.use_ssl, parser.riva_uri)
+        asr_client = ASR_Client(auth)
         config = rasr.StreamingRecognitionConfig(
             config=rasr.RecognitionConfig(
                 encoding=ra.AudioEncoding.LINEAR_PCM,

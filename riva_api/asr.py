@@ -10,6 +10,7 @@ import wave
 import riva_api.proto.riva_asr_pb2 as rasr
 import riva_api.proto.riva_asr_pb2_grpc as rasr_srv
 import riva_api.proto.riva_audio_pb2 as ra
+from riva_api.auth import Auth
 from riva_api.proto.riva_asr_pb2 import StreamingRecognizeResponse
 
 ALLOWED_PREFIXES_FOR_TRANSCRIPTS = ['time', 'partial vs final', '>> vs ##']
@@ -132,8 +133,9 @@ def print_responses(
 
 
 class ASR_Client:
-    def __init__(self, channel: grpc.Channel) -> None:
-        self.stub = rasr_srv.RivaSpeechRecognitionStub(channel)
+    def __init__(self, auth: Auth) -> None:
+        self.auth = auth
+        self.stub = rasr_srv.RivaSpeechRecognitionStub(self.auth.channel)
 
     @staticmethod
     def _update_recognition_config(
@@ -170,7 +172,8 @@ class ASR_Client:
         for response in self.stub.StreamingRecognize(
             audio_chunks_from_file_generator(
                 input_file, streaming_config, num_iterations, simulate_realtime, rate, file_streaming_chunk
-            )
+            ),
+            metadata=self.auth.get_auth_metadata(),
         ):
             yield response
 
@@ -187,6 +190,7 @@ class ASR_Client:
         prefix_for_transcripts: str = "time",
         pretty_overwrite: bool = False,
         word_time_offsets: bool = False,
+        show_intermediate: bool = False,
     ) -> None:
         print_responses(
             self.streaming_recognize_file_generator(
@@ -203,7 +207,7 @@ class ASR_Client:
             False,
             word_time_offsets,
             prefix_for_transcripts,
-            False,
+            show_intermediate,
         )
 
 

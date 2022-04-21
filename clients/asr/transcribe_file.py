@@ -35,7 +35,7 @@ import riva_api.proto.riva_asr_pb2 as rasr
 import riva_api.proto.riva_asr_pb2_grpc as rasr_srv
 import riva_api.proto.riva_audio_pb2 as ra
 from riva_api.asr import ASR_Client
-from riva_api.channel import create_channel
+from riva_api.auth import Auth
 
 
 def get_args() -> argparse.Namespace:
@@ -58,54 +58,16 @@ def get_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def listen_print_loop(responses, show_intermediate=False):
-    num_chars_printed = 0
-    idx = 0
-    for response in responses:
-        idx += 1
-        if not response.results:
-            continue
-
-        partial_transcript = ""
-        for result in response.results:
-            if not result.alternatives:
-                continue
-
-            transcript = result.alternatives[0].transcript
-
-            if show_intermediate:
-                if not result.is_final:
-                    partial_transcript += transcript
-                else:
-                    overwrite_chars = ' ' * (num_chars_printed - len(transcript))
-                    print("## " + transcript + overwrite_chars + "\n")
-                    num_chars_printed = 0
-
-            else:
-                if result.is_final:
-                    final_transcript = "Final transcript: " + transcript
-                    sys.stdout.buffer.write(final_transcript.encode('utf-8'))
-                    sys.stdout.flush()
-                    print("\n")
-
-        if show_intermediate and partial_transcript != "":
-            overwrite_chars = ' ' * (num_chars_printed - len(partial_transcript))
-            sys.stdout.write(">> " + partial_transcript + overwrite_chars + '\r')
-            sys.stdout.flush()
-            num_chars_printed = len(partial_transcript) + 3
-
-
 def main() -> None:
     args = get_args()
-    channel = create_channel(args.ssl_cert, args.use_ssl, args.riva_uri)
-    asr_client = ASR_Client(channel)
+    auth = Auth(args.ssl_cert, args.use_ssl, args.riva_uri)
+    asr_client = ASR_Client(auth)
     config = rasr.StreamingRecognitionConfig(
         config=rasr.RecognitionConfig(
             encoding=ra.AudioEncoding.LINEAR_PCM, language_code=args.language_code, max_alternatives=1,
         ),
         interim_results=True,
     )
-
     asr_client.streaming_recognize_file_print(
         input_file=args.audio_file,
         streaming_config=config,
@@ -116,55 +78,9 @@ def main() -> None:
         boosted_lm_score=args.boosted_lm_score,
         file_streaming_chunk=args.file_streaming_chunk,
         prefix_for_transcripts='>> vs ##',
+        show_intermediate=args.show_intermediate,
     )
 
 
 if __name__ == "__main__":
     main()
-
-
-def old_main() -> None:
-    args = get_args()
-    wf = wave.open(args.audio_file, 'rb')
-
-    if args.ssl_cert != "" or args.use_ssl:
-        root_certificates = None
-        if args.ssl_cert != "" and os.path.exists(args.ssl_cert):
-            with open(args.ssl_cert, 'rb') as f:
-                root_certificates = f.read()
-        creds = grpc.ssl_channel_credentials(root_certificates)
-        channel = grpc.secure_channel(args.server, creds)
-    else:
-        channel = grpc.insecure_channel(args.server)
-
-    client = rasr_srv.RivaSpeechRecognitionStub(channel)
-    config = rasr.RecognitionConfig(
-        encoding=ra.AudioEncoding.LINEAR_PCM,
-        sample_rate_hertz=wf.getframerate(),
-        language_code=args.language_code,
-        max_alternatives=1,
-        enable_automatic_punctuation=True,
-    )
-
-    # Append boosted words/score
-    if args.boosted_lm_words is not None:
-        speech_context = rasr.SpeechContext()
-        speech_context.phrases.extend(args.boosted_lm_words)
-        speech_context.boost = args.boosted_lm_score
-        config.speech_contexts.append(speech_context)
-
-    streaming_config = rasr.StreamingRecognitionConfig(config=config, interim_results=True)
-
-    # read data
-
-
-    def generator(w, s):
-        yield rasr.StreamingRecognizeRequest(streaming_config=s)
-        d = w.readframes(args.file_streaming_chunk)
-        while len(d) > 0:
-            yield rasr.StreamingRecognizeRequest(audio_content=d)
-            d = w.readframes(args.file_streaming_chunk)
-
-
-    responses = client.StreamingRecognize(generator(wf, streaming_config))
-    listen_print_loop(responses, show_intermediate=args.show_intermediate)
