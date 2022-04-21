@@ -25,17 +25,9 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import argparse
-import os
 import sys
-import wave
 
-import grpc
-
-import riva_api.proto.riva_asr_pb2 as rasr
-import riva_api.proto.riva_asr_pb2_grpc as rasr_srv
-import riva_api.proto.riva_audio_pb2 as ra
-from riva_api.asr import ASR_Client
-from riva_api.auth import Auth
+import riva_api
 
 
 def get_args() -> argparse.Namespace:
@@ -60,11 +52,11 @@ def get_args() -> argparse.Namespace:
 
 def main() -> None:
     args = get_args()
-    auth = Auth(args.ssl_cert, args.use_ssl, args.riva_uri)
-    asr_client = ASR_Client(auth)
-    config = rasr.StreamingRecognitionConfig(
-        config=rasr.RecognitionConfig(
-            encoding=ra.AudioEncoding.LINEAR_PCM, language_code=args.language_code, max_alternatives=1,
+    auth = riva_api.Auth(args.ssl_cert, args.use_ssl, args.riva_uri)
+    asr_client = riva_api.ASR_Client(auth)
+    config = riva_api.StreamingRecognitionConfig(
+        config=riva_api.RecognitionConfig(
+            encoding=riva_api.AudioEncoding.LINEAR_PCM, language_code=args.language_code, max_alternatives=1,
         ),
         interim_results=True,
     )

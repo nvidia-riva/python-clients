@@ -1,10 +1,8 @@
 import argparse
 from threading import Thread
 
-import riva_api.proto.riva_asr_pb2 as rasr
-import riva_api.proto.riva_audio_pb2 as ra
-from riva_api.asr import ASR_Client, get_wav_file_frames_rate_duration
-from riva_api.auth import Auth
+from riva_api import ASR_Client, AudioEncoding, Auth, RecognitionConfig, StreamingRecognitionConfig
+from riva_api.asr import get_wav_file_frames_rate_duration
 
 
 def get_args() -> argparse.Namespace:
@@ -72,9 +70,9 @@ def main() -> None:
         output_filenames.append(f"output_{i:d}.txt")
         auth = Auth(parser.ssl_cert, parser.use_ssl, parser.riva_uri)
         asr_client = ASR_Client(auth)
-        config = rasr.StreamingRecognitionConfig(
-            config=rasr.RecognitionConfig(
-                encoding=ra.AudioEncoding.LINEAR_PCM,
+        config = StreamingRecognitionConfig(
+            config=RecognitionConfig(
+                encoding=AudioEncoding.LINEAR_PCM,
                 language_code=parser.language_code,
                 max_alternatives=parser.max_alternatives,
                 enable_automatic_punctuation=parser.automatic_punctuation,

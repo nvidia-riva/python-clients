@@ -4,12 +4,10 @@ import sys
 import time
 from typing import Generator, List, Optional, TextIO, Tuple, Union
 
-import grpc
 import wave
 
 import riva_api.proto.riva_asr_pb2 as rasr
 import riva_api.proto.riva_asr_pb2_grpc as rasr_srv
-import riva_api.proto.riva_audio_pb2 as ra
 from riva_api.auth import Auth
 from riva_api.proto.riva_asr_pb2 import StreamingRecognizeResponse
 
