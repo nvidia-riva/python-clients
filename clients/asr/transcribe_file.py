@@ -100,7 +100,7 @@ def main() -> None:
     channel = create_channel(args.ssl_cert, args.use_ssl, args.riva_uri)
     asr_client = ASR_Client(channel)
     asr_client.streaming_recognize_file_print(
-        input_file=args.input_file,
+        input_file=args.audio_file,
         language_code=args.language_code,
         simulate_realtime=False,
         output_file=sys.stdout,
