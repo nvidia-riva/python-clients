@@ -101,12 +101,7 @@ def main() -> None:
     asr_client = ASR_Client(channel)
     config = rasr.StreamingRecognitionConfig(
         config=rasr.RecognitionConfig(
-            encoding=ra.AudioEncoding.LINEAR_PCM,
-            language_code=args.language_code,
-            max_alternatives=args.max_alternatives,
-            enable_automatic_punctuation=args.automatic_punctuation,
-            enable_word_time_offsets=args.word_time_offsets,
-            verbatim_transcripts=args.verbatim_transcripts,
+            encoding=ra.AudioEncoding.LINEAR_PCM, language_code=args.language_code, max_alternatives=1,
         ),
         interim_results=True,
     )
