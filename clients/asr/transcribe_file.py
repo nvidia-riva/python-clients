@@ -60,15 +60,17 @@ def main() -> None:
         ),
         interim_results=True,
     )
-    asr_client.streaming_recognize_file_print(
-        input_file=args.audio_file,
-        streaming_config=config,
-        simulate_realtime=False,
+    riva_api.print_streaming(
+        generator=asr_client.streaming_recognize_file_generator(
+            input_file=args.audio_file,
+            streaming_config=config,
+            simulate_realtime=False,
+            boosted_lm_words=args.boosted_lm_words,
+            boosted_lm_score=args.boosted_lm_score,
+            file_streaming_chunk=args.file_streaming_chunk,
+        ),
         output_file=sys.stdout,
         pretty_overwrite=True,
-        boosted_lm_words=args.boosted_lm_words,
-        boosted_lm_score=args.boosted_lm_score,
-        file_streaming_chunk=args.file_streaming_chunk,
         prefix_for_transcripts='>> vs ##',
         show_intermediate=args.show_intermediate,
     )

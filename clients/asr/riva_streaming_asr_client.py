@@ -1,7 +1,7 @@
 import argparse
 from threading import Thread
 
-from riva_api import ASR_Client, AudioEncoding, Auth, RecognitionConfig, StreamingRecognitionConfig
+from riva_api import ASR_Client, AudioEncoding, Auth, RecognitionConfig, StreamingRecognitionConfig, print_streaming
 from riva_api.asr import get_wav_file_frames_rate_duration
 
 
@@ -82,16 +82,18 @@ def main() -> None:
             interim_results=True,
         )
         t = Thread(
-            target=asr_client.streaming_recognize_file_print,
+            target=print_streaming,
             kwargs={
+                "generator": asr_client.streaming_recognize_file_generator(
+                    input_file=parser.input_file,
+                    streaming_config=config,
+                    num_iterations=parser.num_iterations,
+                    simulate_realtime=parser.simulate_realtime,
+                    boosted_lm_score=parser.boosted_lm_score,
+                    boosted_lm_words=parser.boosted_lm_words,
+                    file_streaming_chunk=parser.file_streaming_chunk,
+                ),
                 "output_file": output_filenames[-1],
-                "streaming_config": config,
-                "input_file": parser.input_file,
-                "num_iterations": parser.num_iterations,
-                "simulate_realtime": parser.simulate_realtime,
-                "boosted_lm_words": parser.boosted_lm_words,
-                "boosted_lm_score": parser.boosted_lm_score,
-                "file_streaming_chunk": parser.file_streaming_chunk,
             },
         )
         t.start()

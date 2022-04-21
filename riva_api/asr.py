@@ -1,9 +1,11 @@
 import io
 import os
+import queue
 import sys
 import time
 from typing import Generator, List, Optional, TextIO, Tuple, Union
 
+import pyaudio
 import wave
 
 import riva_api.proto.riva_asr_pb2 as rasr
@@ -21,7 +23,7 @@ def get_wav_file_frames_rate_duration(input_file: os.PathLike) -> Tuple[int, int
     return frames, rate, frames / rate
 
 
-def audio_chunks_from_file_generator(
+def audio_requests_from_file_generator(
     input_file: os.PathLike,
     config: rasr.StreamingRecognitionConfig,
     num_iterations: int,
@@ -50,14 +52,84 @@ def audio_chunks_from_file_generator(
         print(e)
 
 
-def print_responses(
+class MicrophoneStream:
+    """Opens a recording stream as a generator yielding the audio chunks."""
+
+    def __init__(self, rate, chunk, device=None):
+        self._rate = rate
+        self._chunk = chunk
+        self._device = device
+
+        # Create a thread-safe buffer of audio data
+        self._buff = queue.Queue()
+        self.closed = True
+
+    def __enter__(self):
+        self._audio_interface = pyaudio.PyAudio()
+        self._audio_stream = self._audio_interface.open(
+            format=pyaudio.paInt16,
+            input_device_index=self._device,
+            channels=1,
+            rate=self._rate,
+            input=True,
+            frames_per_buffer=self._chunk,
+            stream_callback=self._fill_buffer,
+        )
+
+        self.closed = False
+
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self._audio_stream.stop_stream()
+        self._audio_stream.close()
+        self.closed = True
+        # Signal the generator to terminate so that the client's
+        # streaming_recognize method will not block the process termination.
+        self._buff.put(None)
+        self._audio_interface.terminate()
+
+    def _fill_buffer(self, in_data, frame_count, time_info, status_flags):
+        """Continuously collect data from the audio stream, into the buffer."""
+        self._buff.put(in_data)
+        return None, pyaudio.paContinue
+
+    def generator(self):
+        while not self.closed:
+            chunk = self._buff.get()
+            if chunk is None:
+                return
+            data = [chunk]
+
+            while True:
+                try:
+                    chunk = self._buff.get(block=False)
+                    if chunk is None:
+                        return
+                    data.append(chunk)
+                except queue.Empty:
+                    break
+
+            yield b''.join(data)
+
+
+def request_from_microphone_generator(
+    input_device: int, streaming_chunk: int, rate: int, config: rasr.StreamingRecognitionConfig
+) -> Generator[rasr.StreamingRecognizeRequest, None, None]:
+    yield rasr.StreamingRecognizeRequest(streaming_config=config)
+    with MicrophoneStream(rate, streaming_chunk, device=input_device) as stream:
+        for content in stream.generator():
+            yield rasr.StreamingRecognizeRequest(audio_content=content)
+
+
+def print_streaming(
     generator: Generator[StreamingRecognizeResponse, None, None],
     output_file: Union[os.PathLike, TextIO],
-    pretty_overwrite: bool,
-    verbose: bool,
-    word_time_offsets: bool,
-    prefix_for_transcripts: str,
-    show_intermediate: bool,
+    pretty_overwrite: bool = False,
+    verbose: bool = False,
+    word_time_offsets: bool = False,
+    prefix_for_transcripts: str = ALLOWED_PREFIXES_FOR_TRANSCRIPTS[0],
+    show_intermediate: bool = False,
 ) -> None:
     if prefix_for_transcripts not in ALLOWED_PREFIXES_FOR_TRANSCRIPTS:
         raise ValueError(
@@ -168,7 +240,7 @@ class ASR_Client:
             config=streaming_config, rate=rate, boosted_lm_words=boosted_lm_words, boosted_lm_score=boosted_lm_score
         )
         for response in self.stub.StreamingRecognize(
-            audio_chunks_from_file_generator(
+            audio_requests_from_file_generator(
                 input_file, streaming_config, num_iterations, simulate_realtime, rate, file_streaming_chunk
             ),
             metadata=self.auth.get_auth_metadata(),
@@ -190,7 +262,7 @@ class ASR_Client:
         word_time_offsets: bool = False,
         show_intermediate: bool = False,
     ) -> None:
-        print_responses(
+        print_streaming(
             self.streaming_recognize_file_generator(
                 input_file=input_file,
                 streaming_config=streaming_config,
