@@ -25,119 +25,31 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import argparse
-import os
-import queue
 import sys
 
-import grpc
 import pyaudio
-import riva_api.proto.riva_asr_pb2 as rasr
-import riva_api.proto.riva_asr_pb2_grpc as rasr_srv
-import riva_api.proto.riva_audio_pb2 as ra
+
+import riva_api
+
 
 RATE = 16000
 CHUNK = int(RATE / 10)  # 100ms
 
 
+# TODO: add word boosting
 def get_args():
     parser = argparse.ArgumentParser(description="Streaming transcription via Riva AI Services")
-    parser.add_argument("--server", default="localhost:50051", type=str, help="URI to GRPC server endpoint")
+    parser.add_argument("--riva-uri", default="localhost:50051", type=str, help="URI to GRPC server endpoint")
     parser.add_argument("--input-device", type=int, default=None, help="output device to use")
     parser.add_argument("--list-devices", action="store_true", help="list output devices indices")
     parser.add_argument("--language-code", default="en-US", type=str, help="Language code of the model to be used")
-    parser.add_argument("--ssl_cert", type=str, default="", help="Path to SSL client certificatates file")
+    parser.add_argument("--ssl_cert", type=str, help="Path to SSL client certificatates file")
     parser.add_argument(
         "--use_ssl", default=False, action='store_true', help="Boolean to control if SSL/TLS encryption should be used"
     )
+    parser.add_argument("--audio-frame-rate", type=int, default=16000)
+    parser.add_argument("--file-streaming-chunk", type=int, default=1600)
     return parser.parse_args()
-
-
-class MicrophoneStream(object):
-    """Opens a recording stream as a generator yielding the audio chunks."""
-
-    def __init__(self, rate, chunk, device=None):
-        self._rate = rate
-        self._chunk = chunk
-        self._device = device
-
-        # Create a thread-safe buffer of audio data
-        self._buff = queue.Queue()
-        self.closed = True
-
-    def __enter__(self):
-        self._audio_interface = pyaudio.PyAudio()
-        self._audio_stream = self._audio_interface.open(
-            format=pyaudio.paInt16,
-            input_device_index=self._device,
-            channels=1,
-            rate=self._rate,
-            input=True,
-            frames_per_buffer=self._chunk,
-            stream_callback=self._fill_buffer,
-        )
-
-        self.closed = False
-
-        return self
-
-    def __exit__(self, type, value, traceback):
-        self._audio_stream.stop_stream()
-        self._audio_stream.close()
-        self.closed = True
-        # Signal the generator to terminate so that the client's
-        # streaming_recognize method will not block the process termination.
-        self._buff.put(None)
-        self._audio_interface.terminate()
-
-    def _fill_buffer(self, in_data, frame_count, time_info, status_flags):
-        """Continuously collect data from the audio stream, into the buffer."""
-        self._buff.put(in_data)
-        return None, pyaudio.paContinue
-
-    def generator(self):
-        while not self.closed:
-            chunk = self._buff.get()
-            if chunk is None:
-                return
-            data = [chunk]
-
-            while True:
-                try:
-                    chunk = self._buff.get(block=False)
-                    if chunk is None:
-                        return
-                    data.append(chunk)
-                except queue.Empty:
-                    break
-
-            yield b''.join(data)
-
-
-def listen_print_loop(responses):
-    num_chars_printed = 0
-    for response in responses:
-        if not response.results:
-            continue
-
-        partial_transcript = ""
-        for result in response.results:
-            if not result.alternatives:
-                continue
-
-            transcript = result.alternatives[0].transcript
-
-            if not result.is_final:
-                partial_transcript += transcript
-            else:
-                overwrite_chars = ' ' * (num_chars_printed - len(transcript))
-                print("## " + transcript + overwrite_chars + "\n")
-                num_chars_printed = 0
-
-        if partial_transcript != "":
-            overwrite_chars = ' ' * (num_chars_printed - len(partial_transcript))
-            sys.stdout.write(">> " + partial_transcript + overwrite_chars + '\r')
-            sys.stdout.flush()
-            num_chars_printed = len(partial_transcript) + 3
 
 
 def main():
@@ -152,39 +64,28 @@ def main():
             print(f"{info['index']}: {info['name']}")
         sys.exit(0)
 
-    if args.ssl_cert != "" or args.use_ssl:
-        root_certificates = None
-        if args.ssl_cert != "" and os.path.exists(args.ssl_cert):
-            with open(args.ssl_cert, 'rb') as f:
-                root_certificates = f.read()
-        creds = grpc.ssl_channel_credentials(root_certificates)
-        channel = grpc.secure_channel(args.server, creds)
-    else:
-        channel = grpc.insecure_channel(args.server)
-
-    client = rasr_srv.RivaSpeechRecognitionStub(channel)
-
-    config = rasr.RecognitionConfig(
-        encoding=ra.AudioEncoding.LINEAR_PCM,
-        sample_rate_hertz=RATE,
-        language_code=args.language_code,
-        max_alternatives=1,
-        enable_automatic_punctuation=True,
+    auth = riva_api.Auth(args.ssl_cert, args.use_ssl, args.riva_uri)
+    asr_client = riva_api.ASR_Client(auth)
+    config = riva_api.StreamingRecognitionConfig(
+        config=riva_api.RecognitionConfig(
+            encoding=riva_api.AudioEncoding.LINEAR_PCM,
+            language_code=args.language_code,
+            max_alternatives=1,
+            enable_automatic_punctuation=True,
+            sample_rate_hertz=args.audio_frame_rate,
+        ),
+        interim_results=True,
     )
-    streaming_config = rasr.StreamingRecognitionConfig(config=config, interim_results=True)
-
-    with MicrophoneStream(RATE, CHUNK, device=args.input_device) as stream:
-        audio_generator = stream.generator()
-        requests = (rasr.StreamingRecognizeRequest(audio_content=content) for content in audio_generator)
-
-        def build_generator(cfg, gen):
-            yield rasr.StreamingRecognizeRequest(streaming_config=cfg)
-            for x in gen:
-                yield x
-
-        responses = client.StreamingRecognize(build_generator(streaming_config, requests))
-
-        listen_print_loop(responses)
+    riva_api.print_streaming(
+        generator=asr_client.streaming_recognize_microphone_generator(
+            args.input_device,
+            streaming_config=config,
+            file_streaming_chunk=args.file_streaming_chunk,
+            audio_frame_rate=args.audio_frame_rate,
+        ),
+        show_intermediate=True,
+        prefix_for_transcripts='>> vs ##',
+    )
 
 
 if __name__ == '__main__':

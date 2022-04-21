@@ -124,7 +124,7 @@ def request_from_microphone_generator(
 
 def print_streaming(
     generator: Generator[StreamingRecognizeResponse, None, None],
-    output_file: Union[os.PathLike, TextIO],
+    output_file: Union[os.PathLike, TextIO] = sys.stdout,
     pretty_overwrite: bool = False,
     verbose: bool = False,
     word_time_offsets: bool = False,
@@ -156,6 +156,7 @@ def print_streaming(
         output_file = open(output_file, 'w')
     start_time = time.time()
     for response in generator:
+        print('response')
         if not response.results:
             continue
         partial_transcript = ""
@@ -213,7 +214,7 @@ class ASR_Client:
         rate: int,
         boosted_lm_words: List[str],
         boosted_lm_score: float,
-    ) -> rasr.RecognitionConfig:
+    ) -> None:
         inner_config: rasr.RecognitionConfig = config if isinstance(config, rasr.RecognitionConfig) else config.config
         inner_config.sample_rate_hertz = rate
         if boosted_lm_words is not None:
@@ -221,7 +222,6 @@ class ASR_Client:
             speech_context.phrases.extend(boosted_lm_words)
             speech_context.boost = boosted_lm_score
             inner_config.speech_contexts.append(speech_context)
-        return config
 
     def streaming_recognize_file_generator(
         self,
@@ -235,7 +235,7 @@ class ASR_Client:
     ) -> Generator[StreamingRecognizeResponse, None, None]:
         if boosted_lm_words is None:
             boosted_lm_words = []
-        frames, rate, duration = get_wav_file_frames_rate_duration(input_file)
+        _, rate, _ = get_wav_file_frames_rate_duration(input_file)
         self._update_recognition_config(
             config=streaming_config, rate=rate, boosted_lm_words=boosted_lm_words, boosted_lm_score=boosted_lm_score
         )
@@ -247,39 +247,30 @@ class ASR_Client:
         ):
             yield response
 
-    def streaming_recognize_file_print(
+    def streaming_recognize_microphone_generator(
         self,
-        input_file: os.PathLike,
-        simulate_realtime: bool,
+        input_device: int,
         streaming_config: rasr.StreamingRecognitionConfig,
-        output_file: Union[os.PathLike, TextIO] = sys.stdout,
         boosted_lm_words: Optional[List[str]] = None,
         boosted_lm_score: float = 4.0,
-        num_iterations: int = 1,
         file_streaming_chunk: int = 1600,
-        prefix_for_transcripts: str = "time",
-        pretty_overwrite: bool = False,
-        word_time_offsets: bool = False,
-        show_intermediate: bool = False,
-    ) -> None:
-        print_streaming(
-            self.streaming_recognize_file_generator(
-                input_file=input_file,
-                streaming_config=streaming_config,
-                simulate_realtime=simulate_realtime,
-                boosted_lm_words=boosted_lm_words,
-                boosted_lm_score=boosted_lm_score,
-                num_iterations=num_iterations,
-                file_streaming_chunk=file_streaming_chunk,
-            ),
-            output_file,
-            pretty_overwrite,
-            False,
-            word_time_offsets,
-            prefix_for_transcripts,
-            show_intermediate,
+        audio_frame_rate: int = 16000,
+    ) -> Generator[StreamingRecognizeResponse, None, None]:
+        if boosted_lm_words is None:
+            boosted_lm_words = []
+        self._update_recognition_config(
+            config=streaming_config,
+            rate=audio_frame_rate,
+            boosted_lm_words=boosted_lm_words,
+            boosted_lm_score=boosted_lm_score,
         )
-
+        for response in self.stub.StreamingRecognize(
+            request_from_microphone_generator(
+                input_device, audio_frame_rate, file_streaming_chunk, streaming_config
+            ),
+            metadata=self.auth.get_auth_metadata(),
+        ):
+            yield response
 
 
 
