@@ -212,6 +212,7 @@ class ASR_Client:
         boosted_lm_score: float = 4.0,
         num_iterations: int = 1,
         file_streaming_chunk: int = 1600,
+        prefix_for_transcripts: str = "time",
     ) -> None:
         print_responses(
             self.streaming_recognize_file_generator(
@@ -231,7 +232,7 @@ class ASR_Client:
             pretty_overwrite,
             False,
             word_time_offsets,
-            'time',
+            prefix_for_transcripts,
             False,
         )
 

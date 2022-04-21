@@ -108,6 +108,7 @@ def main() -> None:
         boosted_lm_words=args.boosted_lm_words,
         boosted_lm_score=args.boosted_lm_score,
         file_streaming_chunk=args.file_streaming_chunk,
+        prefix_for_transcripts='>> vs ##',
     )
 
 
