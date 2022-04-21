@@ -50,7 +50,7 @@ def get_args() -> argparse.Namespace:
     parser.add_argument(
         "--boosted_lm_score", type=float, default=4.0, help="Value by which to boost words when decoding"
     )
-    parser.add_argument("--ssl_cert", type=str, default="", help="Path to SSL client certificatates file")
+    parser.add_argument("--ssl_cert", type=str, help="Path to SSL client certificatates file")
     parser.add_argument(
         "--use_ssl", default=False, action='store_true', help="Boolean to control if SSL/TLS encryption should be used"
     )
