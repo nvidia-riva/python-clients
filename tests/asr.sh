@@ -15,16 +15,16 @@ while read file1_line <&3 && read file2_line <&4; do
 done 3<"${new_output}" 4<"${expected_output}"
 
 
-new_output="${asr_outputs}/transcribe_file_en-US.txt"
-python clients/asr/transcribe_file.py --audio-file examples/en-US_sample.wav > "${new_output}"
-expected_output="${asr_expected_outputs}/transcribe_file_en-US.txt"
-if cmp -s "${new_output}" "${expected_output}"; then
-    printf 'OK transcribe_file.py'
-else
-    printf 'Output of `transcribe_file.py` is not identical to expected output.'
-    diff "${new_output}" "${expected_output}"
-    exit 1
-fi
+#new_output="${asr_outputs}/transcribe_file_en-US.txt"
+#python clients/asr/transcribe_file.py --audio-file examples/en-US_sample.wav > "${new_output}"
+#expected_output="${asr_expected_outputs}/transcribe_file_en-US.txt"
+#if cmp -s "${new_output}" "${expected_output}"; then
+#    printf 'OK transcribe_file.py'
+#else
+#    printf 'Output of `transcribe_file.py` is not identical to expected output.'
+#    diff "${new_output}" "${expected_output}"
+#    exit 1
+#fi
 
 
 new_output="${asr_outputs}/transcribe_file_offline_en-US.txt"
