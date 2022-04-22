@@ -172,7 +172,7 @@ def main():
         enable_automatic_punctuation=True,
     )
     streaming_config = rasr.StreamingRecognitionConfig(config=config, interim_results=True)
-
+    print("config:", streaming_config)
     with MicrophoneStream(RATE, CHUNK, device=args.input_device) as stream:
         audio_generator = stream.generator()
         requests = (rasr.StreamingRecognizeRequest(audio_content=content) for content in audio_generator)

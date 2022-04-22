@@ -72,7 +72,6 @@ def main():
             language_code=args.language_code,
             max_alternatives=1,
             enable_automatic_punctuation=True,
-            sample_rate_hertz=args.audio_frame_rate,
         ),
         interim_results=True,
     )

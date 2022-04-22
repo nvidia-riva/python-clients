@@ -113,15 +113,6 @@ class MicrophoneStream:
             yield b''.join(data)
 
 
-def request_from_microphone_generator(
-    input_device: int, streaming_chunk: int, rate: int, config: rasr.StreamingRecognitionConfig
-) -> Generator[rasr.StreamingRecognizeRequest, None, None]:
-    yield rasr.StreamingRecognizeRequest(streaming_config=config)
-    with MicrophoneStream(rate, streaming_chunk, device=input_device) as stream:
-        for content in stream.generator():
-            yield rasr.StreamingRecognizeRequest(audio_content=content)
-
-
 def print_streaming(
     generator: Generator[StreamingRecognizeResponse, None, None],
     output_file: Union[os.PathLike, TextIO] = sys.stdout,
@@ -156,7 +147,6 @@ def print_streaming(
         output_file = open(output_file, 'w')
     start_time = time.time()
     for response in generator:
-        print('response')
         if not response.results:
             continue
         partial_transcript = ""
@@ -193,7 +183,7 @@ def print_streaming(
                 partial_transcript += transcript
         if prefix_for_transcripts == ALLOWED_PREFIXES_FOR_TRANSCRIPTS[0]:
             output_file.write(">>>Time %.2fs: %s\n" % (time.time() - start_time, partial_transcript))
-        elif prefix_for_transcripts == ALLOWED_PREFIXES_FOR_TRANSCRIPTS[1]:
+        elif prefix_for_transcripts == ALLOWED_PREFIXES_FOR_TRANSCRIPTS[2]:
             if show_intermediate and partial_transcript != '':
                 overwrite_chars = ' ' * (num_chars_printed - len(partial_transcript))
                 sys.stdout.write(">> " + partial_transcript + overwrite_chars + '\r')
@@ -211,12 +201,13 @@ class ASR_Client:
     @staticmethod
     def _update_recognition_config(
         config: Union[rasr.StreamingRecognitionConfig, rasr.RecognitionConfig],
-        rate: int,
-        boosted_lm_words: List[str],
+        rate: Optional[int],
+        boosted_lm_words: Optional[List[str]],
         boosted_lm_score: float,
     ) -> None:
         inner_config: rasr.RecognitionConfig = config if isinstance(config, rasr.RecognitionConfig) else config.config
-        inner_config.sample_rate_hertz = rate
+        if rate is not None:
+            inner_config.sample_rate_hertz = rate
         if boosted_lm_words is not None:
             speech_context = rasr.SpeechContext()
             speech_context.phrases.extend(boosted_lm_words)
@@ -233,8 +224,6 @@ class ASR_Client:
         num_iterations: int = 1,
         file_streaming_chunk: int = 1600,
     ) -> Generator[StreamingRecognizeResponse, None, None]:
-        if boosted_lm_words is None:
-            boosted_lm_words = []
         _, rate, _ = get_wav_file_frames_rate_duration(input_file)
         self._update_recognition_config(
             config=streaming_config, rate=rate, boosted_lm_words=boosted_lm_words, boosted_lm_score=boosted_lm_score
@@ -254,24 +243,24 @@ class ASR_Client:
         boosted_lm_words: Optional[List[str]] = None,
         boosted_lm_score: float = 4.0,
         file_streaming_chunk: int = 1600,
-        audio_frame_rate: int = 16000,
+        audio_frame_rate: Optional[int] = None,
     ) -> Generator[StreamingRecognizeResponse, None, None]:
-        if boosted_lm_words is None:
-            boosted_lm_words = []
         self._update_recognition_config(
             config=streaming_config,
             rate=audio_frame_rate,
             boosted_lm_words=boosted_lm_words,
             boosted_lm_score=boosted_lm_score,
         )
-        for response in self.stub.StreamingRecognize(
-            request_from_microphone_generator(
-                input_device, audio_frame_rate, file_streaming_chunk, streaming_config
-            ),
-            metadata=self.auth.get_auth_metadata(),
-        ):
-            yield response
+        with MicrophoneStream(audio_frame_rate, file_streaming_chunk, device=input_device) as stream:
+            audio_generator = stream.generator()
+            requests = (rasr.StreamingRecognizeRequest(audio_content=content) for content in audio_generator)
 
+            def build_generator(cfg, gen):
+                yield rasr.StreamingRecognizeRequest(streaming_config=cfg)
+                for x in gen:
+                    yield x
 
-
-
+            for response in self.stub.StreamingRecognize(
+                build_generator(streaming_config, requests), metadata=self.auth.get_auth_metadata(),
+            ):
+                yield response
