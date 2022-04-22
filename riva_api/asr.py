@@ -11,7 +11,7 @@ import wave
 import riva_api.proto.riva_asr_pb2 as rasr
 import riva_api.proto.riva_asr_pb2_grpc as rasr_srv
 from riva_api.auth import Auth
-from riva_api.proto.riva_asr_pb2 import StreamingRecognizeResponse
+from riva_api.proto.riva_asr_pb2 import StreamingRecognizeResponse, RecognizeResponse
 
 ALLOWED_PREFIXES_FOR_TRANSCRIPTS = ['time', 'partial vs final', '>> vs ##']
 
@@ -235,6 +235,12 @@ def print_streaming(
         output_file.close()
 
 
+def print_offline(response: rasr.RecognizeResponse) -> None:
+    print(response)
+    if len(response.results) > 0 and len(response.results[0].alternatives) > 0:
+        print("Final transcript: ", response.results[0].alternatives[0].transcript)
+
+
 class ASR_Client:
     def __init__(self, auth: Auth) -> None:
         self.auth = auth
@@ -340,3 +346,23 @@ class ASR_Client:
                 build_generator(streaming_config, requests), metadata=self.auth.get_auth_metadata(),
             ):
                 yield response
+
+    def offline_recognize(
+        self,
+        input_file: os.PathLike,
+        config: rasr.RecognitionConfig,
+        boosted_lm_words: Optional[List[str]] = None,
+        boosted_lm_score: float = 4.0,
+    ) -> RecognizeResponse:
+        wav_parameters = get_wav_file_parameters(input_file)
+        self._update_recognition_config(
+            config=config,
+            rate=wav_parameters['framerate'],
+            boosted_lm_words=boosted_lm_words,
+            boosted_lm_score=boosted_lm_score,
+        )
+        with open(input_file, 'rb') as fh:
+            data = fh.read()
+        request = rasr.RecognizeRequest(config=config, audio=data)
+        response = self.stub.Recognize(request, metadata=self.auth.get_auth_metadata())
+        return response
