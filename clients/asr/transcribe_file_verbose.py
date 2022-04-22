@@ -89,8 +89,6 @@ def main() -> None:
             input_file=args.audio_file,
             streaming_config=config,
             simulate_realtime=False,
-            boosted_lm_words=args.boosted_lm_words,
-            boosted_lm_score=args.boosted_lm_score,
             file_streaming_chunk=args.file_streaming_chunk,
         ),
         output_file=sys.stdout,
