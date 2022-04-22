@@ -156,10 +156,13 @@ def print_streaming(
             if result.is_final:
                 if show_intermediate:
                     transcript = result.alternatives[0].transcript
-                    assert prefix_for_transcripts == ALLOWED_PREFIXES_FOR_TRANSCRIPTS[2]
-                    overwrite_chars = ' ' * (num_chars_printed - len(transcript))
-                    print("## " + transcript + overwrite_chars + "\n")
-                    num_chars_printed = 0
+                    if verbose:
+                        print(f"Final transcript: {transcript.encode('utf-8')}")
+                        print(f"Confidence: {result.alternatives[0].confidence:9.4f}")
+                    else:
+                        overwrite_chars = ' ' * (num_chars_printed - len(transcript))
+                        print("## " + transcript + overwrite_chars + "\n")
+                        num_chars_printed = 0
                 else:
                     for index, alternative in enumerate(result.alternatives):
                         if prefix_for_transcripts == ALLOWED_PREFIXES_FOR_TRANSCRIPTS[0]:
@@ -181,14 +184,20 @@ def print_streaming(
             else:
                 transcript = result.alternatives[0].transcript
                 partial_transcript += transcript
-        if prefix_for_transcripts == ALLOWED_PREFIXES_FOR_TRANSCRIPTS[0]:
-            output_file.write(">>>Time %.2fs: %s\n" % (time.time() - start_time, partial_transcript))
-        elif prefix_for_transcripts == ALLOWED_PREFIXES_FOR_TRANSCRIPTS[2]:
-            if show_intermediate and partial_transcript != '':
-                overwrite_chars = ' ' * (num_chars_printed - len(partial_transcript))
-                sys.stdout.write(">> " + partial_transcript + overwrite_chars + '\r')
-                sys.stdout.flush()
-                num_chars_printed = len(partial_transcript) + 3
+                if verbose:
+                    print(f"Partial transcript: {transcript.encode('utf-8')}")
+                    print(f"Stability: {result.stability:9.4f}")
+        if verbose:
+            print('----')
+        else:
+            if prefix_for_transcripts == ALLOWED_PREFIXES_FOR_TRANSCRIPTS[0]:
+                output_file.write(">>>Time %.2fs: %s\n" % (time.time() - start_time, partial_transcript))
+            elif prefix_for_transcripts == ALLOWED_PREFIXES_FOR_TRANSCRIPTS[2]:
+                if show_intermediate and partial_transcript != '':
+                    overwrite_chars = ' ' * (num_chars_printed - len(partial_transcript))
+                    sys.stdout.write(">> " + partial_transcript + overwrite_chars + '\r')
+                    sys.stdout.flush()
+                    num_chars_printed = len(partial_transcript) + 3
     if file_opened:
         output_file.close()
 
