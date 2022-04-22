@@ -59,7 +59,7 @@ def main() -> None:
             encoding=riva_api.AudioEncoding.LINEAR_PCM,
             language_code=args.language_code,
             max_alternatives=1,
-            enable_punctuation=True,
+            enable_automatic_punctuation=True,
         ),
         interim_results=True,
     )
