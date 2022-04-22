@@ -25,16 +25,9 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import argparse
-import os
 import sys
-import time
-import wave
 
-import grpc
 import riva_api
-import riva_api.proto.riva_asr_pb2 as rasr
-import riva_api.proto.riva_asr_pb2_grpc as rasr_srv
-import riva_api.proto.riva_audio_pb2 as ra
 
 
 def get_args():
@@ -48,30 +41,6 @@ def get_args():
     )
     parser.add_argument("--file_streaming_chunk", type=int, default=1600)
     return parser.parse_args()
-
-
-def listen_print_loop(responses):
-    num_chars_printed = 0
-    idx = 0
-    for response in responses:
-        idx += 1
-        if not response.results:
-            continue
-
-        for result in response.results:
-            if not result.alternatives:
-                continue
-
-            transcript = result.alternatives[0].transcript
-
-            if result.is_final:
-                print(f"Final transcript: {transcript.encode('utf-8')}")
-                print(f"Confidence: {result.alternatives[0].confidence:9.4f}")
-            else:
-                print(f"Partial transcript: {transcript.encode('utf-8')}")
-                print(f"Stability: {result.stability:9.4f}")
-
-        print("----")
 
 
 def main() -> None:
@@ -100,41 +69,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
-
-def old_main() -> None:
-    CHUNK = 1024
-    args = get_args()
-    wf = wave.open(args.audio_file, 'rb')
-
-    if args.ssl_cert != "" or args.use_ssl:
-        root_certificates = None
-        if args.ssl_cert != "" and os.path.exists(args.ssl_cert):
-            with open(args.ssl_cert, 'rb') as f:
-                root_certificates = f.read()
-        creds = grpc.ssl_channel_credentials(root_certificates)
-        channel = grpc.secure_channel(args.server, creds)
-    else:
-        channel = grpc.insecure_channel(args.server)
-
-    client = rasr_srv.RivaSpeechRecognitionStub(channel)
-    config = rasr.RecognitionConfig(
-        encoding=ra.AudioEncoding.LINEAR_PCM,
-        sample_rate_hertz=wf.getframerate(),
-        language_code=args.language_code,
-        max_alternatives=1,
-        enable_automatic_punctuation=True,
-    )
-    streaming_config = rasr.StreamingRecognitionConfig(config=config, interim_results=True)
-
-    # read data
-    def generator(w, s):
-        yield rasr.StreamingRecognizeRequest(streaming_config=s)
-        d = w.readframes(CHUNK)
-        while len(d) > 0:
-            yield rasr.StreamingRecognizeRequest(audio_content=d)
-            d = w.readframes(CHUNK)
-
-
-    responses = client.StreamingRecognize(generator(wf, streaming_config))
-    listen_print_loop(responses)

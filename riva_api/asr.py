@@ -3,7 +3,7 @@ import os
 import queue
 import sys
 import time
-from typing import Generator, List, Optional, TextIO, Tuple, Union
+from typing import Dict, Generator, List, Optional, TextIO, Union
 
 import pyaudio
 import wave
@@ -16,11 +16,18 @@ from riva_api.proto.riva_asr_pb2 import StreamingRecognizeResponse
 ALLOWED_PREFIXES_FOR_TRANSCRIPTS = ['time', 'partial vs final', '>> vs ##']
 
 
-def get_wav_file_frames_rate_duration(input_file: os.PathLike) -> Tuple[int, int, float]:
+def get_wav_file_parameters(input_file: os.PathLike) -> Dict[str, Union[int, float]]:
     with wave.open(str(input_file), 'rb') as wf:
-        frames = wf.getnframes()
+        nframes = wf.getnframes()
         rate = wf.getframerate()
-    return frames, rate, frames / rate
+        parameters = {
+            'nframes': nframes,
+            'framerate': rate,
+            'duration': nframes / rate,
+            'nchannels': wf.getnchannels(),
+            'sampwidth': wf.getsampwidth(),
+        }
+    return parameters
 
 
 def audio_requests_from_file_generator(
@@ -30,7 +37,10 @@ def audio_requests_from_file_generator(
     simulate_realtime: bool,
     rate: int,
     file_streaming_chunk: int,
+    output_audio_stream: Optional[pyaudio.Stream],
 ) -> Generator[rasr.StreamingRecognizeRequest, None, None]:
+    if simulate_realtime and output_audio_stream is not None:
+        raise ValueError(f"It is not possible to set `simulate_realtime=True` and provide `output_audio_stream`.")
     try:
         for i in range(num_iterations):
             with wave.open(str(input_file), 'rb') as w:
@@ -47,9 +57,32 @@ def audio_requests_from_file_generator(
                             0.0, file_streaming_chunk / rate * num_requests - (time.time() - start_time)
                         )
                         time.sleep(time_to_sleep)
+                    elif output_audio_stream is not None:
+                        output_audio_stream.write(d)
                     yield rasr.StreamingRecognizeRequest(audio_content=d)
     except Exception as e:
         print(e)
+
+
+class OutputAudioStream:
+    def __init__(
+        self, output_device_index: Optional[int], sampwidth: int, nchannels: int, framerate: int,
+    ) -> None:
+        self.pa = pyaudio.PyAudio()
+        self.stream = self.pa.open(
+            output_device_index=output_device_index,
+            format=self.pa.get_format_from_width(sampwidth),
+            channels=nchannels,
+            rate=framerate,
+            output=True,
+        )
+
+    def __enter__(self) -> pyaudio.Stream:
+        return self.stream
+
+    def __exit__(self, type_, value, traceback) -> None:
+        self.stream.close()
+        self.pa.terminate()
 
 
 class MicrophoneStream:
@@ -232,18 +265,52 @@ class ASR_Client:
         boosted_lm_score: float = 4.0,
         num_iterations: int = 1,
         file_streaming_chunk: int = 1600,
+        output_device_index: Optional[int] = None,
+        sound: bool = False,
     ) -> Generator[StreamingRecognizeResponse, None, None]:
-        _, rate, _ = get_wav_file_frames_rate_duration(input_file)
+        if simulate_realtime and sound:
+            raise ValueError(f"It is not possible to set `simulate_realtime` and `sound` parameters to `True`.")
+        wav_parameters = get_wav_file_parameters(input_file)
         self._update_recognition_config(
-            config=streaming_config, rate=rate, boosted_lm_words=boosted_lm_words, boosted_lm_score=boosted_lm_score
+            config=streaming_config,
+            rate=wav_parameters['framerate'],
+            boosted_lm_words=boosted_lm_words,
+            boosted_lm_score=boosted_lm_score,
         )
-        for response in self.stub.StreamingRecognize(
-            audio_requests_from_file_generator(
-                input_file, streaming_config, num_iterations, simulate_realtime, rate, file_streaming_chunk
-            ),
-            metadata=self.auth.get_auth_metadata(),
-        ):
-            yield response
+        if sound:
+            with OutputAudioStream(
+                output_device_index,
+                wav_parameters['sampwidth'],
+                wav_parameters['nchannels'],
+                wav_parameters['framerate'],
+            ) as output_audio_stream:
+                for response in self.stub.StreamingRecognize(
+                    audio_requests_from_file_generator(
+                        input_file,
+                        streaming_config,
+                        num_iterations,
+                        simulate_realtime,
+                        wav_parameters['framerate'],
+                        file_streaming_chunk,
+                        output_audio_stream,
+                    ),
+                    metadata=self.auth.get_auth_metadata(),
+                ):
+                    yield response
+        else:
+            for response in self.stub.StreamingRecognize(
+                audio_requests_from_file_generator(
+                    input_file,
+                    streaming_config,
+                    num_iterations,
+                    simulate_realtime,
+                    wav_parameters['framerate'],
+                    file_streaming_chunk,
+                    None,
+                ),
+                metadata=self.auth.get_auth_metadata(),
+            ):
+                yield response
 
     def streaming_recognize_microphone_generator(
         self,

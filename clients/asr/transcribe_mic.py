@@ -62,6 +62,7 @@ def main():
             if info['maxInputChannels'] < 1:
                 continue
             print(f"{info['index']}: {info['name']}")
+        p.terminate()
         sys.exit(0)
 
     auth = riva_api.Auth(args.ssl_cert, args.use_ssl, args.riva_uri)
