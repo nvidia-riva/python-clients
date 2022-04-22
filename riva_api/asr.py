@@ -162,14 +162,14 @@ def print_streaming(
         )
     if pretty_overwrite and prefix_for_transcripts != ALLOWED_PREFIXES_FOR_TRANSCRIPTS[2]:
         raise ValueError(
-            f"If `pretty_overwrite` parameter is `True` then `prefix_for_transcripts` has to be "
+            f"If `pretty_overwrite` parameter is `True`, then `prefix_for_transcripts` has to be "
             f"'{ALLOWED_PREFIXES_FOR_TRANSCRIPTS[2]}'"
         )
     if pretty_overwrite and verbose:
         raise ValueError("Parameters `pretty_overwrite` and `verbose` cannot be `True` simultaneously")
     if show_intermediate and prefix_for_transcripts not in ALLOWED_PREFIXES_FOR_TRANSCRIPTS[1:]:
         raise ValueError(
-            f"If `show_intermediate` parameter is `True` then `prefix_for_transcripts` has to be "
+            f"If `show_intermediate` parameter is `True`, then `prefix_for_transcripts` has to be "
             f"one of {ALLOWED_PREFIXES_FOR_TRANSCRIPTS[1:]}"
         )
     num_chars_printed = 0
