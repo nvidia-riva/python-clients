@@ -70,7 +70,7 @@ def main() -> None:
             file_streaming_chunk=args.file_streaming_chunk,
         ),
         output_file=sys.stdout,
-        pretty_overwrite=True,
+        pretty_overwrite=False,
         prefix_for_transcripts='partial vs final',
         show_intermediate=args.show_intermediate,
     )
