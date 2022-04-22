@@ -38,14 +38,14 @@ import riva_api.proto.riva_audio_pb2 as ra
 
 def get_args():
     parser = argparse.ArgumentParser(description="Streaming transcription via Riva AI Services")
-    parser.add_argument("--server", default="localhost:50051", type=str, help="URI to GRPC server endpoint")
+    parser.add_argument("--riva-uri", default="localhost:50051", type=str, help="URI to GRPC server endpoint")
     parser.add_argument("--audio-file", required=True, help="path to local file to stream")
     parser.add_argument("--boosted_lm_words", type=str, action='append', help="Words to boost when decoding")
     parser.add_argument(
         "--boosted_lm_score", type=float, default=4.0, help="Value by which to boost words when decoding"
     )
     parser.add_argument("--language-code", default="en-US", type=str, help="Language code of the model to be used")
-    parser.add_argument("--ssl_cert", type=str, default="", help="Path to SSL client certificatates file")
+    parser.add_argument("--ssl_cert", type=str, help="Path to SSL client certificatates file")
     parser.add_argument(
         "--use_ssl", default=False, action='store_true', help="Boolean to control if SSL/TLS encryption should be used"
     )
@@ -61,7 +61,7 @@ def main() -> None:
     )
     try:
         riva_api.print_offline(
-            response=asr_client.offline_recognize(args.input_file, config, args.boosted_lm_words, args.boosted_lm_score)
+            response=asr_client.offline_recognize(args.audio_file, config, args.boosted_lm_words, args.boosted_lm_score)
         )
     except grpc.RpcError as e:
         print(e.details())
