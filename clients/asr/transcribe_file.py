@@ -71,7 +71,7 @@ def main() -> None:
         ),
         output_file=sys.stdout,
         pretty_overwrite=True,
-        prefix_for_transcripts='>> vs ##',
+        prefix_for_transcripts='partial vs final',
         show_intermediate=args.show_intermediate,
     )
 
