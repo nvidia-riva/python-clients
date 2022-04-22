@@ -49,7 +49,10 @@ def main() -> None:
     asr_client = riva_api.ASR_Client(auth)
     config = riva_api.StreamingRecognitionConfig(
         config=riva_api.RecognitionConfig(
-            encoding=riva_api.AudioEncoding.LINEAR_PCM, language_code=args.language_code, max_alternatives=1,
+            encoding=riva_api.AudioEncoding.LINEAR_PCM,
+            language_code=args.language_code,
+            max_alternatives=1,
+            enable_automatic_punctuation=True,
         ),
         interim_results=True,
     )
