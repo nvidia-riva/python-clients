@@ -57,7 +57,11 @@ def main() -> None:
     auth = riva_api.Auth(args.ssl_cert, args.use_ssl, args.riva_uri)
     asr_client = riva_api.ASR_Client(auth)
     config = riva_api.RecognitionConfig(
-        encoding=riva_api.AudioEncoding.LINEAR_PCM, language_code=args.language_code, max_alternatives=1,
+        encoding=riva_api.AudioEncoding.LINEAR_PCM,
+        language_code=args.language_code,
+        max_alternatives=1,
+        enable_automatic_punctuation=False,
+        audio_channel_count=1,
     )
     try:
         riva_api.print_offline(
