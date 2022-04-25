@@ -94,6 +94,7 @@ def main() -> None:
                     file_streaming_chunk=parser.file_streaming_chunk,
                 ),
                 "output_file": output_filenames[-1],
+                "mode": "show_time",
             },
         )
         t.start()

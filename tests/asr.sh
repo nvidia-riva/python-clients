@@ -1,5 +1,5 @@
 set -x -e
-python clients/asr/riva_streaming_asr_client.py --input-file examples/en-US_sample.wav
+python scripts/asr/riva_streaming_asr_client.py --input-file examples/en-US_sample.wav
 asr_outputs=tests/asr_outputs
 asr_expected_outputs=tests/asr_expected_outputs
 mkdir -p "${asr_outputs}"
@@ -16,7 +16,7 @@ done 3<"${new_output}" 4<"${expected_output}"
 
 
 #new_output="${asr_outputs}/transcribe_file_en-US.txt"
-#python clients/asr/transcribe_file.py --audio-file examples/en-US_sample.wav > "${new_output}"
+#python scripts/asr/transcribe_file.py --audio-file examples/en-US_sample.wav > "${new_output}"
 #expected_output="${asr_expected_outputs}/transcribe_file_en-US.txt"
 #if cmp -s "${new_output}" "${expected_output}"; then
 #    printf 'OK transcribe_file.py'
@@ -28,7 +28,7 @@ done 3<"${new_output}" 4<"${expected_output}"
 
 
 #new_output="${asr_outputs}/transcribe_file_offline_en-US.txt"
-#python clients/asr/transcribe_file_offline.py --audio-file examples/en-US_sample.wav > "${new_output}"
+#python scripts/asr/transcribe_file_offline.py --audio-file examples/en-US_sample.wav > "${new_output}"
 #expected_output="${asr_expected_outputs}/transcribe_file_offline_en-US.txt"
 #if cmp -s "${new_output}" "${expected_output}"; then
 #    printf 'OK transcribe_file_offline.py'
@@ -40,7 +40,7 @@ done 3<"${new_output}" 4<"${expected_output}"
 
 
 #new_output="${asr_outputs}/transcribe_file_rt_en-US.txt"
-#python clients/asr/transcribe_file_rt.py --audio-file examples/en-US_sample.wav > "${new_output}"
+#python scripts/asr/transcribe_file_rt.py --audio-file examples/en-US_sample.wav > "${new_output}"
 #expected_output="${asr_expected_outputs}/transcribe_file_rt_en-US.txt"
 #if cmp -s "${new_output}" "${expected_output}"; then
 #    printf 'OK transcribe_file_rt.py'
@@ -52,7 +52,7 @@ done 3<"${new_output}" 4<"${expected_output}"
 
 
 new_output="${asr_outputs}/transcribe_file_verbose_en-US.txt"
-python clients/asr/transcribe_file_verbose.py --audio-file examples/en-US_sample.wav > "${new_output}"
+python scripts/asr/transcribe_file_verbose.py --audio-file examples/en-US_sample.wav > "${new_output}"
 expected_output="${asr_expected_outputs}/transcribe_file_verbose_en-US.txt"
 if cmp -s "${new_output}" "${expected_output}"; then
     printf 'OK transcribe_file_verbose.py'

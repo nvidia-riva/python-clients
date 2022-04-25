@@ -27,45 +27,39 @@
 import argparse
 import sys
 
-import pyaudio
-
 import riva_api
 
 
-def get_args():
+def get_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Streaming transcription via Riva AI Services")
     parser.add_argument("--riva-uri", default="localhost:50051", type=str, help="URI to GRPC server endpoint")
     parser.add_argument("--audio-file", required=True, help="path to local file to stream")
-    parser.add_argument("--output-device", type=int, default=None, help="output device to use")
-    parser.add_argument("--list-devices", action="store_true", help="list output devices indices")
+    parser.add_argument(
+        "--show-intermediate", action="store_true", help="show intermediate transcripts as they are available"
+    )
     parser.add_argument("--language-code", default="en-US", type=str, help="Language code of the model to be used")
-    parser.add_argument("--ssl_cert", type=str, help="Path to SSL client certificatates file")
     parser.add_argument("--boosted_lm_words", type=str, action='append', help="Words to boost when decoding")
     parser.add_argument(
         "--boosted_lm_score", type=float, default=4.0, help="Value by which to boost words when decoding"
     )
+    parser.add_argument("--ssl_cert", type=str, help="Path to SSL client certificatates file")
     parser.add_argument(
         "--use_ssl", default=False, action='store_true', help="Boolean to control if SSL/TLS encryption should be used"
     )
-    parser.add_argument("--file_streaming_chunk", type=int, default=1024)
+    parser.add_argument("--file_streaming_chunk", type=int, default=1600)
     return parser.parse_args()
 
 
 def main() -> None:
     args = get_args()
-    p = pyaudio.PyAudio()
-    if args.list_devices:
-        for i in range(p.get_device_count()):
-            info = p.get_device_info_by_index(i)
-            if info['maxOutputChannels'] < 1:
-                continue
-            print(f"{info['index']}: {info['name']}")
-        sys.exit(0)
     auth = riva_api.Auth(args.ssl_cert, args.use_ssl, args.riva_uri)
     asr_client = riva_api.ASR_Client(auth)
     config = riva_api.StreamingRecognitionConfig(
         config=riva_api.RecognitionConfig(
-            encoding=riva_api.AudioEncoding.LINEAR_PCM, language_code=args.language_code, max_alternatives=1,
+            encoding=riva_api.AudioEncoding.LINEAR_PCM,
+            language_code=args.language_code,
+            max_alternatives=1,
+            enable_automatic_punctuation=True,
         ),
         interim_results=True,
     )
@@ -77,13 +71,9 @@ def main() -> None:
             boosted_lm_words=args.boosted_lm_words,
             boosted_lm_score=args.boosted_lm_score,
             file_streaming_chunk=args.file_streaming_chunk,
-            output_device_index=args.output_device,
-            sound=True,
         ),
         output_file=sys.stdout,
-        pretty_overwrite=True,
-        prefix_for_transcripts='>> vs ##',
-        show_intermediate=True,
+        show_intermediate=args.show_intermediate,
     )
 
 

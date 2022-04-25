@@ -3,6 +3,7 @@ import os
 import queue
 import sys
 import time
+import warnings
 from typing import Dict, Generator, List, Optional, TextIO, Union
 
 import pyaudio
@@ -146,93 +147,106 @@ class MicrophoneStream:
             yield b''.join(data)
 
 
+PRINT_STREAMING_MODES = ['simple', 'show_time', 'show_confidence']
+
+
 def print_streaming(
     generator: Generator[StreamingRecognizeResponse, None, None],
-    output_file: Union[os.PathLike, TextIO] = sys.stdout,
-    pretty_overwrite: bool = False,
-    verbose: bool = False,
+    output_file: Optional[Union[Union[os.PathLike, TextIO], List[Union[os.PathLike, TextIO]]]] = None,
+    mode: str = 'simple',
     word_time_offsets: bool = False,
-    prefix_for_transcripts: str = ALLOWED_PREFIXES_FOR_TRANSCRIPTS[0],
     show_intermediate: bool = False,
-) -> None:
-    if prefix_for_transcripts not in ALLOWED_PREFIXES_FOR_TRANSCRIPTS:
-        raise ValueError(
-            f"Wrong value '{prefix_for_transcripts}' of parameter `prefix_for_transcripts`. "
-            f"Allowed values: {ALLOWED_PREFIXES_FOR_TRANSCRIPTS}."
-        )
-    if pretty_overwrite and prefix_for_transcripts != ALLOWED_PREFIXES_FOR_TRANSCRIPTS[2]:
-        raise ValueError(
-            f"If `pretty_overwrite` parameter is `True`, then `prefix_for_transcripts` has to be "
-            f"'{ALLOWED_PREFIXES_FOR_TRANSCRIPTS[2]}'"
-        )
-    if pretty_overwrite and verbose:
-        raise ValueError("Parameters `pretty_overwrite` and `verbose` cannot be `True` simultaneously")
-    if show_intermediate and prefix_for_transcripts not in ALLOWED_PREFIXES_FOR_TRANSCRIPTS[1:]:
-        raise ValueError(
-            f"If `show_intermediate` parameter is `True`, then `prefix_for_transcripts` has to be "
-            f"one of {ALLOWED_PREFIXES_FOR_TRANSCRIPTS[1:]}"
-        )
-    num_chars_printed = 0
-    if isinstance(output_file, io.TextIOWrapper):
-        file_opened = False
-    else:
-        file_opened = True
-        output_file = open(output_file, 'w')
-    start_time = time.time()
-    for response in generator:
-        if not response.results:
-            continue
-        partial_transcript = ""
-        for result in response.results:
-            if not result.alternatives:
-                continue
-            if result.is_final:
-                if show_intermediate:
-                    transcript = result.alternatives[0].transcript
-                    if verbose:
-                        print(f"Final transcript: {transcript.encode('utf-8')}")
-                        print(f"Confidence: {result.alternatives[0].confidence:9.4f}")
-                    else:
-                        overwrite_chars = ' ' * (num_chars_printed - len(transcript))
-                        print("## " + transcript + overwrite_chars + "\n")
-                        num_chars_printed = 0
-                else:
-                    for index, alternative in enumerate(result.alternatives):
-                        if prefix_for_transcripts == ALLOWED_PREFIXES_FOR_TRANSCRIPTS[0]:
-                            output_file.write(
-                                f"Time {time.time() - start_time:.2f}s: Transcript {index}: {alternative.transcript}\n"
-                            )
-                        elif prefix_for_transcripts == ALLOWED_PREFIXES_FOR_TRANSCRIPTS[1]:
-                            output_file.write(f'Final transcript: {alternative.transcript}\n')
-                        else:
-                            output_file.write(f'## {alternative.transcript}')
-
-                    if word_time_offsets:
-                        output_file.write("Timestamps:\n")
-                        output_file.write("%-40s %-16s %-16s\n" % ("Word", "Start (ms)", "End (ms)"))
-                        for word_info in result.alternatives[0].words:
-                            output_file.write(
-                                "%-40s %-16.0f %-16.0f\n" % (word_info.word, word_info.start_time, word_info.end_time)
-                            )
+):
+    if mode not in PRINT_STREAMING_MODES:
+        raise ValueError(f"Not allowed value '{mode}' of parameter `mode`. Allowed values are {PRINT_STREAMING_MODES}")
+    if mode != PRINT_STREAMING_MODES[0] and show_intermediate:
+        warnings.warn(f"`show_intermediate=True` will not work if `mode != {PRINT_STREAMING_MODES[0]}`. `mode={mode}`")
+    if mode != PRINT_STREAMING_MODES[1] and word_time_offsets:
+        warnings.warn(f"`word_time_offsets=True` will not work if `mode != {PRINT_STREAMING_MODES[1]}`. `mode={mode}")
+    if output_file is None:
+        output_file = [sys.stdout]
+    elif not isinstance(output_file, list):
+        output_file = [output_file]
+    file_opened = [False] * len(output_file)
+    try:
+        for i, elem in enumerate(output_file):
+            if isinstance(elem, io.TextIOWrapper):
+                file_opened[i] = False
             else:
+                file_opened[i] = True
+                output_file[i] = open(elem, 'w')
+        start_time = time.time()  # used in 'show_time` mode
+        num_chars_printed = 0  # used in 'simple' mode
+        for response in generator:
+            if not response.results:
+                continue
+            partial_transcript = ""
+            for result in response.results:
+                if not result.alternatives:
+                    continue
                 transcript = result.alternatives[0].transcript
-                partial_transcript += transcript
-                if verbose:
-                    print(f"Partial transcript: {transcript.encode('utf-8')}")
-                    print(f"Stability: {result.stability:9.4f}")
-        if verbose:
-            print('----')
-        else:
-            if prefix_for_transcripts == ALLOWED_PREFIXES_FOR_TRANSCRIPTS[0]:
-                output_file.write(">>>Time %.2fs: %s\n" % (time.time() - start_time, partial_transcript))
-            elif prefix_for_transcripts == ALLOWED_PREFIXES_FOR_TRANSCRIPTS[2]:
+                if mode == 'simple':
+                    if result.is_final:
+                        if show_intermediate:
+                            overwrite_chars = ' ' * (num_chars_printed - len(transcript))
+                            for i, f in enumerate(output_file):
+                                f.write("## " + transcript + (overwrite_chars if not file_opened[i] else '') + "\n")
+                            num_chars_printed = 0
+                        else:
+                            for i, alternative in enumerate(result.alternatives):
+                                for f in output_file:
+                                    f.write(
+                                        f'##'
+                                        + (f'(alternative {i + 1})' if i > 0 else '')
+                                        + f' {alternative.transcript}\n'
+                                    )
+                    else:
+                        partial_transcript += transcript
+                elif mode == 'show_time':
+                    if result.is_final:
+                        for i, alternative in enumerate(result.alternatives):
+                            for f in output_file:
+                                f.write(
+                                    f"Time {time.time() - start_time:.2f}s: Transcript {i}: {alternative.transcript}\n"
+                                )
+                        if word_time_offsets:
+                            for f in output_file:
+                                f.write("Timestamps:\n")
+                                f.write('{: <40s}{: <16s}{: <16s}'.format('Word', 'Start (ms)', 'End (ms)'))
+                                for word_info in result.alternatives.words:
+                                    f.write(
+                                        f'{word_info.word: <40s}{word_info.start_time: <16.0f}'
+                                        f'{word_info.end_time: <16.0f}'
+                                    )
+                    else:
+                        partial_transcript += transcript
+                else:  # mode == 'show_confidence'
+                    if result.is_final:
+                        for f in output_file:
+                            f.write(f'## {transcript}\n')
+                            f.write(f'Confidence: {result.alternatives[0].confidence:9.4f}\n')
+                    else:
+                        for f in output_file:
+                            f.write(f'>> {transcript}\n')
+                            f.write(f'Stability: {result.stability:9.4f}\n')
+            if mode == 'simple':
                 if show_intermediate and partial_transcript != '':
                     overwrite_chars = ' ' * (num_chars_printed - len(partial_transcript))
-                    sys.stdout.write(">> " + partial_transcript + overwrite_chars + '\r')
-                    sys.stdout.flush()
+                    for i, f in enumerate(output_file):
+                        f.write(">> " + partial_transcript + ('\n' if file_opened[i] else overwrite_chars + '\r'))
                     num_chars_printed = len(partial_transcript) + 3
-    if file_opened:
-        output_file.close()
+            elif mode == 'show_time':
+                for f in output_file:
+                    if partial_transcript:
+                        f.write(f">>>Time {time.time():.2f}s: {partial_transcript}\n")
+            else:
+                for f in output_file:
+                    f.write('----\n')
+    except Exception:
+        for elem in output_file:
+            if isinstance(elem, io.TextIOWrapper):
+                elem.close()
+        raise
 
 
 def print_offline(response: rasr.RecognizeResponse) -> None:
