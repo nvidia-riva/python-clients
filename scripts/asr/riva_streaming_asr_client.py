@@ -3,6 +3,7 @@ from threading import Thread
 
 from riva_api import ASR_Client, AudioEncoding, Auth, RecognitionConfig, StreamingRecognitionConfig, print_streaming
 from riva_api.asr import get_wav_file_parameters
+from riva_api.script_utils import add_asr_config_argparse_parameters, add_connection_argparse_parameters
 
 
 def get_args() -> argparse.Namespace:
@@ -15,39 +16,9 @@ def get_args() -> argparse.Namespace:
     parser.add_argument(
         "--simulate-realtime", default=False, action='store_true', help="Option to simulate realtime transcription"
     )
-    parser.add_argument(
-        "--word-time-offsets", default=False, action='store_true', help="Option to output word timestamps"
-    )
-    parser.add_argument(
-        "--max-alternatives",
-        default=1,
-        type=int,
-        help="Maximum number of alternative transcripts to return (up to limit configured on server)",
-    )
-    parser.add_argument(
-        "--automatic-punctuation",
-        default=False,
-        action='store_true',
-        help="Flag that controls if transcript should be automatically punctuated",
-    )
-    parser.add_argument("--riva-uri", default="localhost:50051", type=str, help="URI to access Riva server")
-    parser.add_argument(
-        "--no-verbatim-transcripts",
-        default=False,
-        action='store_true',
-        help="If specified, text inverse normalization will be applied",
-    )
-    parser.add_argument("--language-code", default="en-US", type=str, help="Language code of the model to be used")
-    parser.add_argument("--boosted_lm_words", type=str, action='append', help="Words to boost when decoding")
-    parser.add_argument(
-        "--boosted_lm_score", type=float, default=4.0, help="Value by which to boost words when decoding"
-    )
-
-    parser.add_argument("--ssl_cert", type=str, help="Path to SSL client certificatates file")
-    parser.add_argument(
-        "--use_ssl", default=False, action='store_true', help="Boolean to control if SSL/TLS encryption should be used"
-    )
-    parser.add_argument("--file_streaming_chunk", type=int, default=1600)
+    parser.add_argument("--file-streaming-chunk", type=int, default=1600)
+    parser = add_connection_argparse_parameters(parser)
+    parser = add_asr_config_argparse_parameters(parser, max_alternatives=True, word_time_offsets=True)
     args = parser.parse_args()
     if args.max_alternatives < 1:
         parser.error("`--max-alternatives` must be greater than or equal to 1")

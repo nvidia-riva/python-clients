@@ -30,6 +30,7 @@ import sys
 import pyaudio
 
 import riva_api
+from riva_api.script_utils import add_asr_config_argparse_parameters, add_connection_argparse_parameters
 
 
 RATE = 16000
@@ -39,14 +40,10 @@ CHUNK = int(RATE / 10)  # 100ms
 # TODO: add word boosting
 def get_args():
     parser = argparse.ArgumentParser(description="Streaming transcription via Riva AI Services")
-    parser.add_argument("--riva-uri", default="localhost:50051", type=str, help="URI to GRPC server endpoint")
     parser.add_argument("--input-device", type=int, default=None, help="output device to use")
-    parser.add_argument("--list-devices", action="store_true", help="list output devices indices")
-    parser.add_argument("--language-code", default="en-US", type=str, help="Language code of the model to be used")
-    parser.add_argument("--ssl_cert", type=str, help="Path to SSL client certificatates file")
-    parser.add_argument(
-        "--use_ssl", default=False, action='store_true', help="Boolean to control if SSL/TLS encryption should be used"
-    )
+    parser.add_argument("--list-devices", action="store_true", help="list input devices indices")
+    parser = add_asr_config_argparse_parameters(parser)
+    parser = add_connection_argparse_parameters(parser)
     parser.add_argument("--audio-frame-rate", type=int, default=16000)
     parser.add_argument("--file-streaming-chunk", type=int, default=1600)
     return parser.parse_args()
@@ -72,7 +69,8 @@ def main():
             encoding=riva_api.AudioEncoding.LINEAR_PCM,
             language_code=args.language_code,
             max_alternatives=1,
-            enable_automatic_punctuation=True,
+            enable_automatic_punctuation=args.automatic_punctuation,
+            verbatim_transcripts=not args.no_verbatim_transcripts,
         ),
         interim_results=True,
     )
