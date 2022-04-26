@@ -170,7 +170,7 @@ def print_streaming(
     file_opened = [False] * len(output_file)
     try:
         for i, elem in enumerate(output_file):
-            if isinstance(elem, io.TextIOWrapper):
+            if isinstance(elem, (io.TextIOWrapper, io.TextIOBase)):
                 file_opened[i] = False
             else:
                 file_opened[i] = True
