@@ -1,3 +1,4 @@
+import copy
 import io
 import os
 import queue
@@ -86,6 +87,33 @@ class OutputAudioStream:
         self.pa.terminate()
 
 
+def list_input_devices() -> None:
+    p = pyaudio.PyAudio()
+    for i in range(p.get_device_count()):
+        info = p.get_device_info_by_index(i)
+        if info['maxInputChannels'] < 1:
+            continue
+        print(f"{info['index']}: {info['name']}")
+    p.terminate()
+
+
+def list_output_devices() -> None:
+    p = pyaudio.PyAudio()
+    for i in range(p.get_device_count()):
+        info = p.get_device_info_by_index(i)
+        if info['maxOutputChannels'] < 1:
+            continue
+        print(f"{info['index']}: {info['name']}")
+    p.terminate()
+
+
+def get_audio_device_info(device_id: int) -> Dict[str, Union[int, float, str]]:
+    p = pyaudio.PyAudio()
+    info = p.get_device_info_by_index(device_id)
+    p.terminate()
+    return info
+
+
 class MicrophoneStream:
     """Opens a recording stream as a generator yielding the audio chunks."""
 
@@ -156,7 +184,7 @@ def print_streaming(
     mode: str = 'simple',
     word_time_offsets: bool = False,
     show_intermediate: bool = False,
-):
+) -> None:
     if mode not in PRINT_STREAMING_MODES:
         raise ValueError(f"Not allowed value '{mode}' of parameter `mode`. Allowed values are {PRINT_STREAMING_MODES}")
     if mode != PRINT_STREAMING_MODES[0] and show_intermediate:
@@ -255,7 +283,52 @@ def print_offline(response: rasr.RecognizeResponse) -> None:
         print("Final transcript: ", response.results[0].alternatives[0].transcript)
 
 
-class ASR_Client:
+class ASRClient:
+    """
+    This class provides response generators for streaming recognition and a method :meth:`offline_recognize` for
+    offline audio file recognition. For file streaming recognition use :meth:`streaming_recognize_file_generator` and
+    for recognition from microphone use :meth:`streaming_recognize_microphone_generator`.
+
+    Examples:
+        .. code-block:: python
+            from pathlib import Path
+            auth = riva_api.Auth(riva_uri="localhost:50051")
+            asr_client = riva_api.ASRClient(auth)
+            config = riva_api.RecognitionConfig(
+                encoding=riva_api.AudioEncoding.LINEAR_PCM,
+                language_code='en-US',
+                max_alternatives=1,
+                enable_automatic_punctuation=True,
+            )
+            streaming_config = riva_api.StreamingRecognitionConfig(
+                config=config,
+                interim_results=True,
+            )
+            path_to_input_file = PATH_TO_RIVA_CLIENTS_REPO_ROOT / Path("examples/en-US_sample.wav")
+            # streaming file recognition
+            riva_api.print_streaming(
+                generator=asr_client.streaming_recognize_file_generator(
+                    input_file=path_to_input_file,
+                    streaming_config=streaming_config,
+                    simulate_realtime=True,
+                ),
+                show_intermediate=True,
+            )
+            # offline recognition
+            riva_api.print_offline(response=asr_client.offline_recognize(path_to_input_file, config))
+            # streaming microphone recognition
+            riva_api.list_input_devices()
+            riva_api.print_streaming(
+                generator=asr_client.streaming_recognize_microphone_generator(
+                    input_device=INPUT_DEVICE_ID,
+                    streaming_config=streaming_config,
+                ),
+                show_intermediate=True,
+            )
+
+    Args:
+        auth (:obj:`Auth`): an instance of authorization class. Used for adding API key to requests.
+    """
     def __init__(self, auth: Auth) -> None:
         self.auth = auth
         self.stub = rasr_srv.RivaSpeechRecognitionStub(self.auth.channel)
@@ -266,10 +339,13 @@ class ASR_Client:
         rate: Optional[int],
         boosted_lm_words: Optional[List[str]],
         boosted_lm_score: float,
+        audio_channel_count: Optional[int] = None
     ) -> None:
         inner_config: rasr.RecognitionConfig = config if isinstance(config, rasr.RecognitionConfig) else config.config
         if rate is not None:
             inner_config.sample_rate_hertz = rate
+        if audio_channel_count is not None:
+            inner_config.audio_channel_count = audio_channel_count
         if boosted_lm_words is not None:
             speech_context = rasr.SpeechContext()
             speech_context.phrases.extend(boosted_lm_words)
@@ -288,6 +364,7 @@ class ASR_Client:
         output_device_index: Optional[int] = None,
         sound: bool = False,
     ) -> Generator[StreamingRecognizeResponse, None, None]:
+        streaming_config = copy.deepcopy(streaming_config)
         if simulate_realtime and sound:
             raise ValueError(f"It is not possible to set `simulate_realtime` and `sound` parameters to `True`.")
         wav_parameters = get_wav_file_parameters(input_file)
@@ -341,6 +418,9 @@ class ASR_Client:
         file_streaming_chunk: int = 1600,
         audio_frame_rate: Optional[int] = None,
     ) -> Generator[StreamingRecognizeResponse, None, None]:
+        streaming_config = copy.deepcopy(streaming_config)
+        if audio_frame_rate is None and streaming_config.config.sample_rate_hertz == 0:
+            audio_frame_rate = round(get_audio_device_info(input_device)['defaultSampleRate'])
         self._update_recognition_config(
             config=streaming_config,
             rate=audio_frame_rate,
@@ -368,12 +448,14 @@ class ASR_Client:
         boosted_lm_words: Optional[List[str]] = None,
         boosted_lm_score: float = 4.0,
     ) -> RecognizeResponse:
+        config = copy.deepcopy(config)
         wav_parameters = get_wav_file_parameters(input_file)
         self._update_recognition_config(
             config=config,
             rate=wav_parameters['framerate'],
             boosted_lm_words=boosted_lm_words,
             boosted_lm_score=boosted_lm_score,
+            audio_channel_count=wav_parameters['nchannels'],
         )
         with open(input_file, 'rb') as fh:
             data = fh.read()

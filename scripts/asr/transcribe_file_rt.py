@@ -46,16 +46,11 @@ def get_args():
 
 def main() -> None:
     args = get_args()
-    p = pyaudio.PyAudio()
     if args.list_devices:
-        for i in range(p.get_device_count()):
-            info = p.get_device_info_by_index(i)
-            if info['maxOutputChannels'] < 1:
-                continue
-            print(f"{info['index']}: {info['name']}")
+        riva_api.list_output_devices()
         sys.exit(0)
     auth = riva_api.Auth(args.ssl_cert, args.use_ssl, args.riva_uri)
-    asr_client = riva_api.ASR_Client(auth)
+    asr_client = riva_api.ASRClient(auth)
     config = riva_api.StreamingRecognitionConfig(
         config=riva_api.RecognitionConfig(
             encoding=riva_api.AudioEncoding.LINEAR_PCM,

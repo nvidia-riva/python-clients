@@ -1,7 +1,7 @@
 import argparse
 from threading import Thread
 
-from riva_api import ASR_Client, AudioEncoding, Auth, RecognitionConfig, StreamingRecognitionConfig, print_streaming
+from riva_api import ASRClient, AudioEncoding, Auth, RecognitionConfig, StreamingRecognitionConfig, print_streaming
 from riva_api.asr import get_wav_file_parameters
 from riva_api.script_utils import add_asr_config_argparse_parameters, add_connection_argparse_parameters
 
@@ -40,7 +40,7 @@ def main() -> None:
             print(f"File duration: {wav_parameters['duration']:.2f}s")
         output_filenames.append(f"output_{i:d}.txt")
         auth = Auth(parser.ssl_cert, parser.use_ssl, parser.riva_uri)
-        asr_client = ASR_Client(auth)
+        asr_client = ASRClient(auth)
         config = StreamingRecognitionConfig(
             config=RecognitionConfig(
                 encoding=AudioEncoding.LINEAR_PCM,

@@ -27,8 +27,6 @@
 import argparse
 import sys
 
-import pyaudio
-
 import riva_api
 from riva_api.script_utils import add_asr_config_argparse_parameters, add_connection_argparse_parameters
 
@@ -38,32 +36,31 @@ CHUNK = int(RATE / 10)  # 100ms
 
 
 # TODO: add word boosting
-def get_args():
+def get_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Streaming transcription via Riva AI Services")
     parser.add_argument("--input-device", type=int, default=None, help="output device to use")
     parser.add_argument("--list-devices", action="store_true", help="list input devices indices")
     parser = add_asr_config_argparse_parameters(parser)
     parser = add_connection_argparse_parameters(parser)
-    parser.add_argument("--audio-frame-rate", type=int, default=16000)
+    parser.add_argument(
+        "--audio-frame-rate", type=int, help="Frame for input device. If not provided, then default value is used."
+    )
     parser.add_argument("--file-streaming-chunk", type=int, default=1600)
-    return parser.parse_args()
+    args = parser.parse_args()
+    if args.audio_frame_rate is None:
+        args.audio_frame_rate = riva_api.get_audio_device_info(args.input_device)['defaultSampleRate']
+    return args
 
 
 def main():
     args = get_args()
 
     if args.list_devices:
-        p = pyaudio.PyAudio()
-        for i in range(p.get_device_count()):
-            info = p.get_device_info_by_index(i)
-            if info['maxInputChannels'] < 1:
-                continue
-            print(f"{info['index']}: {info['name']}")
-        p.terminate()
+        riva_api.list_input_devices()
         sys.exit(0)
 
     auth = riva_api.Auth(args.ssl_cert, args.use_ssl, args.riva_uri)
-    asr_client = riva_api.ASR_Client(auth)
+    asr_client = riva_api.ASRClient(auth)
     config = riva_api.StreamingRecognitionConfig(
         config=riva_api.RecognitionConfig(
             encoding=riva_api.AudioEncoding.LINEAR_PCM,

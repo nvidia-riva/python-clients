@@ -46,7 +46,7 @@ def get_args() -> argparse.Namespace:
 def main() -> None:
     args = get_args()
     auth = riva_api.Auth(args.ssl_cert, args.use_ssl, args.riva_uri)
-    asr_client = riva_api.ASR_Client(auth)
+    asr_client = riva_api.ASRClient(auth)
     config = riva_api.StreamingRecognitionConfig(
         config=riva_api.RecognitionConfig(
             encoding=riva_api.AudioEncoding.LINEAR_PCM,
