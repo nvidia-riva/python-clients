@@ -47,7 +47,6 @@ def main() -> None:
         encoding=riva_api.AudioEncoding.LINEAR_PCM,
         language_code=args.language_code,
         max_alternatives=1,
-        audio_channel_count=1,
         enable_automatic_punctuation=args.automatic_punctuation,
         verbatim_transcripts=not args.no_verbatim_transcripts,
     )
