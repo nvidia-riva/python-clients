@@ -33,7 +33,7 @@ from riva_api.script_utils import add_asr_config_argparse_parameters, add_connec
 
 def get_args():
     parser = argparse.ArgumentParser(description="Streaming transcription via Riva AI Services")
-    parser.add_argument("--audio-file", required=True, help="path to local file to stream")
+    parser.add_argument("--input-file", required=True, help="path to local file to stream")
     parser = add_connection_argparse_parameters(parser)
     parser = add_asr_config_argparse_parameters(parser)
     return parser.parse_args()
@@ -53,7 +53,7 @@ def main() -> None:
     )
     try:
         riva_api.print_offline(
-            response=asr_client.offline_recognize(args.audio_file, config, args.boosted_lm_words, args.boosted_lm_score)
+            response=asr_client.offline_recognize(args.input_file, config, args.boosted_lm_words, args.boosted_lm_score)
         )
     except grpc.RpcError as e:
         print(e.details())

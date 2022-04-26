@@ -33,7 +33,7 @@ from riva_api.script_utils import add_asr_config_argparse_parameters, add_connec
 
 def get_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Streaming transcription via Riva AI Services")
-    parser.add_argument("--audio-file", required=True, help="path to local file to stream")
+    parser.add_argument("--input-file", required=True, help="path to local file to stream")
     parser.add_argument(
         "--show-intermediate", action="store_true", help="show intermediate transcripts as they are available"
     )
@@ -59,7 +59,7 @@ def main() -> None:
     )
     riva_api.print_streaming(
         generator=asr_client.streaming_recognize_file_generator(
-            input_file=args.audio_file,
+            input_file=args.input_file,
             streaming_config=config,
             simulate_realtime=False,
             boosted_lm_words=args.boosted_lm_words,
