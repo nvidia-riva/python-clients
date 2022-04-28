@@ -32,7 +32,7 @@ class MicrophoneStream:
 
         return self
 
-    def __exit__(self, type, value, traceback):
+    def close(self) -> None:
         self._audio_stream.stop_stream()
         self._audio_stream.close()
         self.closed = True
@@ -40,6 +40,9 @@ class MicrophoneStream:
         # streaming_recognize method will not block the process termination.
         self._buff.put(None)
         self._audio_interface.terminate()
+
+    def __exit__(self, type, value, traceback):
+        self.close()
 
     def _fill_buffer(self, in_data, frame_count, time_info, status_flags):
         """Continuously collect data from the audio stream, into the buffer."""
@@ -123,5 +126,8 @@ class SoundCallBack:
         return self
 
     def __exit__(self, type_, value, traceback) -> None:
+        self.close()
+
+    def close(self) -> None:
         self.stream.close()
         self.pa.terminate()
