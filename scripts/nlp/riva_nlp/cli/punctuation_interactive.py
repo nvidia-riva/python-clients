@@ -16,7 +16,7 @@ def get_args():
     parser.add_argument("--server", default="localhost:8001", type=str, help="URI to GRPC server endpoint")
     parser.add_argument("--model", default="punctuator", type=str, help="Model on TRTIS to execute")
     parser.add_argument(
-        "--query", type=str, default=None, help="Run in CLI mode with supplied query, run interactive if not supplied"
+        "--query", type=str, default=None, help="Run in CLI additional_info with supplied query, run interactive if not supplied"
     )
     parser.add_argument("--ssl_cert", type=str, default="", help="Path to SSL client certificatates file")
     parser.add_argument(

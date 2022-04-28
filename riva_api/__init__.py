@@ -1,10 +1,12 @@
 from riva_api.asr import (
-    ASRClient,
-    get_audio_device_info,
-    list_input_devices,
-    list_output_devices,
+    AudioChunkFileIterator,
+    ASRService,
+    add_audio_file_specs_to_config,
+    add_word_boosting_to_config,
+    get_wav_file_parameters,
     print_offline,
     print_streaming,
+    sleep_audio_length,
 )
 from riva_api.auth import Auth
 from riva_api.proto.riva_audio_pb2 import AudioEncoding

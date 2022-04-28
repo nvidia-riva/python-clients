@@ -25,24 +25,27 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import argparse
+from pathlib import Path
 
 import grpc
 import riva_api
-from riva_api.script_utils import add_asr_config_argparse_parameters, add_connection_argparse_parameters
+from riva_api.argparse_utils import add_asr_config_argparse_parameters, add_connection_argparse_parameters
 
 
 def get_args():
     parser = argparse.ArgumentParser(description="Streaming transcription via Riva AI Services")
-    parser.add_argument("--input-file", required=True, help="path to local file to stream")
+    parser.add_argument("--input-file", required=True, type=Path, help="path to local file to stream")
     parser = add_connection_argparse_parameters(parser)
     parser = add_asr_config_argparse_parameters(parser)
-    return parser.parse_args()
+    args = parser.parse_args()
+    args.input_file = args.input_file.expanduser()
+    return args
 
 
 def main() -> None:
     args = get_args()
     auth = riva_api.Auth(args.ssl_cert, args.use_ssl, args.riva_uri)
-    asr_client = riva_api.ASRClient(auth)
+    asr_service = riva_api.ASRService(auth)
     config = riva_api.RecognitionConfig(
         encoding=riva_api.AudioEncoding.LINEAR_PCM,
         language_code=args.language_code,
@@ -50,10 +53,12 @@ def main() -> None:
         enable_automatic_punctuation=args.automatic_punctuation,
         verbatim_transcripts=not args.no_verbatim_transcripts,
     )
+    riva_api.add_audio_file_specs_to_config(config, args.input_file)
+    riva_api.add_word_boosting_to_config(config, args.boosted_lm_words, args.boosted_lm_score)
+    with args.input_file.open('rb') as fh:
+        data = fh.read()
     try:
-        riva_api.print_offline(
-            response=asr_client.offline_recognize(args.input_file, config, args.boosted_lm_words, args.boosted_lm_score)
-        )
+        riva_api.print_offline(response=asr_service.offline_recognize(data, config))
     except grpc.RpcError as e:
         print(e.details())
 

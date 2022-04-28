@@ -70,7 +70,7 @@ def get_args():
     parser.add_argument(
         "--query", nargs="+", default=["Where is San Francisco?", "Jensen Huang is the CEO of NVIDIA Corporation."]
     )
-    parser.add_argument("--test", default="label", type=str, help="Testing mode")
+    parser.add_argument("--test", default="label", type=str, help="Testing additional_info")
     parser.add_argument("--ssl_cert", type=str, default="", help="Path to SSL client certificatates file")
     parser.add_argument(
         "--use_ssl", default=False, action='store_true', help="Boolean to control if SSL/TLS encryption should be used"

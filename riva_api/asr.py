@@ -1,21 +1,18 @@
 import copy
 import io
 import os
-import queue
 import sys
 import time
 import warnings
-from typing import Dict, Generator, List, Optional, TextIO, Union
+from pathlib import Path
+from typing import Callable, Dict, Generator, Iterable, List, Optional, TextIO, Union
 
-import pyaudio
 import wave
 
 import riva_api.proto.riva_asr_pb2 as rasr
 import riva_api.proto.riva_asr_pb2_grpc as rasr_srv
 from riva_api.auth import Auth
 from riva_api.proto.riva_asr_pb2 import StreamingRecognizeResponse, RecognizeResponse
-
-ALLOWED_PREFIXES_FOR_TRANSCRIPTS = ['time', 'partial vs final', '>> vs ##']
 
 
 def get_wav_file_parameters(input_file: os.PathLike) -> Dict[str, Union[int, float]]:
@@ -32,165 +29,99 @@ def get_wav_file_parameters(input_file: os.PathLike) -> Dict[str, Union[int, flo
     return parameters
 
 
-def audio_requests_from_file_generator(
-    input_file: os.PathLike,
-    config: rasr.StreamingRecognitionConfig,
-    num_iterations: int,
-    simulate_realtime: bool,
-    rate: int,
-    file_streaming_chunk: int,
-    output_audio_stream: Optional[pyaudio.Stream],
-) -> Generator[rasr.StreamingRecognizeRequest, None, None]:
-    if simulate_realtime and output_audio_stream is not None:
-        raise ValueError(f"It is not possible to set `simulate_realtime=True` and provide `output_audio_stream`.")
-    try:
-        for i in range(num_iterations):
-            with wave.open(str(input_file), 'rb') as w:
-                start_time = time.time()
-                yield rasr.StreamingRecognizeRequest(streaming_config=config)
-                num_requests = 0
-                while True:
-                    d = w.readframes(file_streaming_chunk)
-                    if len(d) <= 0:
-                        break
-                    num_requests += 1
-                    if simulate_realtime:
-                        time_to_sleep = max(
-                            0.0, file_streaming_chunk / rate * num_requests - (time.time() - start_time)
-                        )
-                        time.sleep(time_to_sleep)
-                    elif output_audio_stream is not None:
-                        output_audio_stream.write(d)
-                    yield rasr.StreamingRecognizeRequest(audio_content=d)
-    except Exception as e:
-        print(e)
+def sleep_audio_length(audio_chunk: bytes, time_to_sleep: float) -> None:
+    time.sleep(time_to_sleep)
 
 
-class OutputAudioStream:
+class AudioChunkFileIterator:
     def __init__(
-        self, output_device_index: Optional[int], sampwidth: int, nchannels: int, framerate: int,
+        self,
+        input_file: os.PathLike,
+        chunk_n_frames: int,
+        delay_callback: Optional[Callable[[bytes, float], None]] = None,
+        num_iterations: Optional[int] = 1,
     ) -> None:
-        self.pa = pyaudio.PyAudio()
-        self.stream = self.pa.open(
-            output_device_index=output_device_index,
-            format=self.pa.get_format_from_width(sampwidth),
-            channels=nchannels,
-            rate=framerate,
-            output=True,
-        )
+        self.input_file: Path = Path(input_file).expanduser()
+        self.chunk_n_frames = chunk_n_frames
+        self.delay_callback = delay_callback
+        self.file_parameters = get_wav_file_parameters(self.input_file)
+        self.file_object: Optional[wave.Wave_read] = wave.open(str(self.input_file), 'rb')
+        self.num_iterations = num_iterations
 
-    def __enter__(self) -> pyaudio.Stream:
-        return self.stream
-
-    def __exit__(self, type_, value, traceback) -> None:
-        self.stream.close()
-        self.pa.terminate()
-
-
-def list_input_devices() -> None:
-    p = pyaudio.PyAudio()
-    for i in range(p.get_device_count()):
-        info = p.get_device_info_by_index(i)
-        if info['maxInputChannels'] < 1:
-            continue
-        print(f"{info['index']}: {info['name']}")
-    p.terminate()
-
-
-def list_output_devices() -> None:
-    p = pyaudio.PyAudio()
-    for i in range(p.get_device_count()):
-        info = p.get_device_info_by_index(i)
-        if info['maxOutputChannels'] < 1:
-            continue
-        print(f"{info['index']}: {info['name']}")
-    p.terminate()
-
-
-def get_audio_device_info(device_id: int) -> Dict[str, Union[int, float, str]]:
-    p = pyaudio.PyAudio()
-    info = p.get_device_info_by_index(device_id)
-    p.terminate()
-    return info
-
-
-class MicrophoneStream:
-    """Opens a recording stream as a generator yielding the audio chunks."""
-
-    def __init__(self, rate, chunk, device=None):
-        self._rate = rate
-        self._chunk = chunk
-        self._device = device
-
-        # Create a thread-safe buffer of audio data
-        self._buff = queue.Queue()
-        self.closed = True
+    def close(self) -> None:
+        self.file_object.close()
+        self.file_object = None
 
     def __enter__(self):
-        self._audio_interface = pyaudio.PyAudio()
-        self._audio_stream = self._audio_interface.open(
-            format=pyaudio.paInt16,
-            input_device_index=self._device,
-            channels=1,
-            rate=self._rate,
-            input=True,
-            frames_per_buffer=self._chunk,
-            stream_callback=self._fill_buffer,
-        )
-
-        self.closed = False
-
         return self
 
-    def __exit__(self, type, value, traceback):
-        self._audio_stream.stop_stream()
-        self._audio_stream.close()
-        self.closed = True
-        # Signal the generator to terminate so that the client's
-        # streaming_recognize method will not block the process termination.
-        self._buff.put(None)
-        self._audio_interface.terminate()
+    def __exit__(self, type_, value, traceback) -> None:
+        self.file_object.close()
 
-    def _fill_buffer(self, in_data, frame_count, time_info, status_flags):
-        """Continuously collect data from the audio stream, into the buffer."""
-        self._buff.put(in_data)
-        return None, pyaudio.paContinue
+    def __iter__(self):
+        return self
 
-    def generator(self):
-        while not self.closed:
-            chunk = self._buff.get()
-            if chunk is None:
-                return
-            data = [chunk]
-
-            while True:
-                try:
-                    chunk = self._buff.get(block=False)
-                    if chunk is None:
-                        return
-                    data.append(chunk)
-                except queue.Empty:
-                    break
-
-            yield b''.join(data)
+    def __next__(self) -> bytes:
+        data = self.file_object.readframes(self.chunk_n_frames)
+        if not data:
+            raise StopIteration
+        if self.delay_callback is not None:
+            self.delay_callback(
+                data,
+                len(data) / self.file_parameters['sampwidth'] / self.file_parameters['framerate']
+            )
+        return data
 
 
-PRINT_STREAMING_MODES = ['simple', 'show_time', 'show_confidence']
+def add_word_boosting_to_config(
+    config: Union[rasr.StreamingRecognitionConfig, rasr.RecognitionConfig],
+    boosted_lm_words: Optional[List[str]],
+    boosted_lm_score: float,
+) -> None:
+    inner_config: rasr.RecognitionConfig = config if isinstance(config, rasr.RecognitionConfig) else config.config
+    if boosted_lm_words is not None:
+        speech_context = rasr.SpeechContext()
+        speech_context.phrases.extend(boosted_lm_words)
+        speech_context.boost = boosted_lm_score
+        inner_config.speech_contexts.append(speech_context)
+
+
+def add_audio_file_specs_to_config(
+    config: Union[rasr.StreamingRecognitionConfig, rasr.RecognitionConfig],
+    audio_file: os.PathLike,
+) -> None:
+    inner_config: rasr.RecognitionConfig = config if isinstance(config, rasr.RecognitionConfig) else config.config
+    wav_parameters = get_wav_file_parameters(audio_file)
+    inner_config.sample_rate_hertz = wav_parameters['framerate']
+    inner_config.audio_channel_count = wav_parameters['nchannels']
+
+
+PRINT_STREAMING_MODES = ['no', 'time', 'confidence']
 
 
 def print_streaming(
-    generator: Generator[StreamingRecognizeResponse, None, None],
+    response_generator: Generator[StreamingRecognizeResponse, None, None],
     output_file: Optional[Union[Union[os.PathLike, TextIO], List[Union[os.PathLike, TextIO]]]] = None,
-    mode: str = 'simple',
+    additional_info: str = 'no',
     word_time_offsets: bool = False,
     show_intermediate: bool = False,
+    file_mode: str = 'w',
 ) -> None:
-    if mode not in PRINT_STREAMING_MODES:
-        raise ValueError(f"Not allowed value '{mode}' of parameter `mode`. Allowed values are {PRINT_STREAMING_MODES}")
-    if mode != PRINT_STREAMING_MODES[0] and show_intermediate:
-        warnings.warn(f"`show_intermediate=True` will not work if `mode != {PRINT_STREAMING_MODES[0]}`. `mode={mode}`")
-    if mode != PRINT_STREAMING_MODES[1] and word_time_offsets:
-        warnings.warn(f"`word_time_offsets=True` will not work if `mode != {PRINT_STREAMING_MODES[1]}`. `mode={mode}")
+    if additional_info not in PRINT_STREAMING_MODES:
+        raise ValueError(
+            f"Not allowed value '{additional_info}' of parameter `additional_info`. "
+            f"Allowed values are {PRINT_STREAMING_MODES}"
+        )
+    if additional_info != PRINT_STREAMING_MODES[0] and show_intermediate:
+        warnings.warn(
+            f"`show_intermediate=True` will not work if `additional_info != {PRINT_STREAMING_MODES[0]}`. "
+            f"`additional_info={additional_info}`"
+        )
+    if additional_info != PRINT_STREAMING_MODES[1] and word_time_offsets:
+        warnings.warn(
+            f"`word_time_offsets=True` will not work if `additional_info != {PRINT_STREAMING_MODES[1]}`. "
+            f"`additional_info={additional_info}"
+        )
     if output_file is None:
         output_file = [sys.stdout]
     elif not isinstance(output_file, list):
@@ -202,10 +133,10 @@ def print_streaming(
                 file_opened[i] = False
             else:
                 file_opened[i] = True
-                output_file[i] = open(elem, 'w')
-        start_time = time.time()  # used in 'show_time` mode
-        num_chars_printed = 0  # used in 'simple' mode
-        for response in generator:
+                output_file[i] = Path(elem).expanduser().open(file_mode)
+        start_time = time.time()  # used in 'time` additional_info
+        num_chars_printed = 0  # used in 'no' additional_info
+        for response in response_generator:
             if not response.results:
                 continue
             partial_transcript = ""
@@ -213,7 +144,7 @@ def print_streaming(
                 if not result.alternatives:
                     continue
                 transcript = result.alternatives[0].transcript
-                if mode == 'simple':
+                if additional_info == 'no':
                     if result.is_final:
                         if show_intermediate:
                             overwrite_chars = ' ' * (num_chars_printed - len(transcript))
@@ -230,7 +161,7 @@ def print_streaming(
                                     )
                     else:
                         partial_transcript += transcript
-                elif mode == 'show_time':
+                elif additional_info == 'time':
                     if result.is_final:
                         for i, alternative in enumerate(result.alternatives):
                             for f in output_file:
@@ -248,7 +179,7 @@ def print_streaming(
                                     )
                     else:
                         partial_transcript += transcript
-                else:  # mode == 'show_confidence'
+                else:  # additional_info == 'confidence'
                     if result.is_final:
                         for f in output_file:
                             f.write(f'## {transcript}\n')
@@ -257,13 +188,13 @@ def print_streaming(
                         for f in output_file:
                             f.write(f'>> {transcript}\n')
                             f.write(f'Stability: {result.stability:9.4f}\n')
-            if mode == 'simple':
+            if additional_info == 'no':
                 if show_intermediate and partial_transcript != '':
                     overwrite_chars = ' ' * (num_chars_printed - len(partial_transcript))
                     for i, f in enumerate(output_file):
                         f.write(">> " + partial_transcript + ('\n' if file_opened[i] else overwrite_chars + '\r'))
                     num_chars_printed = len(partial_transcript) + 3
-            elif mode == 'show_time':
+            elif additional_info == 'time':
                 for f in output_file:
                     if partial_transcript:
                         f.write(f">>>Time {time.time():.2f}s: {partial_transcript}\n")
@@ -283,7 +214,15 @@ def print_offline(response: rasr.RecognizeResponse) -> None:
         print("Final transcript: ", response.results[0].alternatives[0].transcript)
 
 
-class ASRClient:
+def streaming_request_generator(
+    audio_chunks: Iterable[bytes], streaming_config: rasr.StreamingRecognitionConfig
+) -> Generator[rasr.StreamingRecognizeRequest, None, None]:
+    yield rasr.StreamingRecognizeRequest(streaming_config=streaming_config)
+    for chunk in audio_chunks:
+        yield rasr.StreamingRecognizeRequest(audio_content=chunk)
+
+
+class ASRService:
     """
     This class provides response generators for streaming recognition and a method :meth:`offline_recognize` for
     offline audio file recognition. For file streaming recognition use :meth:`streaming_recognize_file_generator` and
@@ -293,7 +232,7 @@ class ASRClient:
         .. code-block:: python
             from pathlib import Path
             auth = riva_api.Auth(riva_uri="localhost:50051")
-            asr_client = riva_api.ASRClient(auth)
+            asr_client = riva_api.ASRService(auth)
             config = riva_api.RecognitionConfig(
                 encoding=riva_api.AudioEncoding.LINEAR_PCM,
                 language_code='en-US',
@@ -307,7 +246,7 @@ class ASRClient:
             path_to_input_file = PATH_TO_RIVA_CLIENTS_REPO_ROOT / Path("examples/en-US_sample.wav")
             # streaming file recognition
             riva_api.print_streaming(
-                generator=asr_client.streaming_recognize_file_generator(
+                response_generator=asr_client.streaming_recognize_file_generator(
                     input_file=path_to_input_file,
                     streaming_config=streaming_config,
                     simulate_realtime=True,
@@ -319,7 +258,7 @@ class ASRClient:
             # streaming microphone recognition
             riva_api.list_input_devices()
             riva_api.print_streaming(
-                generator=asr_client.streaming_recognize_microphone_generator(
+                response_generator=asr_client.streaming_recognize_microphone_generator(
                     input_device=INPUT_DEVICE_ID,
                     streaming_config=streaming_config,
                 ),
@@ -333,132 +272,14 @@ class ASRClient:
         self.auth = auth
         self.stub = rasr_srv.RivaSpeechRecognitionStub(self.auth.channel)
 
-    @staticmethod
-    def _update_recognition_config(
-        config: Union[rasr.StreamingRecognitionConfig, rasr.RecognitionConfig],
-        rate: Optional[int],
-        boosted_lm_words: Optional[List[str]],
-        boosted_lm_score: float,
-        audio_channel_count: Optional[int] = None
-    ) -> None:
-        inner_config: rasr.RecognitionConfig = config if isinstance(config, rasr.RecognitionConfig) else config.config
-        if rate is not None:
-            inner_config.sample_rate_hertz = rate
-        if audio_channel_count is not None:
-            inner_config.audio_channel_count = audio_channel_count
-        if boosted_lm_words is not None:
-            speech_context = rasr.SpeechContext()
-            speech_context.phrases.extend(boosted_lm_words)
-            speech_context.boost = boosted_lm_score
-            inner_config.speech_contexts.append(speech_context)
+    def streaming_response_generator(
+        self, audio_chunks: Iterable[bytes], streaming_config: rasr.StreamingRecognitionConfig
+    ):
+        generator = streaming_request_generator(audio_chunks, streaming_config)
+        for response in self.stub.StreamingRecognize(generator, metadata=self.auth.get_auth_metadata()):
+            yield response
 
-    def streaming_recognize_file_generator(
-        self,
-        input_file: os.PathLike,
-        simulate_realtime: bool,
-        streaming_config: rasr.StreamingRecognitionConfig,
-        boosted_lm_words: Optional[List[str]] = None,
-        boosted_lm_score: float = 4.0,
-        num_iterations: int = 1,
-        file_streaming_chunk: int = 1600,
-        output_device_index: Optional[int] = None,
-        sound: bool = False,
-    ) -> Generator[StreamingRecognizeResponse, None, None]:
-        streaming_config = copy.deepcopy(streaming_config)
-        if simulate_realtime and sound:
-            raise ValueError(f"It is not possible to set `simulate_realtime` and `sound` parameters to `True`.")
-        wav_parameters = get_wav_file_parameters(input_file)
-        self._update_recognition_config(
-            config=streaming_config,
-            rate=wav_parameters['framerate'],
-            boosted_lm_words=boosted_lm_words,
-            boosted_lm_score=boosted_lm_score,
-        )
-        if sound:
-            with OutputAudioStream(
-                output_device_index,
-                wav_parameters['sampwidth'],
-                wav_parameters['nchannels'],
-                wav_parameters['framerate'],
-            ) as output_audio_stream:
-                for response in self.stub.StreamingRecognize(
-                    audio_requests_from_file_generator(
-                        input_file,
-                        streaming_config,
-                        num_iterations,
-                        simulate_realtime,
-                        wav_parameters['framerate'],
-                        file_streaming_chunk,
-                        output_audio_stream,
-                    ),
-                    metadata=self.auth.get_auth_metadata(),
-                ):
-                    yield response
-        else:
-            for response in self.stub.StreamingRecognize(
-                audio_requests_from_file_generator(
-                    input_file,
-                    streaming_config,
-                    num_iterations,
-                    simulate_realtime,
-                    wav_parameters['framerate'],
-                    file_streaming_chunk,
-                    None,
-                ),
-                metadata=self.auth.get_auth_metadata(),
-            ):
-                yield response
-
-    def streaming_recognize_microphone_generator(
-        self,
-        input_device: int,
-        streaming_config: rasr.StreamingRecognitionConfig,
-        boosted_lm_words: Optional[List[str]] = None,
-        boosted_lm_score: float = 4.0,
-        file_streaming_chunk: int = 1600,
-        audio_frame_rate: Optional[int] = None,
-    ) -> Generator[StreamingRecognizeResponse, None, None]:
-        streaming_config = copy.deepcopy(streaming_config)
-        if audio_frame_rate is None and streaming_config.config.sample_rate_hertz == 0:
-            audio_frame_rate = round(get_audio_device_info(input_device)['defaultSampleRate'])
-        self._update_recognition_config(
-            config=streaming_config,
-            rate=audio_frame_rate,
-            boosted_lm_words=boosted_lm_words,
-            boosted_lm_score=boosted_lm_score,
-        )
-        with MicrophoneStream(audio_frame_rate, file_streaming_chunk, device=input_device) as stream:
-            audio_generator = stream.generator()
-            requests = (rasr.StreamingRecognizeRequest(audio_content=content) for content in audio_generator)
-
-            def build_generator(cfg, gen):
-                yield rasr.StreamingRecognizeRequest(streaming_config=cfg)
-                for x in gen:
-                    yield x
-
-            for response in self.stub.StreamingRecognize(
-                build_generator(streaming_config, requests), metadata=self.auth.get_auth_metadata(),
-            ):
-                yield response
-
-    def offline_recognize(
-        self,
-        input_file: os.PathLike,
-        config: rasr.RecognitionConfig,
-        boosted_lm_words: Optional[List[str]] = None,
-        boosted_lm_score: float = 4.0,
-    ) -> RecognizeResponse:
-        config = copy.deepcopy(config)
-        wav_parameters = get_wav_file_parameters(input_file)
-        self._update_recognition_config(
-            config=config,
-            rate=wav_parameters['framerate'],
-            boosted_lm_words=boosted_lm_words,
-            boosted_lm_score=boosted_lm_score,
-            audio_channel_count=wav_parameters['nchannels'],
-        )
-        with open(input_file, 'rb') as fh:
-            data = fh.read()
-        request = rasr.RecognizeRequest(config=config, audio=data)
+    def offline_recognize(self, audio_bytes: bytes, config: rasr.RecognitionConfig) -> RecognizeResponse:
+        request = rasr.RecognizeRequest(config=config, audio=audio_bytes)
         response = self.stub.Recognize(request, metadata=self.auth.get_auth_metadata())
         return response

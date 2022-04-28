@@ -25,10 +25,9 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import argparse
-import sys
 
 import riva_api
-from riva_api.script_utils import add_asr_config_argparse_parameters, add_connection_argparse_parameters
+from riva_api.argparse_utils import add_asr_config_argparse_parameters, add_connection_argparse_parameters
 
 
 def get_args() -> argparse.Namespace:
@@ -37,7 +36,8 @@ def get_args() -> argparse.Namespace:
     parser.add_argument(
         "--show-intermediate", action="store_true", help="show intermediate transcripts as they are available"
     )
-    parser.add_argument("--file_streaming_chunk", type=int, default=1600)
+    parser.add_argument("--file-streaming-chunk", type=int, default=1600)
+    parser.add_argument("--simulate-realtime", action='store_true', help="Option to simulate realtime transcription")
     parser = add_connection_argparse_parameters(parser)
     parser = add_asr_config_argparse_parameters(parser)
     return parser.parse_args()
@@ -46,7 +46,7 @@ def get_args() -> argparse.Namespace:
 def main() -> None:
     args = get_args()
     auth = riva_api.Auth(args.ssl_cert, args.use_ssl, args.riva_uri)
-    asr_client = riva_api.ASRClient(auth)
+    asr_service = riva_api.ASRService(auth)
     config = riva_api.StreamingRecognitionConfig(
         config=riva_api.RecognitionConfig(
             encoding=riva_api.AudioEncoding.LINEAR_PCM,
@@ -57,18 +57,20 @@ def main() -> None:
         ),
         interim_results=True,
     )
-    riva_api.print_streaming(
-        generator=asr_client.streaming_recognize_file_generator(
-            input_file=args.input_file,
-            streaming_config=config,
-            simulate_realtime=False,
-            boosted_lm_words=args.boosted_lm_words,
-            boosted_lm_score=args.boosted_lm_score,
-            file_streaming_chunk=args.file_streaming_chunk,
-        ),
-        output_file=sys.stdout,
-        show_intermediate=args.show_intermediate,
-    )
+    riva_api.add_audio_file_specs_to_config(config, args.input_file)
+    riva_api.add_word_boosting_to_config(config, args.boosted_lm_words, args.boosted_lm_score)
+    with riva_api.AudioChunkFileIterator(
+        args.input_file,
+        args.file_streaming_chunk,
+        delay_callback=riva_api.sleep_audio_length if args.simulate_realtime else None,
+    ) as audio_chunk_iterator:
+        riva_api.print_streaming(
+            response_generator=asr_service.streaming_response_generator(
+                audio_chunks=audio_chunk_iterator,
+                streaming_config=config,
+            ),
+            show_intermediate=args.show_intermediate,
+        )
 
 
 if __name__ == "__main__":

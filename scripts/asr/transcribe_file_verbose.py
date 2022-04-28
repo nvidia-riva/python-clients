@@ -28,7 +28,7 @@ import argparse
 import sys
 
 import riva_api
-from riva_api.script_utils import add_asr_config_argparse_parameters, add_connection_argparse_parameters
+from riva_api.argparse_utils import add_asr_config_argparse_parameters, add_connection_argparse_parameters
 
 
 def get_args():
@@ -36,14 +36,14 @@ def get_args():
     parser.add_argument("--input-file", required=True, help="path to local file to stream")
     parser = add_asr_config_argparse_parameters(parser)
     parser = add_connection_argparse_parameters(parser)
-    parser.add_argument("--file_streaming_chunk", type=int, default=1600)
+    parser.add_argument("--file-streaming-chunk", type=int, default=1600)
     return parser.parse_args()
 
 
 def main() -> None:
     args = get_args()
     auth = riva_api.Auth(args.ssl_cert, args.use_ssl, args.riva_uri)
-    asr_client = riva_api.ASRClient(auth)
+    asr_service = riva_api.ASRService(auth)
     config = riva_api.StreamingRecognitionConfig(
         config=riva_api.RecognitionConfig(
             encoding=riva_api.AudioEncoding.LINEAR_PCM,
@@ -54,16 +54,20 @@ def main() -> None:
         ),
         interim_results=True,
     )
-    riva_api.print_streaming(
-        generator=asr_client.streaming_recognize_file_generator(
-            input_file=args.input_file,
-            streaming_config=config,
-            simulate_realtime=False,
-            file_streaming_chunk=args.file_streaming_chunk,
-        ),
-        output_file=sys.stdout,
-        mode="show_confidence",
-    )
+    riva_api.add_audio_file_specs_to_config(config, args.input_file)
+    riva_api.add_word_boosting_to_config(config, args.boosted_lm_words, args.boosted_lm_score)
+    with riva_api.AudioChunkFileIterator(
+        args.input_file,
+        args.file_streaming_chunk,
+    ) as audio_chunk_iterator:
+        riva_api.print_streaming(
+            response_generator=asr_service.streaming_response_generator(
+                audio_chunks=audio_chunk_iterator,
+                streaming_config=config,
+            ),
+            output_file=sys.stdout,
+            additional_info='confidence',
+        )
 
 
 if __name__ == "__main__":
