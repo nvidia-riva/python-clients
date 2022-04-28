@@ -100,7 +100,7 @@ PRINT_STREAMING_MODES = ['no', 'time', 'confidence']
 
 
 def print_streaming(
-    response_generator: Generator[StreamingRecognizeResponse, None, None],
+    response_generator: Iterable[StreamingRecognizeResponse],
     output_file: Optional[Union[Union[os.PathLike, TextIO], List[Union[os.PathLike, TextIO]]]] = None,
     additional_info: str = 'no',
     word_time_offsets: bool = False,
