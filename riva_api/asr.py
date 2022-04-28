@@ -223,51 +223,6 @@ def streaming_request_generator(
 
 
 class ASRService:
-    """
-    This class provides response generators for streaming recognition and a method :meth:`offline_recognize` for
-    offline audio file recognition. For file streaming recognition use :meth:`streaming_recognize_file_generator` and
-    for recognition from microphone use :meth:`streaming_recognize_microphone_generator`.
-
-    Examples:
-        .. code-block:: python
-            from pathlib import Path
-            auth = riva_api.Auth(riva_uri="localhost:50051")
-            asr_client = riva_api.ASRService(auth)
-            config = riva_api.RecognitionConfig(
-                encoding=riva_api.AudioEncoding.LINEAR_PCM,
-                language_code='en-US',
-                max_alternatives=1,
-                enable_automatic_punctuation=True,
-            )
-            streaming_config = riva_api.StreamingRecognitionConfig(
-                config=config,
-                interim_results=True,
-            )
-            path_to_input_file = PATH_TO_RIVA_CLIENTS_REPO_ROOT / Path("examples/en-US_sample.wav")
-            # streaming file recognition
-            riva_api.print_streaming(
-                response_generator=asr_client.streaming_recognize_file_generator(
-                    input_file=path_to_input_file,
-                    streaming_config=streaming_config,
-                    simulate_realtime=True,
-                ),
-                show_intermediate=True,
-            )
-            # offline recognition
-            riva_api.print_offline(response=asr_client.offline_recognize(path_to_input_file, config))
-            # streaming microphone recognition
-            riva_api.list_input_devices()
-            riva_api.print_streaming(
-                response_generator=asr_client.streaming_recognize_microphone_generator(
-                    input_device=INPUT_DEVICE_ID,
-                    streaming_config=streaming_config,
-                ),
-                show_intermediate=True,
-            )
-
-    Args:
-        auth (:obj:`Auth`): an instance of authorization class. Used for adding API key to requests.
-    """
     def __init__(self, auth: Auth) -> None:
         self.auth = auth
         self.stub = rasr_srv.RivaSpeechRecognitionStub(self.auth.channel)
