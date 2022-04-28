@@ -7,7 +7,7 @@ import pyaudio
 class MicrophoneStream:
     """Opens a recording stream as a response_generator yielding the audio chunks."""
 
-    def __init__(self, rate, chunk, device=None):
+    def __init__(self, rate: int, chunk: int, device: int = None):
         self._rate = rate
         self._chunk = chunk
         self._device = device
