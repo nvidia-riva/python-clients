@@ -8,7 +8,10 @@ from riva_api.argparse_utils import add_asr_config_argparse_parameters, add_conn
 
 
 def get_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Streaming transcription via Riva AI Services")
+    parser = argparse.ArgumentParser(
+        description="Streaming transcription via Riva AI Services",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
     parser.add_argument("--num-clients", default=1, type=int, help="Number of client threads")
     parser.add_argument("--num-iterations", default=1, type=int, help="Number of iterations over the file")
     parser.add_argument(

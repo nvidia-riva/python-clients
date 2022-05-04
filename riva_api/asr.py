@@ -228,7 +228,7 @@ class ASRService:
 
     def streaming_response_generator(
         self, audio_chunks: Iterable[bytes], streaming_config: rasr.StreamingRecognitionConfig
-    ):
+    ) -> Generator[rasr.StreamingRecognizeResponse, None, None]:
         generator = streaming_request_generator(audio_chunks, streaming_config)
         for response in self.stub.StreamingRecognize(generator, metadata=self.auth.get_auth_metadata()):
             yield response

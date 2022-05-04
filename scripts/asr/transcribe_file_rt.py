@@ -33,7 +33,10 @@ import riva_api.audio_io
 
 
 def get_args():
-    parser = argparse.ArgumentParser(description="Streaming transcription via Riva AI Services")
+    parser = argparse.ArgumentParser(
+        description="Streaming transcription via Riva AI Services",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
     parser.add_argument("--input-file", required=True, help="path to local file to stream")
     parser.add_argument("--output-device", type=int, default=None, help="output device to use")
     parser = add_connection_argparse_parameters(parser)

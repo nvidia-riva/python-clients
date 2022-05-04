@@ -32,7 +32,10 @@ from riva_api.argparse_utils import add_asr_config_argparse_parameters, add_conn
 
 
 def get_args():
-    parser = argparse.ArgumentParser(description="Streaming transcription via Riva AI Services")
+    parser = argparse.ArgumentParser(
+        description="Streaming transcription via Riva AI Services",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
     parser.add_argument("--input-file", required=True, help="path to local file to stream")
     parser = add_asr_config_argparse_parameters(parser)
     parser = add_connection_argparse_parameters(parser)
