@@ -7,16 +7,13 @@
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
 
 import argparse
-import os
 
-import grpc
-import riva_api.proto.riva_nlp_pb2 as rnlp
-import riva_api.proto.riva_nlp_pb2_grpc as rnlp_srv
+import riva_api
+from riva_api.argparse_utils import add_connection_argparse_parameters
 
 
 def get_args():
     parser = argparse.ArgumentParser(description="Riva Question Answering client sample")
-    parser.add_argument("--server", type=str, help="URI to access Riva server")
     parser.add_argument(
         "--query", type=str, default="How much carbon dioxide was released in 2005?", help="Query for the QA API"
     )
@@ -32,34 +29,17 @@ def get_args():
         "released.",
         help="Context for the QA API",
     )
-    parser.add_argument("--ssl_cert", type=str, default="", help="Path to SSL client certificatates file")
-    parser.add_argument(
-        "--use_ssl", default=False, action='store_true', help="Boolean to control if SSL/TLS encryption should be used"
-    )
+    parser = add_connection_argparse_parameters(parser)
     return parser.parse_args()
 
 
-parser = get_args()
+def main() -> None:
+    args = get_args()
+    auth = riva_api.Auth(args.ssl_cert, args.use_ssl, args.server)
+    service = riva_api.NLPService(auth)
+    print(service.natural_query(args.query, args.context))
 
-riva_uri = parser.server
-if riva_uri is None:
-    if "RIVA_URI" in os.environ:
-        riva_uri = os.getenv("RIVA_URI")
-    else:
-        riva_uri = "localhost:50051"
-grpc_server = riva_uri
-if parser.ssl_cert != "" or parser.use_ssl:
-    root_certificates = None
-    if parser.ssl_cert != "" and os.path.exists(parser.ssl_cert):
-        with open(parser.ssl_cert, 'rb') as f:
-            root_certificates = f.read()
-    creds = grpc.ssl_channel_credentials(root_certificates)
-    channel = grpc.secure_channel(riva_uri, creds)
-else:
-    channel = grpc.insecure_channel(riva_uri)
-riva_nlp = rnlp_srv.RivaLanguageUnderstandingStub(channel)
-req = rnlp.NaturalQueryRequest()
-req.query = parser.query
-req.context = parser.context
-resp = riva_nlp.NaturalQuery(req)
-print(resp)
+
+if __name__ == "__main__":
+    main()
+
