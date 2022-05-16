@@ -1,0 +1,760 @@
+navigation.startnavigation	36:40:destinationplace	BOS intent_none start navigation to work EOS
+navigation.startnavigation	36:42:destinationplace	BOS intent_none start navigation to office EOS
+navigation.startnavigation	36:44:destinationplace	BOS intent_none start navigation to new york EOS
+navigation.startnavigation	39:51:destinationplace	BOS intent_none activate navigation to intel museum EOS
+navigation.startnavigation	40:59:destinationplace	BOS intent_none switch on navigation to nvidia headquarters EOS
+navigation.startnavigation	40:81:destinationplace	BOS intent_none switch on navigation to 2788, san thomas express way, santa clara EOS
+navigation.startnavigation	37:55:destinationplace	BOS intent_none put on navigation to golden gate bridge EOS
+navigation.startnavigation	37:43:destinationplace	BOS intent_none enable navigation to office EOS
+navigation.startnavigation	37:49:destinationplace	BOS intent_none enable navigation to intel museum EOS
+navigation.startnavigation	35:54:destinationplace	BOS intent_none stop navigation to nvidia headquarters EOS
+navigation.startnavigation	35:47:destinationplace	BOS intent_none stop navigation to intel museum EOS
+navigation.startnavigation	35:43:destinationplace	BOS intent_none stop navigation to stanford EOS
+navigation.startnavigation	35:41:destinationplace	BOS intent_none stop navigation to nvidia EOS
+navigation.startnavigation	35:46:destinationplace	BOS intent_none quit navigation to santa clara EOS
+navigation.startnavigation	35:43:destinationplace	BOS intent_none quit navigation to stanford EOS
+navigation.startnavigation	44:48:destinationplace	BOS intent_none can you start navigation to work EOS
+navigation.startnavigation	45:64:destinationplace	BOS intent_none can you enable navigation to 203, lincoln avenue EOS
+navigation.startnavigation	28:39:destinationplace	BOS intent_none navigate to santa clara EOS
+navigation.startnavigation	28:69:destinationplace	BOS intent_none navigate to 2788, san thomas express way, santa clara EOS
+navigation.startnavigation	25:31:destinationplace	BOS intent_none drive to office EOS
+navigation.startnavigation	25:31:destinationplace	BOS intent_none drive to nvidia EOS
+navigation.startnavigation	25:33:destinationplace	BOS intent_none drive to facebook EOS
+navigation.startnavigation	31:49:destinationplace	BOS intent_none navigate me to golden gate bridge EOS
+navigation.startnavigation	31:56:destinationplace	BOS intent_none navigate me to nvidia santa clara office EOS
+navigation.startnavigation	31:72:destinationplace	BOS intent_none navigate me to 2788, san thomas express way, santa clara EOS
+navigation.startnavigation	28:34:destinationplace	BOS intent_none drive me to office EOS
+navigation.startnavigation	28:39:destinationplace	BOS intent_none drive me to santa clara EOS
+navigation.startnavigation	28:34:destinationplace	BOS intent_none drive me to nvidia EOS
+navigation.startnavigation	27:31:destinationplace	BOS intent_none take me to home EOS
+navigation.startnavigation	27:56:destinationplace	BOS intent_none take me to santa clara convention centre EOS
+navigation.startnavigation	35:39:destinationplace	BOS intent_none please navigate to home EOS
+navigation.startnavigation	35:47:destinationplace	BOS intent_none please navigate to intel museum EOS
+navigation.startnavigation	35:64:destinationplace	BOS intent_none please navigate to santa clara convention centre EOS
+navigation.startnavigation	35:43:destinationplace	BOS intent_none please navigate to facebook EOS
+navigation.startnavigation	38:46:destinationplace	BOS intent_none please navigate me to stanford EOS
+navigation.startnavigation	39:80:destinationplace	BOS intent_none can you navigate me to 2788, san thomas express way, santa clara EOS
+navigation.startnavigation	33:39:destinationplace	BOS intent_none can you drive to nvidia EOS
+navigation.startnavigation	35:54:destinationplace	BOS intent_none please drive me to 203, lincoln avenue EOS
+navigation.startnavigation	36:61:destinationplace	BOS intent_none can you drive me to nvidia santa clara office EOS
+navigation.startnavigation	36:44:destinationplace	BOS intent_none can you drive me to facebook EOS
+navigation.startnavigation	34:38:destinationplace	BOS intent_none please take me to home EOS
+navigation.startnavigation	34:38:destinationplace	BOS intent_none please take me to work EOS
+navigation.startnavigation	34:59:destinationplace	BOS intent_none please take me to nvidia santa clara office EOS
+navigation.startnavigation	35:39:destinationplace	BOS intent_none can you take me to work EOS
+navigation.startnavigation	35:53:destinationplace	BOS intent_none can you take me to golden gate bridge EOS
+navigation.startnavigation	38:56:destinationplace	BOS intent_navigation.startnavigation golden gate bridge EOS
+navigation.startnavigation	38:46:destinationplace	BOS intent_navigation.startnavigation facebook EOS
+navigation.startnavigation	41:45:destinationplace	BOS intent_navigation.startnavigationpoi work EOS
+navigation.startnavigation	41:49:destinationplace	BOS intent_navigation.startnavigationpoi stanford EOS
+navigation.startnavigation	44:50:destinationplace	BOS intent_navigation.startnavigationpoi to nvidia EOS
+navigation.startnavigationpoi	38:48:poiplace,60:66:destinationplace	BOS intent_none start navigation to a restaurant located in nvidia EOS
+navigation.startnavigationpoi	38:43:poiplace,55:67:destinationplace	BOS intent_none start navigation to a hotel located on intel museum EOS
+navigation.startnavigationpoi	38:51:poiplace,63:75:destinationplace	BOS intent_none start navigation to a movie theatre located in intel museum EOS
+navigation.startnavigationpoi	42:47:poiplace,59:88:destinationplace	BOS intent_none switch on navigation to a hotel located at santa clara convention centre EOS
+navigation.startnavigationpoi	39:50:poiplace,62:103:destinationplace	BOS intent_none enable navigation to a coffee shop located at 2788, san thomas express way, santa clara EOS
+navigation.startnavigationpoi	48:58:poiplace,70:76:destinationplace	BOS intent_none can you turn on navigation to a restaurant located in nvidia EOS
+navigation.startnavigationpoi	46:59:poiplace,71:112:destinationplace	BOS intent_none can you start navigation to a movie theatre located in 2788, san thomas express way, santa clara EOS
+navigation.startnavigationpoi	49:58:poiplace,70:95:destinationplace	BOS intent_none can you activate navigation to a starbucks located at nvidia santa clara office EOS
+navigation.startnavigationpoi	30:41:poiplace,53:57:destinationplace	BOS intent_none navigate to a coffee shop located on work EOS
+navigation.startnavigationpoi	37:42:poiplace,54:58:destinationplace	BOS intent_none please navigate to a hotel located on home EOS
+navigation.startnavigationpoi	38:51:poiplace,63:88:destinationplace	BOS intent_none can you navigate to a movie theatre located in nvidia santa clara office EOS
+navigation.startnavigationpoi	36:46:poiplace,58:62:destinationplace	BOS intent_none please take me to a restaurant located on work EOS
+navigation.startnavigationpoi	37:46:poiplace,58:87:destinationplace	BOS intent_none can you take me to a starbucks located on santa clara convention centre EOS
+navigation.startnavigationpoi	40:44:poisortcriteria,45:55:poiplace,67:71:destinationplace	BOS intent_none turn on navigation to a good restaurant located on work EOS
+navigation.startnavigationpoi	40:44:poisortcriteria,45:56:poiplace,68:74:destinationplace	BOS intent_none turn on navigation to a good coffee shop located at office EOS
+navigation.startnavigationpoi	40:49:poisortcriteria,50:61:poiplace,73:91:destinationplace	BOS intent_none turn on navigation to a expensive coffee shop located on golden gate bridge EOS
+navigation.startnavigationpoi	40:45:poisortcriteria,46:59:poiplace,71:75:destinationplace	BOS intent_none turn on navigation to a cheap movie theatre located on work EOS
+navigation.startnavigationpoi	38:47:poisortcriteria,48:59:poiplace,71:79:destinationplace	BOS intent_none start navigation to a expensive coffee shop located at new york EOS
+navigation.startnavigationpoi	39:48:poisortcriteria,49:59:poiplace,71:79:destinationplace	BOS intent_none put on navigation to a expensive restaurant located at stanford EOS
+navigation.startnavigationpoi	39:44:poisortcriteria,45:55:poiplace,67:71:destinationplace	BOS intent_none put on navigation to a cheap restaurant located in work EOS
+navigation.startnavigationpoi	37:42:poisortcriteria,43:56:poiplace,68:72:destinationplace	BOS intent_none stop navigation to a cheap movie theatre located at home EOS
+navigation.startnavigationpoi	48:52:poisortcriteria,53:64:poiplace,76:80:destinationplace	BOS intent_none can you turn on navigation to a good coffee shop located on home EOS
+navigation.startnavigationpoi	48:53:poisortcriteria,54:63:poiplace,75:79:destinationplace	BOS intent_none can you turn on navigation to a cheap starbucks located on home EOS
+navigation.startnavigationpoi	47:56:poisortcriteria,57:66:poiplace,78:90:destinationplace	BOS intent_none can you enable navigation to a expensive starbucks located on intel museum EOS
+navigation.startnavigationpoi	30:39:poisortcriteria,40:51:poiplace,63:75:destinationplace	BOS intent_none navigate to a expensive coffee shop located on intel museum EOS
+navigation.startnavigationpoi	27:31:poisortcriteria,32:43:poiplace,55:63:destinationplace	BOS intent_none drive to a good coffee shop located at facebook EOS
+navigation.startnavigationpoi	37:46:poisortcriteria,47:56:poiplace,68:87:destinationplace	BOS intent_none please navigate to a expensive starbucks located at nvidia headquarters EOS
+navigation.startnavigationpoi	34:39:poisortcriteria,40:50:poiplace,62:74:destinationplace	BOS intent_none please drive to a cheap restaurant located in intel museum EOS
+navigation.startnavigationpoi	35:44:poisortcriteria,45:55:poiplace,67:75:destinationplace	BOS intent_none can you drive to a expensive restaurant located at stanford EOS
+navigation.startnavigationpoi	37:46:poisortcriteria,47:58:poiplace,70:78:destinationplace	BOS intent_none please drive me to a expensive coffee shop located in new york EOS
+navigation.startnavigationpoi	36:40:poisortcriteria,41:50:poiplace,62:70:destinationplace	BOS intent_none please take me to a good starbucks located at facebook EOS
+navigation.startnavigationpoi	40:50:poiplace,59:66:poisortcriteria,67:92:destinationplace	BOS intent_none turn on navigation to a restaurant located closeby nvidia santa clara office EOS
+navigation.startnavigationpoi	27:32:poiplace,41:47:poisortcriteria,48:56:destinationplace	BOS intent_none drive to a hotel located nearby stanford EOS
+navigation.startnavigationpoi	40:45:poiplace,54:60:poisortcriteria,61:67:destinationplace	BOS intent_none please navigate me to a hotel located nearby nvidia EOS
+navigation.startnavigationpoi	36:46:poiplace,55:61:poisortcriteria,62:66:destinationplace	BOS intent_none please take me to a restaurant located nearby work EOS
+navigation.startnavigationpoi	47:56:poisortcriteria,57:67:poiplace,76:83:poisortcriteria,84:92:destinationplace	BOS intent_none can you enable navigation to a expensive restaurant located closeby new york EOS
+navigation.startnavigationpoi	33:42:poisortcriteria,43:56:poiplace,65:71:poisortcriteria,72:78:destinationplace	BOS intent_none navigate me to a expensive movie theatre located nearby office EOS
+navigation.startnavigationpoi	34:43:poisortcriteria,44:49:poiplace,58:64:poisortcriteria,65:71:destinationplace	BOS intent_none please drive to a expensive hotel located nearby nvidia EOS
+navigation.startnavigationpoi	37:42:poisortcriteria,43:56:poiplace,65:72:poisortcriteria,73:114:destinationplace	BOS intent_none please drive me to a cheap movie theatre located closeby 2788, san thomas express way, santa clara EOS
+navigation.startnavigationpoi	42:49:poisortcriteria,50:63:poiplace,75:116:destinationplace	BOS intent_none turn on navigation to the closest movie theatre located in 2788, san thomas express way, santa clara EOS
+navigation.startnavigationpoi	43:50:poisortcriteria,51:61:poiplace,73:114:destinationplace	BOS intent_none activate navigation to the closest restaurant located on 2788, san thomas express way, santa clara EOS
+navigation.startnavigationpoi	43:51:poisortcriteria,52:61:poiplace,73:92:destinationplace	BOS intent_none activate navigation to the cheapest starbucks located in nvidia headquarters EOS
+navigation.startnavigationpoi	44:52:poisortcriteria,53:58:poiplace,70:78:destinationplace	BOS intent_none switch on navigation to the cheapest hotel located in stanford EOS
+navigation.startnavigationpoi	41:48:poisortcriteria,49:58:poiplace,70:81:destinationplace	BOS intent_none put on navigation to the nearest starbucks located on santa clara EOS
+navigation.startnavigationpoi	41:48:poisortcriteria,49:54:poiplace,66:70:destinationplace	BOS intent_none put on navigation to the closest hotel located at home EOS
+navigation.startnavigationpoi	39:46:poisortcriteria,47:56:poiplace,68:74:destinationplace	BOS intent_none quit navigation to the closest starbucks located at office EOS
+navigation.startnavigationpoi	50:57:poisortcriteria,58:63:poiplace,75:83:destinationplace	BOS intent_none can you turn on navigation to the nearest hotel located at new york EOS
+navigation.startnavigationpoi	29:36:poisortcriteria,37:42:poiplace,54:95:destinationplace	BOS intent_none drive to the nearest hotel located on 2788, san thomas express way, santa clara EOS
+navigation.startnavigationpoi	32:40:poisortcriteria,41:50:poiplace,62:70:destinationplace	BOS intent_none drive me to the cheapest starbucks located in stanford EOS
+navigation.startnavigationpoi	39:46:poisortcriteria,47:60:poiplace,72:76:destinationplace	BOS intent_none please navigate to the closest movie theatre located on work EOS
+navigation.stopnavigation		BOS intent_none stop the navigation EOS
+navigation.stopnavigation		BOS intent_none switch off the navigation EOS
+navigation.stopnavigation		BOS intent_none disable the navigation EOS
+navigation.stopnavigation		BOS intent_none cancel the navigation EOS
+navigation.stopnavigation		BOS intent_none turn off the current navigation EOS
+navigation.stopnavigation		BOS intent_none stop the current navigation EOS
+navigation.stopnavigation		BOS intent_none deactivate the current navigation EOS
+navigation.stopnavigation		BOS intent_none please turn off the current navigation EOS
+navigation.stopnavigation		BOS intent_none please stop the current navigation EOS
+navigation.stopnavigation		BOS intent_none please switch off the current navigation EOS
+navigation.navigationavoidhighways	49:60:sourceplace,64:83:destinationplace	BOS intent_none avoid highways on the route from santa clara to nvidia headquarters EOS
+navigation.navigationavoidhighways	49:61:sourceplace,65:71:destinationplace	BOS intent_none avoid highways on the route from intel museum to office EOS
+navigation.navigationavoidhighways	49:61:sourceplace,65:71:destinationplace	BOS intent_none avoid highways on the route from intel museum to google EOS
+navigation.navigationavoidhighways	49:67:sourceplace,71:79:destinationplace	BOS intent_none avoid highways on the route from golden gate bridge to facebook EOS
+navigation.navigationavoidhighways	49:57:sourceplace,61:65:destinationplace	BOS intent_none avoid highways on the route from new york to home EOS
+navigation.navigationavoidhighways	47:51:sourceplace,55:59:destinationplace	BOS intent_none avoid highways on the way from home to home EOS
+navigation.navigationavoidhighways	47:51:sourceplace,55:61:destinationplace	BOS intent_none avoid highways on the way from work to nvidia EOS
+navigation.navigationavoidhighways	48:52:sourceplace,56:60:destinationplace	BOS intent_none avoid highways on the road from home to home EOS
+navigation.navigationavoidhighways	48:52:sourceplace,56:64:destinationplace	BOS intent_none avoid highways on the road from home to new york EOS
+navigation.navigationavoidhighways	48:52:sourceplace,56:85:destinationplace	BOS intent_none avoid highways on the road from work to santa clara convention centre EOS
+navigation.navigationavoidhighways	48:67:sourceplace,71:112:destinationplace	BOS intent_none avoid highways on the road from nvidia headquarters to 2788, san thomas express way, santa clara EOS
+navigation.navigationavoidhighways	48:60:sourceplace,64:105:destinationplace	BOS intent_none avoid highways on the road from intel museum to 2788, san thomas express way, santa clara EOS
+navigation.navigationavoidhighways	48:66:sourceplace,70:76:destinationplace	BOS intent_none avoid highways on the road from golden gate bridge to google EOS
+navigation.navigationavoidhighways	48:73:sourceplace,77:96:destinationplace	BOS intent_none avoid highways on the road from nvidia santa clara office to nvidia headquarters EOS
+navigation.navigationavoidhighways	48:54:sourceplace,58:76:destinationplace	BOS intent_none avoid highways on the road from nvidia to golden gate bridge EOS
+navigation.navigationavoidhighways	48:54:sourceplace,58:87:destinationplace	BOS intent_none avoid highways on the road from google to santa clara convention centre EOS
+navigation.navigationavoidhighways	48:89:sourceplace,93:111:destinationplace	BOS intent_none avoid highways on the road from 2788, san thomas express way, santa clara to golden gate bridge EOS
+navigation.navigationavoidhighways	47:53:destinationplace,59:71:sourceplace	BOS intent_none avoid highways on the route to office from intel museum EOS
+navigation.navigationavoidhighways	47:59:destinationplace,65:69:sourceplace	BOS intent_none avoid highways on the route to intel museum from work EOS
+navigation.navigationavoidhighways	47:53:destinationplace,59:78:sourceplace	BOS intent_none avoid highways on the route to google from 203, lincoln avenue EOS
+navigation.navigationavoidhighways	47:66:destinationplace,72:90:sourceplace	BOS intent_none avoid highways on the route to 203, lincoln avenue from golden gate bridge EOS
+navigation.navigationavoidhighways	45:56:destinationplace,62:70:sourceplace	BOS intent_none avoid highways on the way to santa clara from stanford EOS
+navigation.navigationavoidhighways	45:64:destinationplace,70:89:sourceplace	BOS intent_none avoid highways on the way to nvidia headquarters from 203, lincoln avenue EOS
+navigation.navigationavoidhighways	45:53:destinationplace,59:65:sourceplace	BOS intent_none avoid highways on the way to facebook from office EOS
+navigation.navigationavoidhighways	45:86:destinationplace,92:121:sourceplace	BOS intent_none avoid highways on the way to 2788, san thomas express way, santa clara from santa clara convention centre EOS
+navigation.navigationavoidhighways	46:52:destinationplace,58:64:sourceplace	BOS intent_none avoid highways on the road to office from google EOS
+navigation.navigationavoidhighways	46:71:destinationplace,77:118:sourceplace	BOS intent_none avoid highways on the road to nvidia santa clara office from 2788, san thomas express way, santa clara EOS
+navigation.navigationavoidhighways	46:52:destinationplace,58:64:sourceplace	BOS intent_none avoid highways on the road to nvidia from nvidia EOS
+navigation.navigationavoidhighways	46:52:destinationplace,58:66:sourceplace	BOS intent_none avoid highways on the road to google from stanford EOS
+navigation.navigationavoidhighways	46:54:destinationplace,60:71:sourceplace	BOS intent_none avoid highways on the road to facebook from santa clara EOS
+navigation.navigationavoidhighways	46:65:destinationplace,71:75:sourceplace	BOS intent_none avoid highways on the road to 203, lincoln avenue from home EOS
+navigation.navigationavoidhighways	46:87:destinationplace,93:97:sourceplace	BOS intent_none avoid highways on the road to 2788, san thomas express way, santa clara from work EOS
+navigation.navigationavoidhighways	46:52:destinationplace	BOS intent_none avoid highways on the road to nvidia EOS
+navigation.navigationavoidhighways	25:43:destinationplace	BOS intent_none drive to golden gate bridge by avoiding highways EOS
+navigation.navigationavoidhighways	25:44:destinationplace	BOS intent_none drive to 203, lincoln avenue by avoiding highways EOS
+navigation.navigationavoidhighways	27:31:destinationplace	BOS intent_none take me to home by avoiding highways EOS
+navigation.navigationavoidhighways	27:33:destinationplace	BOS intent_none take me to office by avoiding highways EOS
+navigation.navigationavoidhighways	38:44:destinationplace	BOS intent_none please navigate me to nvidia by avoiding highways EOS
+navigation.navigationavoidhighways	39:51:destinationplace	BOS intent_none can you navigate me to intel museum by avoiding highways EOS
+navigation.navigationavoidhighways	33:37:destinationplace	BOS intent_none can you drive to work by avoiding highways EOS
+navigation.navigationavoidhighways	34:42:destinationplace	BOS intent_none please take me to new york by avoiding highways EOS
+navigation.navigationavoidhighways	34:75:destinationplace	BOS intent_none please take me to 2788, san thomas express way, santa clara by avoiding highways EOS
+navigation.navigationavoidhighways	52:93:destinationplace	BOS intent_none navigate me by avoiding highways to 2788, san thomas express way, santa clara EOS
+navigation.navigationavoidhighways	49:78:destinationplace	BOS intent_none drive me by avoiding highways to santa clara convention centre EOS
+navigation.navigationavoidhighways	56:64:destinationplace	BOS intent_none can you take me by avoiding highways to new york EOS
+navigation.navigationavoidhighways	52:60:destinationplace	BOS intent_none please navigate without highways to stanford EOS
+navigation.navigationavoidhighways	52:60:destinationplace	BOS intent_none please navigate without highways to new york EOS
+navigation.navigationavoidhighways	49:68:destinationplace	BOS intent_none please drive without highways to 203, lincoln avenue EOS
+navigation.navigationavoidhighways	50:68:destinationplace	BOS intent_none can you drive without highways to golden gate bridge EOS
+navigation.navigationavoidhighways	52:63:destinationplace	BOS intent_none please drive me without highways to santa clara EOS
+navigation.istollsonroute	51:63:destinationplace,69:81:sourceplace	BOS intent_none is there any tolls on the route to intel museum from intel museum EOS
+navigation.istollsonroute	51:59:destinationplace,65:73:sourceplace	BOS intent_none is there any tolls on the route to facebook from new york EOS
+navigation.istollsonroute	49:61:destinationplace,67:79:sourceplace	BOS intent_none is there any tolls on the way to intel museum from intel museum EOS
+navigation.istollsonroute	50:58:sourceplace,62:68:destinationplace	BOS intent_none find me the tolls on the way from new york to nvidia EOS
+navigation.istollsonroute	50:58:sourceplace,62:68:destinationplace	BOS intent_none find me the tolls on the way from new york to google EOS
+navigation.istollsonroute	58:62:sourceplace,66:85:destinationplace	BOS intent_none can you find me the tolls on the way from work to nvidia headquarters EOS
+navigation.istollsonroute	59:63:sourceplace,67:86:destinationplace	BOS intent_none can you find me the tolls on the road from work to 203, lincoln avenue EOS
+navigation.istollsonroute	51:57:sourceplace,61:72:destinationplace	BOS intent_none get me the tolls on the route from google to santa clara EOS
+navigation.istollsonroute	49:78:sourceplace,82:94:destinationplace	BOS intent_none get me the tolls on the way from santa clara convention centre to intel museum EOS
+navigation.istollsonroute	50:54:sourceplace,58:77:destinationplace	BOS intent_none get me the tolls on the road from work to 203, lincoln avenue EOS
+navigation.istollsonroute	50:75:sourceplace,79:91:destinationplace	BOS intent_none get me the tolls on the road from nvidia santa clara office to intel museum EOS
+navigation.istollsonroute	59:88:sourceplace,92:100:destinationplace	BOS intent_none can you get me the tolls on the route from santa clara convention centre to new york EOS
+navigation.istollsonroute	57:76:sourceplace,80:92:destinationplace	BOS intent_none can you get me the tolls on the way from nvidia headquarters to intel museum EOS
+navigation.istollsonroute	57:82:sourceplace,86:97:destinationplace	BOS intent_none can you get me the tolls on the way from nvidia santa clara office to santa clara EOS
+navigation.istollsonroute	57:98:sourceplace,102:108:destinationplace	BOS intent_none can you get me the tolls on the way from 2788, san thomas express way, santa clara to nvidia EOS
+navigation.istollsonroute	52:56:sourceplace,60:71:destinationplace	BOS intent_none tell me the tolls on the route from home to santa clara EOS
+navigation.istollsonroute	60:79:sourceplace,83:91:destinationplace	BOS intent_none can you tell me the tolls on the route from nvidia headquarters to facebook EOS
+navigation.istollsonroute	58:87:sourceplace,91:97:destinationplace	BOS intent_none can you tell me the tolls on the way from santa clara convention centre to office EOS
+navigation.istollsonroute	59:84:sourceplace,88:113:destinationplace	BOS intent_none can you tell me the tolls on the road from nvidia santa clara office to nvidia santa clara office EOS
+navigation.istollsonroute	52:58:sourceplace,62:81:destinationplace	BOS intent_none show me the tolls on the route from nvidia to 203, lincoln avenue EOS
+navigation.istollsonroute	50:79:sourceplace,83:91:destinationplace	BOS intent_none show me the tolls on the way from santa clara convention centre to stanford EOS
+navigation.istollsonroute	51:63:sourceplace,67:108:destinationplace	BOS intent_none show me the tolls on the road from intel museum to 2788, san thomas express way, santa clara EOS
+navigation.istollsonroute	51:69:sourceplace,73:81:destinationplace	BOS intent_none show me the tolls on the road from golden gate bridge to stanford EOS
+navigation.istollsonroute	55:96:sourceplace,100:106:destinationplace	BOS intent_none can you show the tolls on the way from 2788, san thomas express way, santa clara to google EOS
+navigation.istollsonroute	59:67:sourceplace,71:79:destinationplace	BOS intent_none can you locate the tolls on the route from new york to new york EOS
+navigation.istollsonroute	57:65:sourceplace,69:110:destinationplace	BOS intent_none can you locate the tolls on the way from new york to 2788, san thomas express way, santa clara EOS
+navigation.istollsonroute	57:63:sourceplace,67:96:destinationplace	BOS intent_none can you locate the tolls on the way from nvidia to santa clara convention centre EOS
+navigation.istollsonroute	48:89:destinationplace,95:114:sourceplace	BOS intent_none find me the tolls on the way to 2788, san thomas express way, santa clara from nvidia headquarters EOS
+navigation.istollsonroute	58:69:destinationplace,75:86:sourceplace	BOS intent_none can you find me the tolls on the route to santa clara from santa clara EOS
+navigation.istollsonroute	58:87:destinationplace,93:104:sourceplace	BOS intent_none can you find me the tolls on the route to santa clara convention centre from santa clara EOS
+navigation.istollsonroute	58:83:destinationplace,89:95:sourceplace	BOS intent_none can you find me the tolls on the route to nvidia santa clara office from nvidia EOS
+navigation.istollsonroute	58:66:destinationplace,72:80:sourceplace	BOS intent_none can you find me the tolls on the route to facebook from stanford EOS
+navigation.istollsonroute	56:62:destinationplace,68:74:sourceplace	BOS intent_none can you find me the tolls on the way to office from nvidia EOS
+navigation.istollsonroute	49:74:destinationplace,80:88:sourceplace	BOS intent_none get me the tolls on the route to nvidia santa clara office from facebook EOS
+navigation.istollsonroute	49:57:destinationplace,63:82:sourceplace	BOS intent_none get me the tolls on the route to new york from nvidia headquarters EOS
+navigation.istollsonroute	48:56:destinationplace,62:73:sourceplace	BOS intent_none get me the tolls on the road to stanford from santa clara EOS
+navigation.istollsonroute	48:54:destinationplace,60:101:sourceplace	BOS intent_none get me the tolls on the road to google from 2788, san thomas express way, santa clara EOS
+navigation.istollsonroute	57:75:destinationplace,81:100:sourceplace	BOS intent_none can you get me the tolls on the route to golden gate bridge from nvidia headquarters EOS
+navigation.istollsonroute	57:65:destinationplace,71:79:sourceplace	BOS intent_none can you get me the tolls on the route to facebook from new york EOS
+navigation.istollsonroute	50:56:destinationplace,62:81:sourceplace	BOS intent_none tell me the tolls on the route to nvidia from 203, lincoln avenue EOS
+navigation.istollsonroute	49:61:destinationplace,67:71:sourceplace	BOS intent_none tell me the tolls on the road to intel museum from work EOS
+navigation.istollsonroute	57:61:destinationplace,67:85:sourceplace	BOS intent_none can you tell me the tolls on the road to home from golden gate bridge EOS
+navigation.istollsonroute	57:63:destinationplace,69:80:sourceplace	BOS intent_none can you tell me the tolls on the road to nvidia from santa clara EOS
+navigation.istollsonroute	50:54:destinationplace,60:78:sourceplace	BOS intent_none show me the tolls on the route to work from golden gate bridge EOS
+navigation.istollsonroute	48:67:destinationplace,73:84:sourceplace	BOS intent_none show me the tolls on the way to nvidia headquarters from santa clara EOS
+navigation.istollsonroute	49:61:destinationplace,67:86:sourceplace	BOS intent_none show me the tolls on the road to intel museum from 203, lincoln avenue EOS
+navigation.istollsonroute	47:53:destinationplace,59:67:sourceplace	BOS intent_none locate the tolls on the way to office from facebook EOS
+navigation.istollsonroute	48:54:destinationplace,60:68:sourceplace	BOS intent_none locate the tolls on the road to nvidia from facebook EOS
+navigation.istollsonroute	57:82:destinationplace,88:129:sourceplace	BOS intent_none can you locate the tolls on the route to nvidia santa clara office from 2788, san thomas express way, santa clara EOS
+navigation.istollsonroute	55:63:destinationplace,69:87:sourceplace	BOS intent_none can you locate the tolls on the way to facebook from golden gate bridge EOS
+navigation.getspeedlimitonroute	56:64:destinationplace	BOS intent_none find me the speed limit on the route to stanford EOS
+navigation.getspeedlimitonroute	63:69:destinationplace	BOS intent_none can you tell me the speed limit on the road to nvidia EOS
+navigation.getspeedlimitonroute	61:86:destinationplace	BOS intent_none can you show the speed limit on the route to nvidia santa clara office EOS
+navigation.getspeedlimitonroute	61:80:destinationplace	BOS intent_none can you locate the speed limit on the way to 203, lincoln avenue EOS
+navigation.getspeedlimitonroute	54:72:destinationplace,78:82:sourceplace	BOS intent_none find me the speed limit on the way to golden gate bridge from home EOS
+navigation.getspeedlimitonroute	55:80:destinationplace,86:92:sourceplace	BOS intent_none find me the speed limit on the road to nvidia santa clara office from google EOS
+navigation.getspeedlimitonroute	55:63:destinationplace,69:81:sourceplace	BOS intent_none find me the speed limit on the road to new york from intel museum EOS
+navigation.getspeedlimitonroute	64:68:destinationplace,74:92:sourceplace	BOS intent_none can you find me the speed limit on the route to work from golden gate bridge EOS
+navigation.getspeedlimitonroute	62:66:destinationplace,72:97:sourceplace	BOS intent_none can you find me the speed limit on the way to home from nvidia santa clara office EOS
+navigation.getspeedlimitonroute	62:73:destinationplace,79:85:sourceplace	BOS intent_none can you find me the speed limit on the way to santa clara from google EOS
+navigation.getspeedlimitonroute	62:70:destinationplace,76:80:sourceplace	BOS intent_none can you find me the speed limit on the way to new york from work EOS
+navigation.getspeedlimitonroute	62:68:destinationplace,74:82:sourceplace	BOS intent_none can you find me the speed limit on the way to nvidia from stanford EOS
+navigation.getspeedlimitonroute	55:61:destinationplace,67:73:sourceplace	BOS intent_none get me the speed limit on the route to office from office EOS
+navigation.getspeedlimitonroute	63:74:destinationplace,80:88:sourceplace	BOS intent_none can you get me the speed limit on the route to santa clara from new york EOS
+navigation.getspeedlimitonroute	63:75:destinationplace,81:87:sourceplace	BOS intent_none can you get me the speed limit on the route to intel museum from nvidia EOS
+navigation.getspeedlimitonroute	61:69:destinationplace,75:83:sourceplace	BOS intent_none can you get me the speed limit on the way to new york from new york EOS
+navigation.getspeedlimitonroute	62:68:destinationplace,74:103:sourceplace	BOS intent_none can you get me the speed limit on the road to nvidia from santa clara convention centre EOS
+navigation.getspeedlimitonroute	56:81:destinationplace,87:128:sourceplace	BOS intent_none tell me the speed limit on the route to nvidia santa clara office from 2788, san thomas express way, santa clara EOS
+navigation.getspeedlimitonroute	56:75:destinationplace,81:87:sourceplace	BOS intent_none tell me the speed limit on the route to 203, lincoln avenue from office EOS
+navigation.getspeedlimitonroute	56:97:destinationplace,103:122:sourceplace	BOS intent_none tell me the speed limit on the route to 2788, san thomas express way, santa clara from nvidia headquarters EOS
+navigation.getspeedlimitonroute	54:66:destinationplace,72:78:sourceplace	BOS intent_none tell me the speed limit on the way to intel museum from google EOS
+navigation.getspeedlimitonroute	55:63:destinationplace,69:73:sourceplace	BOS intent_none tell me the speed limit on the road to new york from home EOS
+navigation.getspeedlimitonroute	64:105:destinationplace,111:129:sourceplace	BOS intent_none can you tell me the speed limit on the route to 2788, san thomas express way, santa clara from golden gate bridge EOS
+navigation.getspeedlimitonroute	63:82:destinationplace,88:99:sourceplace	BOS intent_none can you tell me the speed limit on the road to nvidia headquarters from santa clara EOS
+navigation.getspeedlimitonroute	56:85:destinationplace,91:99:sourceplace	BOS intent_none show me the speed limit on the route to santa clara convention centre from facebook EOS
+navigation.getspeedlimitonroute	54:79:destinationplace,85:89:sourceplace	BOS intent_none show me the speed limit on the way to nvidia santa clara office from home EOS
+navigation.getspeedlimitonroute	55:66:destinationplace,72:91:sourceplace	BOS intent_none show me the speed limit on the road to santa clara from nvidia headquarters EOS
+navigation.getspeedlimitonroute	61:69:destinationplace,75:83:sourceplace	BOS intent_none can you show the speed limit on the route to stanford from new york EOS
+navigation.getspeedlimitonroute	61:67:destinationplace,73:98:sourceplace	BOS intent_none can you show the speed limit on the route to nvidia from nvidia santa clara office EOS
+navigation.getspeedlimitonroute	61:67:destinationplace,73:81:sourceplace	BOS intent_none can you show the speed limit on the route to google from stanford EOS
+navigation.getspeedlimitonroute	60:71:destinationplace,77:106:sourceplace	BOS intent_none can you show the speed limit on the road to santa clara from santa clara convention centre EOS
+navigation.getspeedlimitonroute	60:72:destinationplace,78:86:sourceplace	BOS intent_none can you show the speed limit on the road to intel museum from new york EOS
+navigation.getspeedlimitonroute	60:68:destinationplace,74:80:sourceplace	BOS intent_none can you show the speed limit on the road to stanford from office EOS
+navigation.getspeedlimitonroute	55:66:destinationplace,72:113:sourceplace	BOS intent_none locate the speed limit on the route to santa clara from 2788, san thomas express way, santa clara EOS
+navigation.getspeedlimitonroute	55:63:destinationplace,69:94:sourceplace	BOS intent_none locate the speed limit on the route to facebook from nvidia santa clara office EOS
+navigation.getspeedlimitonroute	55:96:destinationplace,102:121:sourceplace	BOS intent_none locate the speed limit on the route to 2788, san thomas express way, santa clara from 203, lincoln avenue EOS
+navigation.getspeedlimitonroute	53:65:destinationplace,71:112:sourceplace	BOS intent_none locate the speed limit on the way to intel museum from 2788, san thomas express way, santa clara EOS
+navigation.getspeedlimitonroute	53:82:destinationplace,88:96:sourceplace	BOS intent_none locate the speed limit on the way to santa clara convention centre from new york EOS
+navigation.getspeedlimitonroute	54:73:destinationplace,79:90:sourceplace	BOS intent_none locate the speed limit on the road to 203, lincoln avenue from santa clara EOS
+navigation.getspeedlimitonroute	63:104:destinationplace,110:118:sourceplace	BOS intent_none can you locate the speed limit on the route to 2788, san thomas express way, santa clara from stanford EOS
+navigation.getspeedlimitonroute	61:65:destinationplace,71:77:sourceplace	BOS intent_none can you locate the speed limit on the way to work from google EOS
+navigation.getspeedlimitonroute	61:90:destinationplace,96:115:sourceplace	BOS intent_none can you locate the speed limit on the way to santa clara convention centre from nvidia headquarters EOS
+navigation.getspeedlimitonroute	61:69:destinationplace,75:81:sourceplace	BOS intent_none can you locate the speed limit on the way to new york from google EOS
+navigation.getspeedlimitonroute	62:81:destinationplace,87:95:sourceplace	BOS intent_none can you locate the speed limit on the road to nvidia headquarters from stanford EOS
+navigation.getspeedlimitonroute	56:68:destinationplace	BOS intent_none what is the speed limit on the route to intel museum EOS
+navigation.getspeedlimitonroute	56:75:destinationplace,81:92:sourceplace	BOS intent_none what is the speed limit on the route to nvidia headquarters from santa clara EOS
+navigation.getspeedlimitonroute	54:58:destinationplace,64:76:sourceplace	BOS intent_none what is the speed limit on the way to home from intel museum EOS
+navigation.getspeedlimitonroute	54:79:destinationplace,85:96:sourceplace	BOS intent_none what is the speed limit on the way to nvidia santa clara office from santa clara EOS
+navigation.getspeedlimitonroute	55:67:destinationplace,73:81:sourceplace	BOS intent_none what is the speed limit on the road to intel museum from new york EOS
+navigation.getspeedlimitonroute		BOS intent_none can you get me the speed limit EOS
+navigation.getdistance	42:50:sourceplace,54:60:destinationplace	BOS intent_none what is the distance from new york to nvidia EOS
+navigation.getdistance	46:50:sourceplace,54:62:destinationplace,66:76:distanceunit	BOS intent_none how much is the distance from home to facebook in kilometers EOS
+navigation.getdistance	46:54:sourceplace,58:69:destinationplace,73:79:distanceunit	BOS intent_none how much is the distance from stanford to santa clara in meters EOS
+navigation.getdistance	42:54:sourceplace,58:77:destinationplace,81:91:distanceunit	BOS intent_none what is the distance from intel museum to 203, lincoln avenue in kilometers EOS
+navigation.getdistance	46:50:sourceplace,54:83:destinationplace,87:94:navigationmethod	BOS intent_none how much is the distance from work to santa clara convention centre by walking EOS
+navigation.getdistance	46:58:sourceplace,62:81:destinationplace,85:89:navigationmethod	BOS intent_none how much is the distance from intel museum to nvidia headquarters by foot EOS
+navigation.getdistance	42:61:sourceplace,65:73:destinationplace,77:81:navigationmethod	BOS intent_none what is the distance from 203, lincoln avenue to stanford by foot EOS
+navigation.getdistance	45:49:sourceplace,53:61:destinationplace,65:69:navigationmethod	BOS intent_none how far is the distance from home to new york by bike EOS
+navigation.getdistance	39:68:destinationplace,74:86:sourceplace	BOS intent_none get me the distance to santa clara convention centre from intel museum EOS
+navigation.getdistance	47:53:destinationplace,59:100:sourceplace	BOS intent_none can you get me the distance to office from 2788, san thomas express way, santa clara EOS
+navigation.getdistance	47:66:destinationplace,72:80:sourceplace	BOS intent_none can you get me the distance to nvidia headquarters from new york EOS
+navigation.getdistance	40:69:destinationplace,75:86:sourceplace	BOS intent_none show me the distance to santa clara convention centre from santa clara EOS
+navigation.getdistance	40:59:destinationplace,65:106:sourceplace	BOS intent_none show me the distance to 203, lincoln avenue from 2788, san thomas express way, santa clara EOS
+navigation.getdistance	45:56:destinationplace,62:68:sourceplace	BOS intent_none can you show the distance to santa clara from nvidia EOS
+navigation.getdistance	47:66:destinationplace,72:97:sourceplace	BOS intent_none can you locate the distance to nvidia headquarters from nvidia santa clara office EOS
+navigation.getdistance	48:89:destinationplace,93:99:distanceunit	BOS intent_none can you find me the distance to 2788, san thomas express way, santa clara in meters EOS
+navigation.getdistance	40:65:destinationplace,69:79:distanceunit	BOS intent_none tell me the distance to nvidia santa clara office in kilometers EOS
+navigation.getdistance	45:56:destinationplace,60:65:distanceunit	BOS intent_none can you show the distance to santa clara in miles EOS
+navigation.getdistance	40:69:destinationplace,75:93:sourceplace,97:103:distanceunit	BOS intent_none find me the distance to santa clara convention centre from golden gate bridge in meters EOS
+navigation.getdistance	48:56:destinationplace,62:68:sourceplace,72:82:distanceunit	BOS intent_none can you find me the distance to new york from nvidia in kilometers EOS
+navigation.getdistance	39:80:destinationplace,86:94:sourceplace,98:103:distanceunit	BOS intent_none get me the distance to 2788, san thomas express way, santa clara from new york in miles EOS
+navigation.getdistance	47:51:destinationplace,57:65:sourceplace,69:74:distanceunit	BOS intent_none can you get me the distance to work from stanford in miles EOS
+navigation.getdistance	47:55:destinationplace,61:80:sourceplace,84:94:distanceunit	BOS intent_none can you get me the distance to facebook from 203, lincoln avenue in kilometers EOS
+navigation.getdistance	40:44:destinationplace,50:61:sourceplace,65:70:distanceunit	BOS intent_none tell me the distance to home from santa clara in miles EOS
+navigation.getdistance	40:65:destinationplace,71:112:sourceplace,116:122:distanceunit	BOS intent_none tell me the distance to nvidia santa clara office from 2788, san thomas express way, santa clara in meters EOS
+navigation.getdistance	40:46:destinationplace,52:77:sourceplace,81:87:distanceunit	BOS intent_none tell me the distance to nvidia from nvidia santa clara office in meters EOS
+navigation.getdistance	40:48:destinationplace,54:79:sourceplace,83:88:distanceunit	BOS intent_none tell me the distance to facebook from nvidia santa clara office in miles EOS
+navigation.getdistance	48:59:destinationplace,65:77:sourceplace,81:87:distanceunit	BOS intent_none can you tell me the distance to santa clara from intel museum in meters EOS
+navigation.getdistance	48:77:destinationplace,83:102:sourceplace,106:116:distanceunit	BOS intent_none can you tell me the distance to santa clara convention centre from 203, lincoln avenue in kilometers EOS
+navigation.getdistance	40:59:destinationplace,65:71:sourceplace,75:81:distanceunit	BOS intent_none show me the distance to nvidia headquarters from google in meters EOS
+navigation.getdistance	40:58:destinationplace,64:68:sourceplace,72:78:distanceunit	BOS intent_none show me the distance to golden gate bridge from home in meters EOS
+navigation.getdistance	45:56:destinationplace,62:66:sourceplace,70:76:distanceunit	BOS intent_none can you show the distance to santa clara from work in meters EOS
+navigation.getdistance	45:51:destinationplace,57:75:sourceplace,79:85:distanceunit	BOS intent_none can you show the distance to google from golden gate bridge in meters EOS
+navigation.getdistance	39:50:destinationplace,56:62:sourceplace,66:76:distanceunit	BOS intent_none locate the distance to santa clara from nvidia in kilometers EOS
+navigation.getdistance	39:45:destinationplace,49:53:navigationmethod	BOS intent_none get me the distance to nvidia by foot EOS
+navigation.getdistance	40:48:destinationplace,54:58:sourceplace,62:66:navigationmethod	BOS intent_none find me the distance to stanford from home by foot EOS
+navigation.getdistance	48:73:destinationplace,79:83:sourceplace,87:90:navigationmethod	BOS intent_none can you find me the distance to nvidia santa clara office from work by car EOS
+navigation.getdistance	48:73:destinationplace,79:104:sourceplace,108:112:navigationmethod	BOS intent_none can you find me the distance to nvidia santa clara office from nvidia santa clara office by bike EOS
+navigation.getdistance	39:58:destinationplace,64:72:sourceplace,76:80:navigationmethod	BOS intent_none get me the distance to 203, lincoln avenue from new york by bike EOS
+navigation.getdistance	47:58:destinationplace,64:75:sourceplace,79:83:navigationmethod	BOS intent_none can you get me the distance to santa clara from santa clara by bike EOS
+navigation.getdistance	47:66:destinationplace,72:91:sourceplace,95:102:navigationmethod	BOS intent_none can you get me the distance to nvidia headquarters from nvidia headquarters by walking EOS
+navigation.getdistance	47:55:destinationplace,61:65:sourceplace,69:73:navigationmethod	BOS intent_none can you get me the distance to new york from home by foot EOS
+navigation.getdistance	48:52:destinationplace,58:66:sourceplace,70:73:navigationmethod	BOS intent_none can you tell me the distance to work from stanford by car EOS
+navigation.getdistance	48:59:destinationplace,65:73:sourceplace,77:80:navigationmethod	BOS intent_none can you tell me the distance to santa clara from stanford by car EOS
+navigation.getdistance	40:52:destinationplace,58:62:sourceplace,66:73:navigationmethod	BOS intent_none show me the distance to intel museum from home by walking EOS
+navigation.getdistance	40:48:destinationplace,54:72:sourceplace,76:79:navigationmethod	BOS intent_none show me the distance to stanford from golden gate bridge by car EOS
+navigation.getdistance	40:48:destinationplace,54:73:sourceplace,77:81:navigationmethod	BOS intent_none show me the distance to facebook from 203, lincoln avenue by foot EOS
+navigation.getdistance	45:64:destinationplace,70:89:sourceplace,93:97:navigationmethod	BOS intent_none can you show the distance to nvidia headquarters from nvidia headquarters by foot EOS
+navigation.getdistance	45:64:destinationplace,70:89:sourceplace,93:100:navigationmethod	BOS intent_none can you show the distance to nvidia headquarters from 203, lincoln avenue by walking EOS
+navigation.getdistance	47:53:destinationplace,59:70:sourceplace,74:81:navigationmethod	BOS intent_none can you locate the distance to nvidia from santa clara by walking EOS
+navigation.getdistancepoi	47:55:poisortcriteria,56:67:poiplace	BOS intent_none how far is the distance to the cheapest coffee shop EOS
+navigation.getdistancepoi	44:55:poiplace,59:69:distanceunit	BOS intent_none how much is the distance to coffee shop in kilometers EOS
+navigation.getdistancepoi	44:51:poisortcriteria,52:57:poiplace,61:71:distanceunit	BOS intent_none what is the distance to the closest hotel in kilometers EOS
+navigation.getdistancepoi	44:52:poisortcriteria,53:63:poiplace,67:72:distanceunit	BOS intent_none what is the distance to the cheapest restaurant in miles EOS
+navigation.getdistancepoi	47:55:poisortcriteria,56:67:poiplace,71:81:distanceunit	BOS intent_none how far is the distance to the cheapest coffee shop in kilometers EOS
+navigation.getdistancepoi	47:54:poisortcriteria,55:60:poiplace,64:67:navigationmethod	BOS intent_none how far is the distance to the closest hotel by car EOS
+navigation.getdistancepoi	29:42:poiplace	BOS intent_none how far is a movie theatre EOS
+navigation.getdistancepoi	40:45:poiplace	BOS intent_none find me the distance to hotel EOS
+navigation.getdistancepoi	40:51:poiplace,55:61:distanceunit	BOS intent_none find me the distance to coffee shop in meters EOS
+navigation.getdistancepoi	40:49:poiplace,53:59:distanceunit	BOS intent_none tell me the distance to starbucks in meters EOS
+navigation.getdistancepoi	43:50:poisortcriteria,51:56:poiplace,60:65:distanceunit	BOS intent_none get me the distance to the nearest hotel in miles EOS
+navigation.getdistancepoi	52:59:poisortcriteria,60:70:poiplace,74:80:distanceunit	BOS intent_none can you tell me the distance to the nearest restaurant in meters EOS
+navigation.getdistancepoi	40:49:poiplace,53:56:navigationmethod	BOS intent_none find me the distance to starbucks by car EOS
+navigation.getdistancepoi	39:50:poiplace,54:57:navigationmethod	BOS intent_none locate the distance to coffee shop by car EOS
+navigation.getdistancepoi	47:52:poiplace,56:59:navigationmethod	BOS intent_none can you locate the distance to hotel by car EOS
+navigation.getdistancepoi	44:51:poisortcriteria,52:63:poiplace,67:70:navigationmethod	BOS intent_none find me the distance to the closest coffee shop by car EOS
+navigation.getdistancepoi	43:50:poisortcriteria,51:61:poiplace,65:69:navigationmethod	BOS intent_none get me the distance to the nearest restaurant by bike EOS
+navigation.getdistancepoi	52:60:poisortcriteria,61:66:poiplace,70:74:navigationmethod	BOS intent_none can you tell me the distance to the cheapest hotel by foot EOS
+navigation.getdistancepoi	49:56:poisortcriteria,57:70:poiplace,74:78:navigationmethod	BOS intent_none can you show the distance to the closest movie theatre by foot EOS
+navigation.getdistancepoi	49:58:poisortcriteria,59:68:poiplace	BOS intent_none can you get me the distance to a expensive starbucks EOS
+navigation.getdistancepoi	50:54:poisortcriteria,55:64:poiplace	BOS intent_none can you tell me the distance to a good starbucks EOS
+navigation.getdistancepoi	50:54:poisortcriteria,55:60:poiplace,61:67:poisortcriteria	BOS intent_none can you find me the distance to a good hotel nearby EOS
+navigation.getdistancepoi	49:53:poisortcriteria,54:63:poiplace,64:70:poisortcriteria	BOS intent_none can you locate the distance to a good starbucks nearby EOS
+navigation.getdistancepoi	49:58:poisortcriteria,59:64:poiplace,65:71:poisortcriteria	BOS intent_none can you locate the distance to a expensive hotel nearby EOS
+navigation.getdistancepoi	49:54:poisortcriteria,55:64:poiplace,65:72:poisortcriteria	BOS intent_none can you locate the distance to a cheap starbucks closeby EOS
+navigation.getdistancepoi	50:59:poisortcriteria,60:71:poiplace,75:85:distanceunit	BOS intent_none can you find me the distance to a expensive coffee shop in kilometers EOS
+navigation.getdistancepoi	50:59:poisortcriteria,60:69:poiplace,73:78:distanceunit	BOS intent_none can you tell me the distance to a expensive starbucks in miles EOS
+navigation.getdistancepoi	50:55:poisortcriteria,56:67:poiplace,71:76:distanceunit	BOS intent_none can you tell me the distance to a cheap coffee shop in miles EOS
+navigation.getdistancepoi	42:47:poisortcriteria,48:59:poiplace,63:68:distanceunit	BOS intent_none show me the distance to a cheap coffee shop in miles EOS
+navigation.getdistancepoi	47:56:poisortcriteria,57:66:poiplace,70:76:distanceunit	BOS intent_none can you show the distance to a expensive starbucks in meters EOS
+navigation.getdistancepoi	41:45:poisortcriteria,46:59:poiplace,63:73:distanceunit	BOS intent_none locate the distance to a good movie theatre in kilometers EOS
+navigation.getdistancepoi	49:53:poisortcriteria,54:63:poiplace,67:77:distanceunit	BOS intent_none can you locate the distance to a good starbucks in kilometers EOS
+navigation.getdistancepoi	49:54:poisortcriteria,55:64:poiplace,68:74:distanceunit	BOS intent_none can you locate the distance to a cheap starbucks in meters EOS
+navigation.getdistancepoi	41:50:poisortcriteria,51:56:poiplace,57:64:poisortcriteria,68:78:distanceunit	BOS intent_none get me the distance to a expensive hotel closeby in kilometers EOS
+navigation.getdistancepoi	41:50:poisortcriteria,51:64:poiplace,65:72:poisortcriteria,76:86:distanceunit	BOS intent_none get me the distance to a expensive movie theatre closeby in kilometers EOS
+navigation.getdistancepoi	49:58:poisortcriteria,59:68:poiplace,69:76:poisortcriteria,80:90:distanceunit	BOS intent_none can you get me the distance to a expensive starbucks closeby in kilometers EOS
+navigation.getdistancepoi	42:51:poisortcriteria,52:65:poiplace,66:73:poisortcriteria,77:87:distanceunit	BOS intent_none tell me the distance to a expensive movie theatre closeby in kilometers EOS
+navigation.getdistancepoi	47:51:poisortcriteria,52:63:poiplace,64:71:poisortcriteria,75:81:distanceunit	BOS intent_none can you show the distance to a good coffee shop closeby in meters EOS
+navigation.getdistancepoi	47:52:poisortcriteria,53:58:poiplace,59:66:poisortcriteria,70:76:distanceunit	BOS intent_none can you show the distance to a cheap hotel closeby in meters EOS
+navigation.getdistancepoi	47:52:poisortcriteria,53:66:poiplace,67:73:poisortcriteria,77:83:distanceunit	BOS intent_none can you show the distance to a cheap movie theatre nearby in meters EOS
+navigation.getdistancepoi	41:45:poisortcriteria,46:59:poiplace,63:67:navigationmethod	BOS intent_none get me the distance to a good movie theatre by bike EOS
+navigation.getdistancepoi	50:55:poisortcriteria,56:61:poiplace,65:72:navigationmethod	BOS intent_none can you tell me the distance to a cheap hotel by walking EOS
+navigation.getdistancepoi	42:51:poisortcriteria,52:61:poiplace,65:69:navigationmethod	BOS intent_none show me the distance to a expensive starbucks by foot EOS
+navigation.getdistancepoi	47:51:poisortcriteria,52:61:poiplace,65:72:navigationmethod	BOS intent_none can you show the distance to a good starbucks by walking EOS
+navigation.getdistancepoi	47:56:poisortcriteria,57:70:poiplace,74:81:navigationmethod	BOS intent_none can you show the distance to a expensive movie theatre by walking EOS
+navigation.getdistancepoi	41:50:poisortcriteria,51:62:poiplace,66:70:navigationmethod	BOS intent_none locate the distance to a expensive coffee shop by foot EOS
+navigation.getdistancepoi	49:58:poisortcriteria,59:68:poiplace,72:79:navigationmethod	BOS intent_none can you locate the distance to a expensive starbucks by walking EOS
+navigation.getdistancepoi	49:58:poisortcriteria,59:70:poiplace,74:77:navigationmethod	BOS intent_none can you locate the distance to a expensive coffee shop by car EOS
+navigation.getdistancepoi	42:47:poisortcriteria,48:59:poiplace,60:66:poisortcriteria	BOS intent_none find me the distance to a cheap coffee shop nearby EOS
+navigation.getdistancepoi	49:58:poisortcriteria,59:64:poiplace,65:72:poisortcriteria	BOS intent_none can you get me the distance to a expensive hotel closeby EOS
+navigation.gettraveltime	52:58:sourceplace,62:73:destinationplace,77:81:navigationmethod	BOS intent_none how much is the traveling time from google to santa clara by bike EOS
+navigation.gettraveltime	48:59:sourceplace,63:81:destinationplace,85:89:navigationmethod	BOS intent_none what is the traveling time from santa clara to golden gate bridge by bike EOS
+navigation.gettraveltime	48:56:sourceplace,60:68:destinationplace,72:76:navigationmethod	BOS intent_none what is the traveling time from stanford to new york by bike EOS
+navigation.gettraveltime	48:56:sourceplace,60:89:destinationplace,93:96:navigationmethod	BOS intent_none what is the traveling time from facebook to santa clara convention centre by car EOS
+navigation.gettraveltime	48:89:sourceplace,93:97:destinationplace,101:105:navigationmethod	BOS intent_none what is the traveling time from 2788, san thomas express way, santa clara to work by bike EOS
+navigation.gettraveltime	48:89:sourceplace,93:111:destinationplace,115:118:navigationmethod	BOS intent_none what is the traveling time from 2788, san thomas express way, santa clara to golden gate bridge by car EOS
+navigation.gettraveltime	51:55:sourceplace,59:67:destinationplace,71:78:navigationmethod	BOS intent_none how far is the traveling time from home to stanford by walking EOS
+navigation.gettraveltime	51:57:sourceplace,61:67:destinationplace,71:74:navigationmethod	BOS intent_none how far is the traveling time from nvidia to office by car EOS
+navigation.gettraveltime	47:58:destinationplace,64:68:sourceplace	BOS intent_none how long does it take to reach santa clara from work EOS
+navigation.gettraveltime	47:58:destinationplace,64:72:sourceplace,76:80:navigationmethod	BOS intent_none how long does it take to reach santa clara from new york by bike EOS
+navigation.gettraveltime	47:55:destinationplace,61:65:sourceplace,69:76:navigationmethod	BOS intent_none how long does it take to reach facebook from home by walking EOS
+navigation.gettraveltime	46:50:navigationmethod,60:101:destinationplace,107:136:sourceplace	BOS intent_none how much time it will take by bike to reach 2788, san thomas express way, santa clara from santa clara convention centre EOS
+navigation.gettraveltime	46:53:navigationmethod,63:71:destinationplace,77:85:sourceplace	BOS intent_none how much time it will take by walking to reach new york from new york EOS
+navigation.gettraveltime	46:50:navigationmethod,60:68:destinationplace,74:93:sourceplace	BOS intent_none how much time it will take by foot to reach new york from 203, lincoln avenue EOS
+navigation.gettraveltime	45:52:navigationmethod,62:73:destinationplace,79:97:sourceplace	BOS intent_none how far time it will take by walking to reach santa clara from golden gate bridge EOS
+navigation.gettraveltime	45:52:navigationmethod,62:103:destinationplace,109:120:sourceplace	BOS intent_none how far time it will take by walking to reach 2788, san thomas express way, santa clara from santa clara EOS
+navigation.gettraveltime	48:56:destinationplace,60:67:navigationmethod	BOS intent_none what time it will take to reach stanford by walking EOS
+navigation.gettraveltime	52:60:destinationplace,66:85:sourceplace,89:93:navigationmethod	BOS intent_none how much time it will take to reach stanford from 203, lincoln avenue by foot EOS
+navigation.gettraveltime	52:60:destinationplace,66:70:sourceplace,74:81:navigationmethod	BOS intent_none how much time it will take to reach new york from work by walking EOS
+navigation.gettraveltime	52:60:destinationplace,66:74:sourceplace,78:82:navigationmethod	BOS intent_none how much time it will take to reach new york from stanford by bike EOS
+navigation.gettraveltime	48:67:destinationplace,73:114:sourceplace,118:122:navigationmethod	BOS intent_none what time it will take to reach 203, lincoln avenue from 2788, san thomas express way, santa clara by foot EOS
+navigation.gettraveltime	51:69:destinationplace,75:116:sourceplace,120:124:navigationmethod	BOS intent_none how far time it will take to reach golden gate bridge from 2788, san thomas express way, santa clara by bike EOS
+navigation.gettraveltime	51:76:destinationplace,82:90:sourceplace,94:98:navigationmethod	BOS intent_none how far time it will take to reach nvidia santa clara office from stanford by foot EOS
+navigation.gettraveltime	51:59:destinationplace,65:77:sourceplace,81:84:navigationmethod	BOS intent_none how far time it will take to reach facebook from intel museum by car EOS
+navigation.gettraveltime	51:70:destinationplace,76:87:sourceplace,91:98:navigationmethod	BOS intent_none how far time it will take to reach 203, lincoln avenue from santa clara by walking EOS
+navigation.gettraveltime	42:48:destinationplace,54:60:sourceplace	BOS intent_none find me the time to reach google from nvidia EOS
+navigation.gettraveltime	41:49:destinationplace,55:59:sourceplace	BOS intent_none get me the time to reach new york from work EOS
+navigation.gettraveltime	49:57:destinationplace,63:71:sourceplace	BOS intent_none can you get me the time to reach new york from stanford EOS
+navigation.gettraveltime	50:56:destinationplace,62:91:sourceplace,95:99:navigationmethod	BOS intent_none can you find me the time to reach office from santa clara convention centre by foot EOS
+navigation.gettraveltime	50:56:destinationplace,62:87:sourceplace,91:94:navigationmethod	BOS intent_none can you find me the time to reach office from nvidia santa clara office by car EOS
+navigation.gettraveltime	50:62:destinationplace,68:76:sourceplace,80:83:navigationmethod	BOS intent_none can you find me the time to reach intel museum from stanford by car EOS
+navigation.gettraveltime	50:58:destinationplace,64:72:sourceplace,76:80:navigationmethod	BOS intent_none can you find me the time to reach stanford from stanford by foot EOS
+navigation.gettraveltime	50:58:destinationplace,64:72:sourceplace,76:80:navigationmethod	BOS intent_none can you find me the time to reach facebook from stanford by foot EOS
+navigation.gettraveltime	41:47:destinationplace,53:59:sourceplace,63:70:navigationmethod	BOS intent_none get me the time to reach google from office by walking EOS
+navigation.gettraveltime	41:49:destinationplace,55:67:sourceplace,71:78:navigationmethod	BOS intent_none get me the time to reach facebook from intel museum by walking EOS
+navigation.gettraveltime	49:57:destinationplace,63:67:sourceplace,71:74:navigationmethod	BOS intent_none can you get me the time to reach facebook from work by car EOS
+navigation.gettraveltime	42:61:destinationplace,67:86:sourceplace,90:94:navigationmethod	BOS intent_none tell me the time to reach nvidia headquarters from nvidia headquarters by bike EOS
+navigation.gettraveltime	42:50:destinationplace,56:64:sourceplace,68:72:navigationmethod	BOS intent_none tell me the time to reach new york from new york by bike EOS
+navigation.gettraveltime	50:54:destinationplace,60:68:sourceplace,72:76:navigationmethod	BOS intent_none can you tell me the time to reach home from facebook by bike EOS
+navigation.gettraveltime	50:91:destinationplace,97:105:sourceplace,109:112:navigationmethod	BOS intent_none can you tell me the time to reach 2788, san thomas express way, santa clara from facebook by car EOS
+navigation.gettraveltime	42:54:destinationplace,60:78:sourceplace,82:89:navigationmethod	BOS intent_none show me the time to reach intel museum from golden gate bridge by walking EOS
+navigation.gettraveltime	42:54:destinationplace,60:66:sourceplace,70:77:navigationmethod	BOS intent_none show me the time to reach intel museum from google by walking EOS
+navigation.gettraveltime	42:60:destinationplace,66:77:sourceplace,81:88:navigationmethod	BOS intent_none show me the time to reach golden gate bridge from santa clara by walking EOS
+navigation.gettraveltime	42:50:destinationplace,56:60:sourceplace,64:67:navigationmethod	BOS intent_none show me the time to reach stanford from home by car EOS
+navigation.gettraveltime	47:55:destinationplace,61:80:sourceplace,84:88:navigationmethod	BOS intent_none can you show the time to reach stanford from 203, lincoln avenue by bike EOS
+navigation.gettraveltime	47:55:destinationplace,61:80:sourceplace,84:91:navigationmethod	BOS intent_none can you show the time to reach stanford from 203, lincoln avenue by walking EOS
+navigation.gettraveltime	47:66:destinationplace,72:80:sourceplace,84:87:navigationmethod	BOS intent_none can you show the time to reach 203, lincoln avenue from facebook by car EOS
+navigation.gettraveltime	49:60:destinationplace,66:72:sourceplace,76:83:navigationmethod	BOS intent_none can you locate the time to reach santa clara from google by walking EOS
+navigation.gettraveltime	49:68:destinationplace,74:78:sourceplace,82:86:navigationmethod	BOS intent_none can you locate the time to reach 203, lincoln avenue from work by foot EOS
+navigation.gettraveltime	51:80:destinationplace	BOS intent_navigation.gettraveltimepoi distance to santa clara convention centre EOS
+navigation.gettraveltimepoi	73:82:poiplace,83:87:poisortcriteria	BOS intent_none how far is the traveling time to a [$poisortcriteria_01] starbucks good EOS
+navigation.gettraveltimepoi	51:56:poiplace,60:63:navigationmethod	BOS intent_none how far is the traveling time to a hotel by car EOS
+navigation.gettraveltimepoi	52:61:poisortcriteria,62:72:poiplace,76:83:navigationmethod	BOS intent_none how much is the traveling time to a expensive restaurant by walking EOS
+navigation.gettraveltimepoi	52:61:poisortcriteria,62:72:poiplace,76:80:navigationmethod	BOS intent_none how much is the traveling time to a expensive restaurant by foot EOS
+navigation.gettraveltimepoi	48:52:poisortcriteria,53:62:poiplace,66:73:navigationmethod	BOS intent_none what is the traveling time to a good starbucks by walking EOS
+navigation.gettraveltimepoi	48:52:poisortcriteria,53:64:poiplace,68:71:navigationmethod	BOS intent_none what is the traveling time to a good coffee shop by car EOS
+navigation.gettraveltimepoi	53:61:poisortcriteria,62:71:poiplace,75:82:navigationmethod	BOS intent_none how far is the traveling time to the cheapest starbucks by walking EOS
+navigation.gettraveltimepoi	54:65:poiplace,66:72:poisortcriteria	BOS intent_none how much time it will take to reach a coffee shop nearby EOS
+navigation.gettraveltimepoi	54:58:poisortcriteria,59:68:poiplace,69:75:poisortcriteria	BOS intent_none how much time it will take to reach a good starbucks nearby EOS
+navigation.gettraveltimepoi	54:63:poisortcriteria,64:69:poiplace,70:77:poisortcriteria	BOS intent_none how much time it will take to reach a expensive hotel closeby EOS
+navigation.gettraveltimepoi	54:63:poisortcriteria,64:75:poiplace,76:82:poisortcriteria	BOS intent_none how much time it will take to reach a expensive coffee shop nearby EOS
+navigation.gettraveltimepoi	54:59:poisortcriteria,60:71:poiplace,72:79:poisortcriteria	BOS intent_none how much time it will take to reach a cheap coffee shop closeby EOS
+navigation.gettraveltimepoi	50:54:poisortcriteria,55:65:poiplace,66:73:poisortcriteria	BOS intent_none what time it will take to reach a good restaurant closeby EOS
+navigation.gettraveltimepoi	56:64:poisortcriteria,65:74:poiplace	BOS intent_none how much time it will take to reach the cheapest starbucks EOS
+navigation.gettraveltimepoi	46:49:navigationmethod,61:74:poiplace,75:82:poisortcriteria	BOS intent_none how much time it will take by car to reach a movie theatre closeby EOS
+navigation.gettraveltimepoi	46:50:navigationmethod,62:71:poiplace,72:79:poisortcriteria	BOS intent_none how much time it will take by bike to reach a starbucks closeby EOS
+navigation.gettraveltimepoi	53:57:poisortcriteria,58:71:poiplace,75:79:navigationmethod	BOS intent_none how far time it will take to reach a good movie theatre by bike EOS
+navigation.gettraveltimepoi	53:62:poisortcriteria,63:74:poiplace,78:81:navigationmethod	BOS intent_none how far time it will take to reach a expensive coffee shop by car EOS
+navigation.gettraveltimepoi	51:60:poisortcriteria,61:72:poiplace	BOS intent_none can you get me the time to reach a expensive coffee shop EOS
+navigation.gettraveltimepoi	51:56:poisortcriteria,57:62:poiplace	BOS intent_none can you get me the time to reach a cheap hotel EOS
+navigation.gettraveltimepoi	52:57:poisortcriteria,58:63:poiplace	BOS intent_none can you tell me the time to reach a cheap hotel EOS
+navigation.gettraveltimepoi	52:57:poisortcriteria,58:69:poiplace	BOS intent_none can you tell me the time to reach a cheap coffee shop EOS
+navigation.gettraveltimepoi	43:52:poisortcriteria,53:66:poiplace	BOS intent_none locate the time to reach a expensive movie theatre EOS
+navigation.gettraveltimepoi	52:56:poisortcriteria,57:67:poiplace,68:74:poisortcriteria	BOS intent_none can you find me the time to reach a good restaurant nearby EOS
+navigation.gettraveltimepoi	52:57:poisortcriteria,58:69:poiplace,70:77:poisortcriteria	BOS intent_none can you find me the time to reach a cheap coffee shop closeby EOS
+navigation.gettraveltimepoi	51:55:poisortcriteria,56:65:poiplace,66:73:poisortcriteria	BOS intent_none can you get me the time to reach a good starbucks closeby EOS
+navigation.gettraveltimepoi	51:60:poisortcriteria,61:74:poiplace,75:82:poisortcriteria	BOS intent_none can you get me the time to reach a expensive movie theatre closeby EOS
+navigation.gettraveltimepoi	44:53:poisortcriteria,54:59:poiplace,60:66:poisortcriteria	BOS intent_none tell me the time to reach a expensive hotel nearby EOS
+navigation.gettraveltimepoi	52:56:poisortcriteria,57:70:poiplace,71:78:poisortcriteria	BOS intent_none can you tell me the time to reach a good movie theatre closeby EOS
+navigation.gettraveltimepoi	43:52:poisortcriteria,53:58:poiplace,59:65:poisortcriteria	BOS intent_none locate the time to reach a expensive hotel nearby EOS
+navigation.gettraveltimepoi	51:60:poisortcriteria,61:66:poiplace,67:73:poisortcriteria	BOS intent_none can you locate the time to reach a expensive hotel nearby EOS
+navigation.gettraveltimepoi	43:48:poiplace,52:56:navigationmethod	BOS intent_none get me the time to reach a hotel by bike EOS
+navigation.gettraveltimepoi	51:62:poiplace,66:70:navigationmethod	BOS intent_none can you get me the time to reach a coffee shop by foot EOS
+navigation.gettraveltimepoi	49:58:poiplace,62:65:navigationmethod	BOS intent_none can you show the time to reach a starbucks by car EOS
+navigation.gettraveltimepoi	44:48:poisortcriteria,49:54:poiplace,58:62:navigationmethod	BOS intent_none find me the time to reach a good hotel by bike EOS
+navigation.gettraveltimepoi	52:57:poisortcriteria,58:68:poiplace,72:79:navigationmethod	BOS intent_none can you find me the time to reach a cheap restaurant by walking EOS
+navigation.gettraveltimepoi	43:52:poisortcriteria,53:63:poiplace,67:74:navigationmethod	BOS intent_none get me the time to reach a expensive restaurant by walking EOS
+navigation.gettraveltimepoi	43:52:poisortcriteria,53:64:poiplace,68:72:navigationmethod	BOS intent_none get me the time to reach a expensive coffee shop by foot EOS
+navigation.gettraveltimepoi	51:56:poisortcriteria,57:68:poiplace,72:76:navigationmethod	BOS intent_none can you get me the time to reach a cheap coffee shop by foot EOS
+navigation.gettraveltimepoi	44:48:poisortcriteria,49:59:poiplace,63:67:navigationmethod	BOS intent_none tell me the time to reach a good restaurant by bike EOS
+navigation.gettraveltimepoi	44:48:poisortcriteria,49:62:poiplace,66:73:navigationmethod	BOS intent_none tell me the time to reach a good movie theatre by walking EOS
+navigation.gettraveltimepoi	44:48:poisortcriteria,49:60:poiplace,64:68:navigationmethod	BOS intent_none show me the time to reach a good coffee shop by bike EOS
+navigation.gettraveltimepoi	44:49:poisortcriteria,50:61:poiplace,65:69:navigationmethod	BOS intent_none show me the time to reach a cheap coffee shop by bike EOS
+navigation.gettraveltimepoi	49:54:poisortcriteria,55:68:poiplace,72:79:navigationmethod	BOS intent_none can you show the time to reach a cheap movie theatre by walking EOS
+navigation.gettraveltimepoi	43:52:poisortcriteria,53:58:poiplace,62:66:navigationmethod	BOS intent_none locate the time to reach a expensive hotel by foot EOS
+navigation.gettraveltimepoi	43:48:poisortcriteria,49:62:poiplace,66:70:navigationmethod	BOS intent_none locate the time to reach a cheap movie theatre by bike EOS
+navigation.gettraveltimepoi	51:60:poisortcriteria,61:70:poiplace,74:77:navigationmethod	BOS intent_none can you locate the time to reach a expensive starbucks by car EOS
+navigation.gettraveltimepoi	41:50:poiplace,51:58:poisortcriteria	BOS intent_navigation.gettraveltimepoi a starbucks closeby EOS
+navigation.gettraveltimepoi	43:51:poisortcriteria,52:62:poiplace,63:70:poisortcriteria	BOS intent_navigation.gettraveltimepoi the cheapest restaurant closeby EOS
+navigation.gettraveltimepoi	40:48:poisortcriteria,49:58:poiplace,59:66:poisortcriteria	BOS intent_navigation.gettraveltime the cheapest starbucks closeby EOS
+navigation.geteta	64:68:destinationplace	BOS intent_none how much is the estimated arrival time to reach home EOS
+navigation.geteta	64:83:destinationplace	BOS intent_none how much is the estimated arrival time to reach 203, lincoln avenue EOS
+navigation.geteta	64:105:destinationplace	BOS intent_none how much is the estimated arrival time to reach 2788, san thomas express way, santa clara EOS
+navigation.geteta	60:64:destinationplace	BOS intent_none what is the estimated arrival time to reach home EOS
+navigation.geteta	60:64:destinationplace	BOS intent_none what is the estimated arrival time to reach work EOS
+navigation.geteta	60:66:destinationplace	BOS intent_none what is the estimated arrival time to reach office EOS
+navigation.geteta	63:74:destinationplace	BOS intent_none how far is the estimated arrival time to reach santa clara EOS
+navigation.geteta	63:92:destinationplace	BOS intent_none how far is the estimated arrival time to reach santa clara convention centre EOS
+navigation.geteta	63:69:destinationplace	BOS intent_none how far is the estimated arrival time to reach google EOS
+navigation.geteta	63:71:destinationplace	BOS intent_none how far is the estimated arrival time to reach facebook EOS
+navigation.geteta	42:71:destinationplace	BOS intent_none at what time will i reach santa clara convention centre EOS
+navigation.geteta	42:50:destinationplace	BOS intent_none at what time will i reach new york EOS
+navigation.geteta	42:48:destinationplace	BOS intent_none at what time will i reach nvidia EOS
+navigation.geteta	50:54:destinationplace	BOS intent_none find me at what time i will reach work EOS
+navigation.geteta	50:56:destinationplace	BOS intent_none find me at what time i will reach office EOS
+navigation.geteta	49:53:destinationplace	BOS intent_none get me at what time i will reach work EOS
+navigation.geteta	49:60:destinationplace	BOS intent_none get me at what time i will reach santa clara EOS
+navigation.geteta	49:61:destinationplace	BOS intent_none get me at what time i will reach intel museum EOS
+navigation.geteta	49:67:destinationplace	BOS intent_none get me at what time i will reach golden gate bridge EOS
+navigation.geteta	49:78:destinationplace	BOS intent_none get me at what time i will reach santa clara convention centre EOS
+navigation.geteta	49:74:destinationplace	BOS intent_none get me at what time i will reach nvidia santa clara office EOS
+navigation.geteta	57:61:destinationplace	BOS intent_none can you get me at what time i will reach home EOS
+navigation.geteta	50:56:destinationplace	BOS intent_none tell me at what time i will reach google EOS
+navigation.geteta	50:91:destinationplace	BOS intent_none tell me at what time i will reach 2788, san thomas express way, santa clara EOS
+navigation.geteta	58:62:destinationplace	BOS intent_none can you tell me at what time i will reach work EOS
+navigation.geteta	58:69:destinationplace	BOS intent_none can you tell me at what time i will reach santa clara EOS
+navigation.geteta	58:66:destinationplace	BOS intent_none can you tell me at what time i will reach stanford EOS
+navigation.geteta	58:66:destinationplace	BOS intent_none can you tell me at what time i will reach new york EOS
+navigation.geteta	50:54:destinationplace	BOS intent_none show me at what time i will reach home EOS
+navigation.geteta	50:56:destinationplace	BOS intent_none show me at what time i will reach office EOS
+navigation.geteta	50:68:destinationplace	BOS intent_none show me at what time i will reach golden gate bridge EOS
+navigation.geteta	50:58:destinationplace	BOS intent_none show me at what time i will reach facebook EOS
+navigation.geteta	50:69:destinationplace	BOS intent_none show me at what time i will reach 203, lincoln avenue EOS
+navigation.geteta	55:59:destinationplace	BOS intent_none can you show at what time i will reach work EOS
+navigation.geteta	55:67:destinationplace	BOS intent_none can you show at what time i will reach intel museum EOS
+navigation.geteta	55:96:destinationplace	BOS intent_none can you show at what time i will reach 2788, san thomas express way, santa clara EOS
+navigation.geteta	49:55:destinationplace	BOS intent_none locate at what time i will reach office EOS
+navigation.geteta	49:68:destinationplace	BOS intent_none locate at what time i will reach nvidia headquarters EOS
+navigation.geteta	49:57:destinationplace	BOS intent_none locate at what time i will reach stanford EOS
+navigation.geteta	49:68:destinationplace	BOS intent_none locate at what time i will reach 203, lincoln avenue EOS
+navigation.geteta	57:76:destinationplace	BOS intent_none can you locate at what time i will reach nvidia headquarters EOS
+navigation.geteta	29:47:destinationplace	BOS intent_navigation.geteta golden gate bridge EOS
+navigation.geteta	29:48:destinationplace	BOS intent_navigation.geteta 203, lincoln avenue EOS
+navigation.geteta	29:70:destinationplace	BOS intent_navigation.geteta 2788, san thomas express way, santa clara EOS
+navigation.geteta	32:38:destinationplace	BOS intent_navigation.geteta to office EOS
+navigation.geteta	32:51:destinationplace	BOS intent_navigation.geteta to nvidia headquarters EOS
+navigation.geteta	32:44:destinationplace	BOS intent_navigation.geteta to intel museum EOS
+navigation.geteta	32:40:destinationplace	BOS intent_navigation.geteta to stanford EOS
+navigation.geteta	32:38:destinationplace	BOS intent_navigation.geteta to google EOS
+navigation.geteta	32:40:destinationplace	BOS intent_navigation.geteta to facebook EOS
+navigation.showdirection	36:44:destinationplace	BOS intent_none tell me the path to facebook EOS
+navigation.showdirection	50:91:destinationplace,97:109:sourceplace	BOS intent_none can you find me the directions to 2788, san thomas express way, santa clara from intel museum EOS
+navigation.showdirection	43:62:destinationplace,68:87:sourceplace	BOS intent_none can you find me the way to 203, lincoln avenue from nvidia headquarters EOS
+navigation.showdirection	35:43:destinationplace,49:57:sourceplace	BOS intent_none get me the path to new york from stanford EOS
+navigation.showdirection	42:61:destinationplace,67:71:sourceplace	BOS intent_none tell me the directions to 203, lincoln avenue from home EOS
+navigation.showdirection	35:43:destinationplace,49:61:sourceplace	BOS intent_none show me the way to stanford from intel museum EOS
+navigation.showdirection	35:41:destinationplace,47:55:sourceplace	BOS intent_none show me the way to google from facebook EOS
+navigation.showdirection	34:63:destinationplace,69:98:sourceplace	BOS intent_none locate the way to santa clara convention centre from santa clara convention centre EOS
+navigation.showdirection	34:40:destinationplace,46:58:sourceplace	BOS intent_none locate the way to google from intel museum EOS
+navigation.showdirection	35:39:destinationplace,45:49:sourceplace	BOS intent_none locate the path to work from work EOS
+navigation.showdirection	35:54:destinationplace,60:72:sourceplace	BOS intent_none locate the path to nvidia headquarters from intel museum EOS
+navigation.showdirection	43:51:destinationplace,57:69:sourceplace	BOS intent_none can you locate the path to stanford from intel museum EOS
+navigation.showdirection	43:49:destinationplace,55:59:sourceplace	BOS intent_none can you locate the path to nvidia from home EOS
+navigation.showdirection	49:57:destinationplace,61:65:navigationmethod	BOS intent_none can you locate the directions to stanford by bike EOS
+navigation.showdirection	42:54:destinationplace,60:89:sourceplace,93:97:navigationmethod	BOS intent_none find me the directions to intel museum from santa clara convention centre by bike EOS
+navigation.showdirection	36:44:destinationplace,50:54:sourceplace,58:62:navigationmethod	BOS intent_none find me the path to facebook from home by foot EOS
+navigation.showdirection	50:54:destinationplace,60:72:sourceplace,76:79:navigationmethod	BOS intent_none can you find me the directions to work from intel museum by car EOS
+navigation.showdirection	50:62:destinationplace,68:86:sourceplace,90:97:navigationmethod	BOS intent_none can you find me the directions to intel museum from golden gate bridge by walking EOS
+navigation.showdirection	43:49:destinationplace,55:73:sourceplace,77:80:navigationmethod	BOS intent_none can you find me the way to office from golden gate bridge by car EOS
+navigation.showdirection	43:51:destinationplace,57:63:sourceplace,67:70:navigationmethod	BOS intent_none can you find me the way to facebook from nvidia by car EOS
+navigation.showdirection	43:84:destinationplace,90:96:sourceplace,100:104:navigationmethod	BOS intent_none can you find me the way to 2788, san thomas express way, santa clara from office by foot EOS
+navigation.showdirection	41:52:destinationplace,58:66:sourceplace,70:77:navigationmethod	BOS intent_none get me the directions to santa clara from facebook by walking EOS
+navigation.showdirection	34:38:destinationplace,44:50:sourceplace,54:61:navigationmethod	BOS intent_none get me the way to home from nvidia by walking EOS
+navigation.showdirection	34:63:destinationplace,69:88:sourceplace,92:99:navigationmethod	BOS intent_none get me the way to santa clara convention centre from nvidia headquarters by walking EOS
+navigation.showdirection	49:57:destinationplace,63:82:sourceplace,86:90:navigationmethod	BOS intent_none can you get me the directions to stanford from 203, lincoln avenue by bike EOS
+navigation.showdirection	42:67:destinationplace,73:92:sourceplace,96:100:navigationmethod	BOS intent_none can you get me the way to nvidia santa clara office from 203, lincoln avenue by bike EOS
+navigation.showdirection	42:48:destinationplace,54:66:sourceplace,70:73:navigationmethod	BOS intent_none can you get me the way to google from intel museum by car EOS
+navigation.showdirection	43:62:destinationplace,68:97:sourceplace,101:105:navigationmethod	BOS intent_none can you get me the path to nvidia headquarters from santa clara convention centre by bike EOS
+navigation.showdirection	42:48:destinationplace,54:83:sourceplace,87:90:navigationmethod	BOS intent_none tell me the directions to nvidia from santa clara convention centre by car EOS
+navigation.showdirection	42:83:destinationplace,89:114:sourceplace,118:125:navigationmethod	BOS intent_none tell me the directions to 2788, san thomas express way, santa clara from nvidia santa clara office by walking EOS
+navigation.showdirection	35:64:destinationplace,70:89:sourceplace,93:97:navigationmethod	BOS intent_none tell me the way to santa clara convention centre from 203, lincoln avenue by foot EOS
+navigation.showdirection	35:41:destinationplace,47:58:sourceplace,62:69:navigationmethod	BOS intent_none tell me the way to nvidia from santa clara by walking EOS
+navigation.showdirection	35:54:destinationplace,60:64:sourceplace,68:72:navigationmethod	BOS intent_none tell me the way to 203, lincoln avenue from work by bike EOS
+navigation.showdirection	36:55:destinationplace,61:80:sourceplace,84:87:navigationmethod	BOS intent_none tell me the path to 203, lincoln avenue from nvidia headquarters by car EOS
+navigation.showdirection	50:56:destinationplace,62:70:sourceplace,74:78:navigationmethod	BOS intent_none can you tell me the directions to google from new york by foot EOS
+navigation.showdirection	44:63:destinationplace,69:88:sourceplace,92:96:navigationmethod	BOS intent_none can you tell me the path to nvidia headquarters from 203, lincoln avenue by foot EOS
+navigation.showdirection	35:41:destinationplace,47:53:sourceplace,57:64:navigationmethod	BOS intent_none show me the way to nvidia from office by walking EOS
+navigation.showdirection	36:44:destinationplace,50:68:sourceplace,72:76:navigationmethod	BOS intent_none show me the path to facebook from golden gate bridge by foot EOS
+navigation.showdirection	36:77:destinationplace,83:102:sourceplace,106:109:navigationmethod	BOS intent_none show me the path to 2788, san thomas express way, santa clara from 203, lincoln avenue by car EOS
+navigation.showdirection	41:47:destinationplace,53:61:sourceplace,65:68:navigationmethod	BOS intent_none can you show the path to office from facebook by car EOS
+navigation.showdirection	41:70:destinationplace,76:95:sourceplace,99:102:navigationmethod	BOS intent_none can you show the path to santa clara convention centre from nvidia headquarters by car EOS
+navigation.showdirection	34:45:destinationplace,51:63:sourceplace,67:74:navigationmethod	BOS intent_none locate the way to santa clara from intel museum by walking EOS
+navigation.showdirection	34:52:destinationplace,58:87:sourceplace,91:95:navigationmethod	BOS intent_none locate the way to golden gate bridge from santa clara convention centre by bike EOS
+navigation.showdirection	34:40:destinationplace,46:57:sourceplace,61:65:navigationmethod	BOS intent_none locate the way to google from santa clara by foot EOS
+navigation.showdirection	35:43:destinationplace,49:68:sourceplace,72:75:navigationmethod	BOS intent_none locate the path to stanford from nvidia headquarters by car EOS
+navigation.showdirection	42:46:destinationplace,52:56:sourceplace,60:64:navigationmethod	BOS intent_none can you locate the way to home from home by bike EOS
+navigation.showdirection	42:71:destinationplace,77:85:sourceplace,89:93:navigationmethod	BOS intent_none can you locate the way to santa clara convention centre from stanford by foot EOS
+navigation.showdirection	43:47:destinationplace,53:65:sourceplace,69:73:navigationmethod	BOS intent_none can you locate the path to work from intel museum by bike EOS
+navigation.showdirection	41:45:navigationmethod,49:51:destinationplace	BOS intent_none get me the directions by foot to my EOS
+navigation.showdirection	50:57:navigationmethod,61:69:destinationplace	BOS intent_none can you tell me the directions by walking to facebook EOS
+navigation.showdirectionpoi	52:61:poiplace,69:72:distance,73:78:distanceunit	BOS intent_none can you find me the directions to a starbucks within ten miles EOS
+navigation.showdirectionpoi	46:55:poiplace,63:67:distance,68:74:distanceunit	BOS intent_none can you find me the path to a starbucks within five meters EOS
+navigation.showdirectionpoi	51:62:poiplace,70:73:distance,74:84:distanceunit	BOS intent_none can you get me the directions to a coffee shop within two kilometers EOS
+navigation.showdirectionpoi	37:46:poiplace,54:57:distance,58:68:distanceunit	BOS intent_none tell me the way to a starbucks within ten kilometers EOS
+navigation.showdirectionpoi	36:46:poiplace,54:57:distance,58:68:distanceunit	BOS intent_none locate the way to a restaurant within ten kilometers EOS
+navigation.showdirectionpoi	36:47:poiplace,51:54:navigationmethod	BOS intent_none get me the way to a coffee shop by car EOS
+navigation.showdirectionpoi	37:46:poisortcriteria,47:52:poiplace	BOS intent_none tell me the way to a expensive hotel EOS
+navigation.showdirectionpoi	44:48:poisortcriteria,49:59:poiplace	BOS intent_none show me the directions to a good restaurant EOS
+navigation.showdirectionpoi	52:57:poisortcriteria,58:68:poiplace,76:80:distance,81:91:distanceunit	BOS intent_none can you find me the directions to a cheap restaurant within five kilometers EOS
+navigation.showdirectionpoi	45:54:poisortcriteria,55:60:poiplace,68:71:distance,72:82:distanceunit	BOS intent_none can you find me the way to a expensive hotel within ten kilometers EOS
+navigation.showdirectionpoi	51:56:poisortcriteria,57:66:poiplace,74:78:distance,79:89:distanceunit	BOS intent_none can you get me the directions to a cheap starbucks within five kilometers EOS
+navigation.showdirectionpoi	52:56:poisortcriteria,57:62:poiplace,70:73:distance,74:80:distanceunit	BOS intent_none can you tell me the directions to a good hotel within ten meters EOS
+navigation.showdirectionpoi	45:50:poisortcriteria,51:60:poiplace,68:71:distance,72:78:distanceunit	BOS intent_none can you tell me the way to a cheap starbucks within ten meters EOS
+navigation.showdirectionpoi	43:48:poisortcriteria,49:58:poiplace,66:69:distance,70:75:distanceunit	BOS intent_none locate the directions to a cheap starbucks within two miles EOS
+navigation.showdirectionpoi	36:41:poisortcriteria,42:51:poiplace,59:62:distance,63:68:distanceunit	BOS intent_none locate the way to a cheap starbucks within ten miles EOS
+navigation.showdirectionpoi	37:41:poisortcriteria,42:55:poiplace,63:66:distance,67:72:distanceunit	BOS intent_none locate the path to a good movie theatre within two miles EOS
+navigation.showdirectionpoi	44:48:poisortcriteria,49:62:poiplace,66:70:navigationmethod	BOS intent_none find me the directions to a good movie theatre by bike EOS
+navigation.showdirectionpoi	36:41:poisortcriteria,42:47:poiplace,51:58:navigationmethod	BOS intent_none get me the way to a cheap hotel by walking EOS
+navigation.showdirectionpoi	52:57:poisortcriteria,58:67:poiplace,71:75:navigationmethod	BOS intent_none can you tell me the directions to a cheap starbucks by foot EOS
+navigation.showdirectionpoi	45:49:poisortcriteria,50:61:poiplace,65:69:navigationmethod	BOS intent_none can you tell me the way to a good coffee shop by foot EOS
+navigation.showdirectionpoi	46:50:poisortcriteria,51:64:poiplace,68:75:navigationmethod	BOS intent_none can you tell me the path to a good movie theatre by walking EOS
+navigation.showdirectionpoi	46:55:poisortcriteria,56:61:poiplace,65:69:navigationmethod	BOS intent_none can you tell me the path to a expensive hotel by foot EOS
+navigation.showdirectionpoi	52:56:poisortcriteria,57:66:poiplace,67:73:poisortcriteria	BOS intent_none can you tell me the directions to a good starbucks nearby EOS
+navigation.showdirectionpoi	44:52:poisortcriteria,53:66:poiplace	BOS intent_none can you show the way to the cheapest movie theatre EOS
+navigation.showdirectionpoi	46:54:poisortcriteria,55:68:poiplace,72:76:navigationmethod	BOS intent_none can you get me the way to the cheapest movie theatre by foot EOS
+navigation.showdirectionpoi	44:52:poisortcriteria,53:63:poiplace,67:74:navigationmethod	BOS intent_none can you show the way to the cheapest restaurant by walking EOS
+navigation.showdirectionpoi	39:47:poisortcriteria,48:59:poiplace,67:70:distance,71:76:distanceunit	BOS intent_none tell me the way to the cheapest coffee shop within ten miles EOS
+navigation.showdirectionpoi	40:48:poisortcriteria,49:54:poiplace,62:65:distance,66:72:distanceunit	BOS intent_none tell me the path to the cheapest hotel within ten meters EOS
+navigation.showdirectionpoi	54:62:poisortcriteria,63:68:poiplace,76:80:distance,81:86:distanceunit	BOS intent_none can you tell me the directions to the cheapest hotel within five miles EOS
+navigation.showdirectionpoi	47:55:poisortcriteria,56:65:poiplace,73:76:distance,77:82:distanceunit	BOS intent_none can you locate the path to the cheapest starbucks within two miles EOS
+navigation.showdirectionpoi	38:46:poisortcriteria,47:56:poiplace,57:64:poisortcriteria	BOS intent_none get me the way to the cheapest starbucks closeby EOS
+navigation.showdirectionpoi	51:59:poisortcriteria,60:71:poiplace,72:78:poisortcriteria	BOS intent_none can you show the directions to the cheapest coffee shop nearby EOS
+navigation.showdirectionpoi	47:55:poisortcriteria,56:61:poiplace,62:68:poisortcriteria,72:76:navigationmethod	BOS intent_none can you tell me the way to the cheapest hotel nearby by bike EOS
+navigation.showdirectionpoi	42:45:navigationmethod,51:55:poisortcriteria,56:65:poiplace	BOS intent_none find me the directions by car to a good starbucks EOS
+navigation.showdirectionpoi	42:45:navigationmethod,51:56:poisortcriteria,57:67:poiplace	BOS intent_none tell me the directions by car to a cheap restaurant EOS
+navigation.showdirectionpoi	35:38:navigationmethod,44:48:poisortcriteria,49:59:poiplace	BOS intent_none show me the way by car to a good restaurant EOS
+navigation.showdirectionpoi	43:47:navigationmethod,53:58:poisortcriteria,59:64:poiplace,65:72:poisortcriteria	BOS intent_none can you find me the way by bike to a cheap hotel closeby EOS
+navigation.showdirectionpoi	41:45:navigationmethod,51:60:poisortcriteria,61:66:poiplace,67:73:poisortcriteria	BOS intent_none get me the directions by foot to a expensive hotel nearby EOS
+navigation.showdirectionpoi	34:37:navigationmethod,43:52:poisortcriteria,53:63:poiplace,64:71:poisortcriteria	BOS intent_none get me the way by car to a expensive restaurant closeby EOS
+navigation.showdirectionpoi	34:41:navigationmethod,47:56:poisortcriteria,57:70:poiplace,71:77:poisortcriteria	BOS intent_none get me the way by walking to a expensive movie theatre nearby EOS
+navigation.showdirectionpoi	49:52:navigationmethod,58:62:poisortcriteria,63:68:poiplace,69:75:poisortcriteria	BOS intent_none can you get me the directions by car to a good hotel nearby EOS
+navigation.showdirectionpoi	43:47:navigationmethod,53:62:poisortcriteria,63:68:poiplace,69:75:poisortcriteria	BOS intent_none can you get me the path by foot to a expensive hotel nearby EOS
+navigation.showdirectionpoi	42:46:navigationmethod,52:56:poisortcriteria,57:67:poiplace,68:75:poisortcriteria	BOS intent_none tell me the directions by bike to a good restaurant closeby EOS
+navigation.showdirectionpoi	44:51:navigationmethod,57:66:poisortcriteria,67:80:poiplace,81:87:poisortcriteria	BOS intent_none can you tell me the path by walking to a expensive movie theatre nearby EOS
+navigation.showdirectionpoi	35:42:navigationmethod,48:53:poisortcriteria,54:59:poiplace,60:67:poisortcriteria	BOS intent_none show me the way by walking to a cheap hotel closeby EOS
+navigation.showdirectionpoi	50:53:navigationmethod,61:69:poisortcriteria,70:79:poiplace	BOS intent_none can you find me the directions by car to the cheapest starbucks EOS
+navigation.showdirectionpoi	43:47:navigationmethod,55:62:poisortcriteria,63:76:poiplace	BOS intent_none can you tell me the way by bike to the nearest movie theatre EOS
+navigation.showdirectionpoi	42:46:navigationmethod,54:61:poisortcriteria,62:75:poiplace	BOS intent_none show me the directions by foot to the nearest movie theatre EOS
+navigation.showdirectionpoi	43:47:navigationmethod,55:63:poisortcriteria,64:74:poiplace	BOS intent_none can you find me the way by bike to the cheapest restaurant EOS
+navigation.showdirectionpoi	43:50:navigationmethod,58:66:poisortcriteria,67:80:poiplace	BOS intent_none can you locate the path by walking to the cheapest movie theatre EOS
+navigation.showdirectionavoidhighways	49:90:destinationplace	BOS intent_none can you get me the directions to 2788, san thomas express way, santa clara without highways EOS
+navigation.showdirectionavoidhighways	43:49:destinationplace	BOS intent_none can you get me the path to google without highways EOS
+navigation.showdirectionavoidhighways	36:44:destinationplace,50:91:sourceplace	BOS intent_none find me the path to facebook from 2788, san thomas express way, santa clara by avoiding highways EOS
+navigation.showdirectionavoidhighways	43:61:destinationplace,67:85:sourceplace	BOS intent_none can you find me the way to golden gate bridge from golden gate bridge by avoiding highways EOS
+navigation.showdirectionavoidhighways	43:51:destinationplace,57:76:sourceplace	BOS intent_none can you find me the way to stanford from 203, lincoln avenue by avoiding highways EOS
+navigation.showdirectionavoidhighways	41:60:destinationplace,66:85:sourceplace	BOS intent_none get me the directions to 203, lincoln avenue from 203, lincoln avenue by avoiding highways EOS
+navigation.showdirectionavoidhighways	35:41:destinationplace,47:55:sourceplace	BOS intent_none tell me the way to google from stanford by avoiding highways EOS
+navigation.showdirectionavoidhighways	36:42:destinationplace,48:66:sourceplace	BOS intent_none tell me the path to office from golden gate bridge by avoiding highways EOS
+navigation.showdirectionavoidhighways	35:47:destinationplace,53:65:sourceplace	BOS intent_none show me the way to intel museum from intel museum by avoiding highways EOS
+navigation.showdirectionavoidhighways	35:43:destinationplace,49:68:sourceplace	BOS intent_none show me the way to stanford from 203, lincoln avenue by avoiding highways EOS
+navigation.showdirectionavoidhighways	40:44:destinationplace,50:69:sourceplace	BOS intent_none can you show the way to work from 203, lincoln avenue by avoiding highways EOS
+navigation.showdirectionavoidhighways	34:42:destinationplace,48:52:sourceplace	BOS intent_none locate the way to new york from work by avoiding highways EOS
+navigation.showdirectionavoidhighways	42:46:destinationplace,52:71:sourceplace	BOS intent_none can you locate the way to work from nvidia headquarters by avoiding highways EOS
+navigation.showdirectionavoidhighways	42:71:destinationplace,77:83:sourceplace	BOS intent_none find me the directions to santa clara convention centre from nvidia without highways EOS
+navigation.showdirectionavoidhighways	35:46:destinationplace,52:63:sourceplace	BOS intent_none find me the way to santa clara from santa clara without highways EOS
+navigation.showdirectionavoidhighways	35:43:destinationplace,49:55:sourceplace	BOS intent_none find me the way to new york from google without highways EOS
+navigation.showdirectionavoidhighways	41:49:destinationplace,55:73:sourceplace	BOS intent_none get me the directions to new york from golden gate bridge without highways EOS
+navigation.showdirectionavoidhighways	42:50:destinationplace,56:67:sourceplace	BOS intent_none tell me the directions to new york from santa clara without highways EOS
+navigation.showdirectionavoidhighways	35:43:destinationplace,49:68:sourceplace	BOS intent_none tell me the way to new york from 203, lincoln avenue without highways EOS
+navigation.showdirectionavoidhighways	50:62:destinationplace,68:72:sourceplace	BOS intent_none can you tell me the directions to intel museum from work without highways EOS
+navigation.showdirectionavoidhighways	44:63:destinationplace,69:88:sourceplace	BOS intent_none can you tell me the path to 203, lincoln avenue from 203, lincoln avenue without highways EOS
+navigation.showdirectionavoidhighways	42:46:destinationplace,52:70:sourceplace	BOS intent_none show me the directions to work from golden gate bridge without highways EOS
+navigation.showdirectionavoidhighways	47:65:destinationplace,71:89:sourceplace	BOS intent_none can you show the directions to golden gate bridge from golden gate bridge without highways EOS
+navigation.showdirectionavoidhighways	49:57:destinationplace,63:82:sourceplace	BOS intent_none can you locate the directions to new york from 203, lincoln avenue without highways EOS
+navigation.showdirectionavoidhighways	59:88:destinationplace	BOS intent_none can you locate the way without highways to santa clara convention centre EOS
+navigation.showdirectionavoidhighways	53:57:destinationplace,63:82:sourceplace	BOS intent_none find me the path without highways to work from nvidia headquarters EOS
+navigation.showdirectionavoidhighways	60:68:destinationplace,74:93:sourceplace	BOS intent_none can you find me the way without highways to stanford from nvidia headquarters EOS
+navigation.showdirectionavoidhighways	58:64:destinationplace,70:111:sourceplace	BOS intent_none get me the directions without highways to office from 2788, san thomas express way, santa clara EOS
+navigation.showdirectionavoidhighways	51:59:destinationplace,65:83:sourceplace	BOS intent_none get me the way without highways to stanford from golden gate bridge EOS
+navigation.showdirectionavoidhighways	51:92:destinationplace,98:102:sourceplace	BOS intent_none get me the way without highways to 2788, san thomas express way, santa clara from work EOS
+navigation.showdirectionavoidhighways	52:71:destinationplace,77:118:sourceplace	BOS intent_none get me the path without highways to nvidia headquarters from 2788, san thomas express way, santa clara EOS
+navigation.showdirectionavoidhighways	52:60:destinationplace,66:84:sourceplace	BOS intent_none get me the path without highways to facebook from golden gate bridge EOS
+navigation.showdirectionavoidhighways	59:71:destinationplace,77:96:sourceplace	BOS intent_none can you get me the way without highways to intel museum from 203, lincoln avenue EOS
+navigation.showdirectionavoidhighways	60:66:destinationplace,72:76:sourceplace	BOS intent_none can you get me the path without highways to nvidia from work EOS
+navigation.showdirectionavoidhighways	53:78:destinationplace,84:102:sourceplace	BOS intent_none tell me the path without highways to nvidia santa clara office from golden gate bridge EOS
+navigation.showdirectionavoidhighways	53:72:destinationplace,78:86:sourceplace	BOS intent_none tell me the path without highways to 203, lincoln avenue from stanford EOS
+navigation.showdirectionavoidhighways	59:67:destinationplace,73:77:sourceplace	BOS intent_none show me the directions without highways to stanford from home EOS
+navigation.showdirectionavoidhighways	52:71:destinationplace,77:83:sourceplace	BOS intent_none show me the way without highways to nvidia headquarters from office EOS
+navigation.showdirectionavoidhighways	60:68:destinationplace,74:80:sourceplace	BOS intent_none can you locate the path without highways to new york from office EOS
+navigation.showdirectionavoidhighways	63:69:destinationplace,75:94:sourceplace	BOS intent_none find me the directions by avoiding highways to office from nvidia headquarters EOS
+navigation.showdirectionavoidhighways	63:75:destinationplace,81:87:sourceplace	BOS intent_none find me the directions by avoiding highways to intel museum from google EOS
+navigation.showdirectionavoidhighways	56:81:destinationplace,87:116:sourceplace	BOS intent_none get me the path by avoiding highways to nvidia santa clara office from santa clara convention centre EOS
+navigation.showdirectionavoidhighways	64:82:destinationplace,88:100:sourceplace	BOS intent_none can you get me the path by avoiding highways to golden gate bridge from intel museum EOS
+navigation.showdirectionavoidhighways	56:62:destinationplace,68:74:sourceplace	BOS intent_none tell me the way by avoiding highways to google from office EOS
+navigation.showdirectionavoidhighways	56:62:destinationplace,68:76:sourceplace	BOS intent_none show me the way by avoiding highways to office from facebook EOS
+navigation.showdirectionavoidhighways	57:76:destinationplace,82:88:sourceplace	BOS intent_none show me the path by avoiding highways to nvidia headquarters from nvidia EOS
+navigation.showdirectionavoidhighways	62:66:destinationplace,72:91:sourceplace	BOS intent_none can you show the path by avoiding highways to home from 203, lincoln avenue EOS
+navigation.showdirectionavoidhighways	55:63:destinationplace,69:77:sourceplace	BOS intent_none locate the way by avoiding highways to stanford from stanford EOS
+navigation.showdirectionavoidhighways	56:81:destinationplace,87:106:sourceplace	BOS intent_none locate the path by avoiding highways to nvidia santa clara office from nvidia headquarters EOS
+navigation.showdirectionavoidhighways	64:70:destinationplace,76:94:sourceplace	BOS intent_none can you locate the path by avoiding highways to google from golden gate bridge EOS
+navigation.showmap	24:35:destinationplace	BOS intent_none find me santa clara on the map EOS
+navigation.showmap	24:43:destinationplace	BOS intent_none find me 203, lincoln avenue on the map EOS
+navigation.showmap	24:65:destinationplace	BOS intent_none find me 2788, san thomas express way, santa clara on the map EOS
+navigation.showmap	23:52:destinationplace	BOS intent_none get me santa clara convention centre on the map EOS
+navigation.showmap	31:39:destinationplace	BOS intent_none can you get me new york on the map EOS
+navigation.showmap	32:38:destinationplace	BOS intent_none can you tell me google on the map EOS
+navigation.showmap	24:35:destinationplace	BOS intent_none show me santa clara on the map EOS
+navigation.showmap	40:58:destinationplace	BOS intent_none find me the location of golden gate bridge EOS
+navigation.showmap	48:67:destinationplace	BOS intent_none can you find me the location of nvidia headquarters EOS
+navigation.showmap	48:77:destinationplace	BOS intent_none can you find me the location of santa clara convention centre EOS
+navigation.showmap	48:56:destinationplace	BOS intent_none can you find me the location of new york EOS
+navigation.showmap	39:80:destinationplace	BOS intent_none get me the location of 2788, san thomas express way, santa clara EOS
+navigation.showmap	47:51:destinationplace	BOS intent_none can you get me the location of work EOS
+navigation.showmap	47:66:destinationplace	BOS intent_none can you get me the location of 203, lincoln avenue EOS
+navigation.showmap	40:58:destinationplace	BOS intent_none tell me the location of golden gate bridge EOS
+navigation.showmap	48:54:destinationplace	BOS intent_none can you tell me the location of office EOS
+navigation.showmap	48:56:destinationplace	BOS intent_none can you tell me the location of new york EOS
+navigation.showmap	45:70:destinationplace	BOS intent_none can you show the location of nvidia santa clara office EOS
+navigation.showmap	47:55:destinationplace	BOS intent_none can you locate the location of new york EOS
+navigation.showmap	48:60:destinationplace	BOS intent_none can you find me the location of intel museum on the map EOS
+navigation.showmap	47:55:destinationplace	BOS intent_none can you get me the location of facebook on the map EOS
+navigation.showmap	40:52:destinationplace	BOS intent_none tell me the location of intel museum on the map EOS
+navigation.showmap	39:51:destinationplace	BOS intent_none locate the location of intel museum on the map EOS
+navigation.showmap	47:66:destinationplace	BOS intent_none can you locate the location of 203, lincoln avenue on the map EOS
+navigation.showmap	47:88:destinationplace	BOS intent_none can you locate the location of 2788, san thomas express way, santa clara on the map EOS
+navigation.showmap	35:43:destinationplace	BOS intent_none find me the map of facebook EOS
+navigation.showmap	34:75:destinationplace	BOS intent_none get me the map of 2788, san thomas express way, santa clara EOS
+navigation.showmap	35:41:destinationplace	BOS intent_none tell me the map of office EOS
+navigation.showmap	35:64:destinationplace	BOS intent_none tell me the map of santa clara convention centre EOS
+navigation.showmap	42:48:destinationplace	BOS intent_none can you locate the map of google EOS
+navigation.showmap	23:27:destinationplace	BOS intent_none locate home on the map EOS
+navigation.showmap	32:34:destinationplace	BOS intent_none can you find me my location EOS
+navigation.showmap	24:28:destinationplace	BOS intent_none tell me mine coordinates EOS
+navigation.showmap	24:26:destinationplace	BOS intent_none tell me me coordinates EOS
+navigation.showmap	23:25:destinationplace	BOS intent_none locate my coordinates EOS
+navigation.showmap	32:34:destinationplace	BOS intent_none can you find me my latitude and longitude on the map EOS
+navigation.showmap	31:35:destinationplace	BOS intent_none can you get me mine coordinates on the map EOS
+navigation.showmap	23:25:destinationplace	BOS intent_none locate my location on the map EOS
+navigation.showmap	23:27:destinationplace	BOS intent_none locate mine location on the map EOS
+navigation.showmap	31:33:destinationplace	BOS intent_none can you get me me current location EOS
+navigation.showmap	32:34:destinationplace	BOS intent_none can you tell me me current latitude and longitude EOS
+navigation.showmap	24:26:destinationplace	BOS intent_none show me my current coordinates EOS
+navigation.showmap	24:28:destinationplace	BOS intent_none show me mine current latitude and longitude EOS
+navigation.showmap	29:33:destinationplace	BOS intent_none can you show mine current latitude and longitude EOS
+navigation.showmap	31:33:destinationplace	BOS intent_none can you locate my current latitude and longitude EOS
+navigation.showmap	32:34:destinationplace	BOS intent_none can you find me my current location on the map EOS
+navigation.showmap	24:26:destinationplace	BOS intent_none tell me me current location on the map EOS
+navigation.showmap	24:28:destinationplace	BOS intent_none show me mine current latitude and longitude on the map EOS
+navigation.showmap	24:26:destinationplace	BOS intent_none show me me current location on the map EOS
+navigation.showmap	29:31:destinationplace	BOS intent_none can you show my current location on the map EOS
+navigation.showmappoi	25:36:poiplace,44:47:distance,48:58:distanceunit	BOS intent_none get me a coffee shop within ten kilometers EOS
+navigation.showmappoi	26:39:poiplace,47:51:distance,52:62:distanceunit	BOS intent_none tell me a movie theatre within five kilometers on the map EOS
+navigation.showmappoi	26:39:poiplace,47:50:distance,51:57:distanceunit	BOS intent_none tell me a movie theatre within ten meters on the map EOS
+navigation.showmappoi	34:38:poisortcriteria,39:52:poiplace,60:63:distance,64:74:distanceunit	BOS intent_none can you tell me a good movie theatre within two kilometers EOS
+navigation.showmappoi	25:29:poisortcriteria,30:43:poiplace,59:62:distance,63:69:distanceunit	BOS intent_none get me a good movie theatre located within ten meters EOS
+navigation.showmappoi	25:34:poisortcriteria,35:46:poiplace,62:65:distance,66:72:distanceunit	BOS intent_none get me a expensive coffee shop located within ten meters EOS
+navigation.showmappoi	34:43:poisortcriteria,44:54:poiplace,73:77:distance,78:83:distanceunit	BOS intent_none can you find me a expensive restaurant on the map within five miles EOS
+navigation.showmappoi	31:40:poisortcriteria,41:50:poiplace,69:72:distance,73:79:distanceunit	BOS intent_none can you show a expensive starbucks on the map within two meters EOS
+navigation.showmappoi	25:34:poisortcriteria,35:45:poiplace,72:75:distance,76:82:distanceunit	BOS intent_none get me a expensive restaurant on the map located within two meters EOS
+navigation.showmappoi	31:36:poisortcriteria,37:47:poiplace,74:77:distance,78:84:distanceunit	BOS intent_none can you show a cheap restaurant on the map located within two meters EOS
+navigation.showmappoi	31:36:poisortcriteria,37:42:poiplace,69:73:distance,74:80:distanceunit	BOS intent_none can you show a cheap hotel on the map located within five meters EOS
+navigation.showmappoi	25:34:poisortcriteria,35:48:poiplace,49:55:poisortcriteria	BOS intent_none get me a expensive movie theatre nearby EOS
+navigation.showmappoi	34:43:poisortcriteria,44:53:poiplace,54:60:poisortcriteria	BOS intent_none can you tell me a expensive starbucks nearby EOS
+navigation.showmappoi	33:38:poisortcriteria,39:48:poiplace,49:56:poisortcriteria	BOS intent_none can you locate a cheap starbucks closeby EOS
+navigation.showmappoi	25:30:poisortcriteria,31:41:poiplace,53:59:poisortcriteria	BOS intent_none get me a cheap restaurant on the map nearby EOS
+navigation.showmappoi	25:34:poisortcriteria,35:40:poiplace	BOS intent_none locate a expensive hotel on the map EOS
+navigation.showmappoi	65:72:poisortcriteria,73:86:poiplace	BOS intent_none can you get me the latitude and longitude of the nearest movie theatre on the map EOS
+navigation.showmappoi	52:60:poisortcriteria,61:70:poiplace,78:81:distance,82:88:distanceunit	BOS intent_none can you find me the location of the cheapest starbucks within two meters EOS
+navigation.showmappoi	45:51:poisortcriteria,52:57:poiplace	BOS intent_none show me the coordinates of a nearby hotel on the map EOS
+navigation.showmappoi	44:50:poisortcriteria,51:62:poiplace	BOS intent_none locate the coordinates of a nearby coffee shop on the map EOS
+navigation.showmappoi	49:55:poisortcriteria,56:61:poiplace	BOS intent_none can you locate the location of a nearby hotel on the map EOS
+navigation.showmappoi	42:51:poisortcriteria,52:62:poiplace	BOS intent_none find me the location of a expensive restaurant on the map EOS
+navigation.showmappoi	56:60:poisortcriteria,61:74:poiplace,82:85:distance,86:92:distanceunit	BOS intent_none find me the latitude and longitude of a good movie theatre within ten meters EOS
+navigation.showmappoi	64:68:poisortcriteria,69:82:poiplace,90:93:distance,94:100:distanceunit	BOS intent_none can you find me the latitude and longitude of a good movie theatre within two meters EOS
+navigation.showmappoi	64:69:poisortcriteria,70:75:poiplace,83:86:distance,87:92:distanceunit	BOS intent_none can you find me the latitude and longitude of a cheap hotel within two miles EOS
+navigation.showmappoi	53:62:poisortcriteria,63:73:poiplace,81:84:distance,85:91:distanceunit	BOS intent_none can you find me the coordinates of a expensive restaurant within ten meters EOS
+navigation.showmappoi	53:58:poisortcriteria,59:64:poiplace,72:75:distance,76:82:distanceunit	BOS intent_none can you find me the coordinates of a cheap hotel within two meters EOS
+navigation.showmappoi	41:45:poisortcriteria,46:55:poiplace,63:67:distance,68:74:distanceunit	BOS intent_none get me the location of a good starbucks within five meters EOS
+navigation.showmappoi	55:64:poisortcriteria,65:70:poiplace,78:82:distance,83:89:distanceunit	BOS intent_none get me the latitude and longitude of a expensive hotel within five meters EOS
+navigation.showmappoi	55:60:poisortcriteria,61:72:poiplace,80:83:distance,84:94:distanceunit	BOS intent_none get me the latitude and longitude of a cheap coffee shop within ten kilometers EOS
+navigation.showmappoi	44:53:poisortcriteria,54:59:poiplace,67:71:distance,72:77:distanceunit	BOS intent_none get me the coordinates of a expensive hotel within five miles EOS
+navigation.showmappoi	45:54:poisortcriteria,55:68:poiplace,76:80:distance,81:91:distanceunit	BOS intent_none tell me the coordinates of a expensive movie theatre within five kilometers EOS
+navigation.showmappoi	50:59:poisortcriteria,60:70:poiplace,78:81:distance,82:88:distanceunit	BOS intent_none can you tell me the location of a expensive restaurant within two meters EOS
+navigation.showmappoi	64:68:poisortcriteria,69:78:poiplace,86:89:distance,90:96:distanceunit	BOS intent_none can you tell me the latitude and longitude of a good starbucks within two meters EOS
+navigation.showmappoi	64:68:poisortcriteria,69:74:poiplace,82:85:distance,86:91:distanceunit	BOS intent_none can you tell me the latitude and longitude of a good hotel within two miles EOS
+navigation.showmappoi	42:47:poisortcriteria,48:59:poiplace,67:71:distance,72:78:distanceunit	BOS intent_none show me the location of a cheap coffee shop within five meters EOS
+navigation.showmappoi	45:49:poisortcriteria,50:60:poiplace,68:71:distance,72:77:distanceunit	BOS intent_none show me the coordinates of a good restaurant within ten miles EOS
+navigation.showmappoi	47:51:poisortcriteria,52:62:poiplace,70:74:distance,75:85:distanceunit	BOS intent_none can you show the location of a good restaurant within five kilometers EOS
+navigation.showmappoi	44:53:poisortcriteria,54:59:poiplace,67:70:distance,71:81:distanceunit	BOS intent_none locate the coordinates of a expensive hotel within two kilometers EOS
+navigation.showmappoi	50:55:poisortcriteria,56:61:poiplace,62:69:poisortcriteria	BOS intent_none can you find me the location of a cheap hotel closeby EOS
+navigation.showmappoi	41:50:poisortcriteria,51:60:poiplace,61:68:poisortcriteria	BOS intent_none locate the location of a expensive starbucks closeby EOS
+navigation.showmappoi	34:47:poiplace,55:59:distance,60:65:distanceunit	BOS intent_none show me a list of movie theatre within five miles EOS
+navigation.showmappoi	33:46:poiplace,54:57:distance,58:68:distanceunit	BOS intent_none locate a list of movie theatre within ten kilometers EOS
+navigation.showmappoi	36:44:poisortcriteria,45:56:poiplace,57:64:poisortcriteria	BOS intent_none can you tell me the cheapest coffee shop closeby EOS
+navigation.showmappoi	44:54:poiplace,65:70:poisortcriteria	BOS intent_none can you tell me the list of restaurant sorted by price EOS
+navigation.showmappoi	44:55:poiplace,63:66:distance,67:73:distanceunit,84:90:poisortcriteria	BOS intent_none can you find me the list of coffee shop within two meters sorted by rating EOS
+navigation.showmappoi	44:57:poiplace,65:68:distance,69:75:distanceunit,86:91:poisortcriteria	BOS intent_none can you tell me the list of movie theatre within ten meters sorted by price EOS
+navigation.showmappoi	35:46:poiplace,54:57:distance,58:63:distanceunit,74:80:poisortcriteria	BOS intent_none locate the list of coffee shop within ten miles sorted by rating EOS
+navigation.showmappoi	35:40:poiplace,58:63:poisortcriteria	BOS intent_none get me the list of hotel and sort them by price EOS
+navigation.showmappoi	44:54:poiplace,72:77:poisortcriteria	BOS intent_none can you tell me the list of restaurant and sort them by price EOS
