@@ -13,7 +13,10 @@ from riva_api.argparse_utils import add_connection_argparse_parameters
 
 
 def get_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Client app to test Text Classification on Riva")
+    parser = argparse.ArgumentParser(
+        description="Client app to test Text Classification on Riva",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
     parser.add_argument(
         "--model", default="riva_text_classification_domain_name", type=str, help="Model on Riva Server to execute"
     )

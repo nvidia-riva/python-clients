@@ -13,7 +13,9 @@ from riva_api.argparse_utils import add_connection_argparse_parameters
 
 
 def get_args():
-    parser = argparse.ArgumentParser(description="Client app to test intent slot on Riva")
+    parser = argparse.ArgumentParser(
+        description="Client app to test intent slot on Riva", formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
     parser.add_argument("--model", default="riva_ner", type=str, help="Model on Riva Server to execute")
     parser.add_argument(
         "--query", nargs="+", default=["Where is San Francisco?", "Jensen Huang is the CEO of NVIDIA Corporation."]

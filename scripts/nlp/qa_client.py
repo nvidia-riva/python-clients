@@ -13,7 +13,9 @@ from riva_api.argparse_utils import add_connection_argparse_parameters
 
 
 def get_args():
-    parser = argparse.ArgumentParser(description="Riva Question Answering client sample")
+    parser = argparse.ArgumentParser(
+        description="Riva Question Answering client sample", formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
     parser.add_argument(
         "--query", type=str, default="How much carbon dioxide was released in 2005?", help="Query for the QA API"
     )

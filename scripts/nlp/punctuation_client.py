@@ -7,16 +7,25 @@
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
 
 import argparse
+import time
 
 import riva_api
 from riva_api.argparse_utils import add_connection_argparse_parameters
 
 
 def get_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Client app to test Punctuation on Riva")
+    parser = argparse.ArgumentParser(
+        description="Client app to test Punctuation on Riva", formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
     parser.add_argument("--model", default="riva_punctuation", type=str, help="Model on Riva Server to execute")
     parser.add_argument("--query", default="can you prove that you are self aware", type=str, help="Input Query")
     parser.add_argument("--run_tests", default=False, action='store_true', help="Flag to run sanity tests")
+    parser.add_argument(
+        "--interactive",
+        action='store_true',
+        help="If this option is set, then `--query` argument is ignored and the script suggests user to provide "
+        "queries to standard input.",
+    )
     parser = add_connection_argparse_parameters(parser)
     return parser.parse_args()
 
@@ -24,14 +33,22 @@ def get_args() -> argparse.Namespace:
 def run_punct_capit(args):
     auth = riva_api.Auth(args.ssl_cert, args.use_ssl, args.server)
     nlp_service = riva_api.NLPService(auth)
-    print(
-        riva_api.nlp.extract_most_probable_transformed_text(
-            nlp_service.punctuate_text(
-                input_strings=args.query,
-                model_name=args.model,
+    if args.interactive:
+        while True:
+            query = input("Enter a query: ")
+            start = time.time()
+            result = riva_api.nlp.extract_most_probable_transformed_text(
+                nlp_service.punctuate_text(input_strings=query, model_name=args.model)
+            )
+            end = time.time()
+            print(f"Inference complete in {end - start * 1000:.4f} ms")
+            print(result, end='\n' * 2)
+    else:
+        print(
+            riva_api.nlp.extract_most_probable_transformed_text(
+                nlp_service.punctuate_text(input_strings=args.query, model_name=args.model)
             )
         )
-    )
 
 
 def run_tests(args):

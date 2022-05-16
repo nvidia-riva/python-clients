@@ -1,4 +1,4 @@
-from typing import List, Tuple, Union
+from typing import Any, Generator, List, Tuple, Union
 
 import riva_api.proto.riva_nlp_pb2 as rnlp
 import riva_api.proto.riva_nlp_pb2_grpc as rnlp_srv
@@ -134,3 +134,36 @@ class NLPService:
     def natural_query(self, query: str, context: str, top_n: int = 1) -> rnlp.NaturalQueryResult:
         request = rnlp.NaturalQueryRequest(query=query, context=context, top_n=top_n)
         return self.stub.NaturalQuery(request)
+
+
+def batch_generator(examples: List[Any], batch_size: int) -> Generator[List[Any], None, None]:
+    for i in range(0, len(examples), batch_size):
+        yield examples[i : i + batch_size]
+
+
+def classify_text_batch(
+    nlp_service: NLPService, input_strings: List[str], model_name: str, batch_size: int, language_code: str = 'en-US'
+) -> Tuple[List[str], List[float]]:
+    classes, confidences = [], []
+    for batch in batch_generator(input_strings, batch_size):
+        b_classes, b_confidences = extract_most_probable_text_class_and_confidence(
+            nlp_service.classify_text(input_strings=batch, model_name=model_name, language_code=language_code)
+        )
+        classes += b_classes
+        confidences += b_confidences
+    return classes, confidences
+
+
+def classify_tokens_batch(
+    nlp_service: NLPService, input_strings: List[str], model_name: str, batch_size: int, language_code: str = 'en-US'
+) -> Tuple[List[List[str]], List[List[str]], List[List[float]], List[List[int]], List[List[int]]]:
+    tokens, token_classes, confidences, starts, ends = [], [], [], [], []
+    for batch in batch_generator(input_strings, batch_size):
+        response = nlp_service.classify_tokens(input_strings=batch, model_name=model_name, language_code=language_code)
+        b_t, b_tc, b_conf, b_s, b_e = extract_most_probable_token_classification_predictions(response)
+        tokens += b_t
+        token_classes += b_tc
+        confidences += b_conf
+        starts += b_s
+        ends += b_e
+    return tokens, token_classes, confidences, starts, ends
