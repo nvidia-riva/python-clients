@@ -18,3 +18,4 @@ from riva_api.nlp import (
 )
 from riva_api.proto.riva_audio_pb2 import AudioEncoding
 from riva_api.proto.riva_asr_pb2 import RecognitionConfig, StreamingRecognitionConfig
+from riva_api.tts import SpeechSynthesisService

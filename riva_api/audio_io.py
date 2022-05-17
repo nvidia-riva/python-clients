@@ -119,7 +119,7 @@ class SoundCallBack:
             output=True,
         )
 
-    def __call__(self, audio_data: bytes, audio_length: float) -> None:
+    def __call__(self, audio_data: bytes, audio_length: float = None) -> None:
         self.stream.write(audio_data)
 
     def __enter__(self):

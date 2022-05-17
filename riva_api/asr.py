@@ -11,7 +11,6 @@ import wave
 import riva_api.proto.riva_asr_pb2 as rasr
 import riva_api.proto.riva_asr_pb2_grpc as rasr_srv
 from riva_api.auth import Auth
-from riva_api.proto.riva_asr_pb2 import StreamingRecognizeResponse, RecognizeResponse
 
 
 def get_wav_file_parameters(input_file: os.PathLike) -> Dict[str, Union[int, float]]:
@@ -99,7 +98,7 @@ PRINT_STREAMING_MODES = ['no', 'time', 'confidence']
 
 
 def print_streaming(
-    response_generator: Iterable[StreamingRecognizeResponse],
+    response_generator: Iterable[rasr.StreamingRecognizeResponse],
     output_file: Optional[Union[Union[os.PathLike, TextIO], List[Union[os.PathLike, TextIO]]]] = None,
     additional_info: str = 'no',
     word_time_offsets: bool = False,
@@ -233,7 +232,7 @@ class ASRService:
         for response in self.stub.StreamingRecognize(generator, metadata=self.auth.get_auth_metadata()):
             yield response
 
-    def offline_recognize(self, audio_bytes: bytes, config: rasr.RecognitionConfig) -> RecognizeResponse:
+    def offline_recognize(self, audio_bytes: bytes, config: rasr.RecognitionConfig) -> rasr.RecognizeResponse:
         request = rasr.RecognizeRequest(config=config, audio=audio_bytes)
         response = self.stub.Recognize(request, metadata=self.auth.get_auth_metadata())
         return response
