@@ -47,6 +47,7 @@ def get_args() -> argparse.Namespace:
     parser.add_argument("--output-device", type=int, help="Output device to use")
     parser.add_argument("--language-code", default='en-US')
     parser.add_argument("--sample_rate_hz", type=int, default=44100)
+    parser.add_argument("--stream", action="store_true")
     parser = add_connection_argparse_parameters(parser)
     args = parser.parse_args()
     if args.output is not None:
@@ -79,12 +80,26 @@ def main() -> None:
                 print("Generating audio for request...")
                 print(f"  > '{text}': ", end='')
                 start = time.time()
-                resp = service.synthesize(text, args.voice, args.language_code, sample_rate_hz=args.sample_rate_hz)
-                stop = time.time()
-                print(f"Time spent: {(stop - start):.3f}s")
-                sound_stream(resp.audio)
-                if out_f is not None:
-                    out_f.writeframesraw(resp.audio)
+                if args.stream:
+                    responses = service.synthesize_online(
+                        text, args.voice, args.language_code, sample_rate_hz=args.sample_rate_hz
+                    )
+                    first = True
+                    for resp in responses:
+                        stop = time.time()
+                        if first:
+                            print(f"Time to first audio: {(stop - start):.3f}s")
+                            first = False
+                        sound_stream(resp.audio)
+                        if out_f is not None:
+                            out_f.writeframesraw(resp.audio)
+                else:
+                    resp = service.synthesize(text, args.voice, args.language_code, sample_rate_hz=args.sample_rate_hz)
+                    stop = time.time()
+                    print(f"Time spent: {(stop - start):.3f}s")
+                    sound_stream(resp.audio)
+                    if out_f is not None:
+                        out_f.writeframesraw(resp.audio)
         finally:
             if args.output is not None:
                 out_f.close()
