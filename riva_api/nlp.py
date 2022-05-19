@@ -95,7 +95,7 @@ class NLPService:
         request.model.language_code = language_code
         for q in input_strings:
             request.text.append(q)
-        return self.stub.ClassifyText(request)
+        return self.stub.ClassifyText(request, metadata=self.auth.get_auth_metadata())
 
     def classify_tokens(
         self, input_strings: Union[List[str], str], model_name: str, language_code: str = 'en-US'
@@ -107,33 +107,33 @@ class NLPService:
         request.model.language_code = language_code
         for q in input_strings:
             request.text.append(q)
-        return self.stub.ClassifyTokens(request)
+        return self.stub.ClassifyTokens(request, metadata=self.auth.get_auth_metadata())
 
     def transform_text(
         self, input_strings: Union[List[str], str], model_name: str, language_code: str = 'en-US',
     ) -> rnlp.TextTransformResponse:
         request = prepare_transform_text_request(input_strings, model_name, language_code)
-        return self.stub.TransformText(request)
+        return self.stub.TransformText(request, metadata=self.auth.get_auth_metadata())
 
     def analyze_entities(self, input_string: str, language_code: str = 'en-US') -> rnlp.TokenClassResponse:
         request = rnlp.AnalyzeEntitiesRequest(query=input_string)
         request.options.lang = language_code
-        return self.stub.AnalyzeEntities(request)
+        return self.stub.AnalyzeEntities(request, metadata=self.auth.get_auth_metadata())
 
     def analyze_intent(self, input_string: str, options: rnlp.AnalyzeIntentOptions) -> rnlp.AnalyzeIntentResponse:
         request = rnlp.AnalyzeEntitiesRequest(query=input_string)
         request.options = options
-        return self.stub.AnalyzeIntent(request)
+        return self.stub.AnalyzeIntent(request, metadata=self.auth.get_auth_metadata())
 
     def punctuate_text(
         self, input_strings: Union[List[str], str], model_name: str, language_code: str = 'en-US',
     ) -> rnlp.TextTransformResponse:
         request = prepare_transform_text_request(input_strings, model_name, language_code)
-        return self.stub.PunctuateText(request)
+        return self.stub.PunctuateText(request, metadata=self.auth.get_auth_metadata())
 
     def natural_query(self, query: str, context: str, top_n: int = 1) -> rnlp.NaturalQueryResult:
         request = rnlp.NaturalQueryRequest(query=query, context=context, top_n=top_n)
-        return self.stub.NaturalQuery(request)
+        return self.stub.NaturalQuery(request, metadata=self.auth.get_auth_metadata())
 
 
 def batch_generator(examples: List[Any], batch_size: int) -> Generator[List[Any], None, None]:
