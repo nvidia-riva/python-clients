@@ -26,7 +26,7 @@ class SpeechSynthesisService:
             sample_rate_hz=sample_rate_hz,
             encoding=encoding,
         )
-        return self.stub.Synthesize(req)
+        return self.stub.Synthesize(req, metadata=self.auth.get_auth_metadata())
 
     def synthesize_online(
         self,
@@ -43,4 +43,4 @@ class SpeechSynthesisService:
             sample_rate_hz=sample_rate_hz,
             encoding=encoding,
         )
-        return self.stub.SynthesizeOnline(req)
+        return self.stub.SynthesizeOnline(req, metadata=self.auth.get_auth_metadata())

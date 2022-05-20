@@ -121,8 +121,7 @@ class NLPService:
         return self.stub.AnalyzeEntities(request, metadata=self.auth.get_auth_metadata())
 
     def analyze_intent(self, input_string: str, options: rnlp.AnalyzeIntentOptions) -> rnlp.AnalyzeIntentResponse:
-        request = rnlp.AnalyzeEntitiesRequest(query=input_string)
-        request.options = options
+        request = rnlp.AnalyzeIntentRequest(query=input_string, options=options)
         return self.stub.AnalyzeIntent(request, metadata=self.auth.get_auth_metadata())
 
     def punctuate_text(

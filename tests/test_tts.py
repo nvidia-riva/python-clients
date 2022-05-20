@@ -3,9 +3,10 @@ from typing import Any, Generator
 from unittest.mock import patch, Mock
 
 import riva_api.proto.riva_tts_pb2 as rtts
-import riva_api.proto.riva_tts_pb2_grpc as rtts_srv
 from riva_api import AudioEncoding
 from riva_api.tts import SpeechSynthesisService
+
+from .helpers import set_auth_mock
 
 
 TEXT = 'foo'
@@ -30,7 +31,7 @@ SYNTHESIZE_MOCK = Mock(
 SYNTHESIZE_ONLINE_MOCK = Mock(return_value=response_generator())
 
 
-def riva_stub_init_patch(self, channel):
+def riva_tts_stub_init_patch(self, channel):
     self.Synthesize = SYNTHESIZE_MOCK
     self.SynthesizeOnline = SYNTHESIZE_ONLINE_MOCK
 
@@ -43,12 +44,10 @@ def is_iterable(obj: Any) -> bool:
     return True
 
 
-@patch("riva_api.proto.riva_tts_pb2_grpc.RivaSpeechSynthesisStub.__init__", riva_stub_init_patch)
+@patch("riva_api.proto.riva_tts_pb2_grpc.RivaSpeechSynthesisStub.__init__", riva_tts_stub_init_patch)
 class TestSpeechSynthesisService:
     def test_synthesize(self) -> None:
-        auth = Mock()
-        get_auth_return_value = 'get_auth_return_value'
-        auth.get_auth_metadata = Mock(return_value=get_auth_return_value)
+        auth, return_value_of_get_auth_metadata = set_auth_mock()
         SYNTHESIZE_MOCK.reset_mock()
         service = SpeechSynthesisService(auth)
         resp = service.synthesize(TEXT, VOICE_NAME, LANGUAGE_CODE, ENCODING, SAMPLE_RATE_HZ)
@@ -61,17 +60,15 @@ class TestSpeechSynthesisService:
                 encoding=ENCODING,
                 sample_rate_hz=SAMPLE_RATE_HZ,
             ),
-            metadata=get_auth_return_value,
+            metadata=return_value_of_get_auth_metadata,
         )
 
     def test_synthesize_online(self) -> None:
-        auth = Mock()
-        get_auth_return_value = 'get_auth_return_value'
-        auth.get_auth_metadata = Mock(return_value=get_auth_return_value)
+        auth, return_value_of_get_auth_metadata = set_auth_mock()
         SYNTHESIZE_ONLINE_MOCK.reset_mock()
         service = SpeechSynthesisService(auth)
         responses = service.synthesize_online(TEXT, VOICE_NAME, LANGUAGE_CODE, ENCODING, SAMPLE_RATE_HZ)
-        assert is_iterable(responses)
+        assert is_iterable(responses), "`SpeechSynthesisService.synthesize_online()` method has to return an iterable."
         SYNTHESIZE_ONLINE_MOCK.assert_called_with(
             rtts.SynthesizeSpeechRequest(
                 text=TEXT,
@@ -80,11 +77,16 @@ class TestSpeechSynthesisService:
                 encoding=ENCODING,
                 sample_rate_hz=SAMPLE_RATE_HZ,
             ),
-            metadata=get_auth_return_value,
+            metadata=return_value_of_get_auth_metadata,
         )
         count = 0
         for resp in responses:
-            assert isinstance(resp, rtts.SynthesizeSpeechResponse)
+            assert isinstance(
+                resp, rtts.SynthesizeSpeechResponse
+            ), (
+                "`SpeechSynthesisService.synthesize_online()` returned iterable has to contain instances of "
+                "`SynthesizeSpeechResponse`"
+            )
             count += 1
         assert count == ceil(len(AUDIO_BYTES_1_SECOND) / STREAMING_CHUNK_SIZE)
 
