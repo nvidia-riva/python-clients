@@ -183,5 +183,5 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-tests/asr_ouptuts
+tests/integration/asr/outputs
 

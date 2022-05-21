@@ -94,7 +94,7 @@ def add_audio_file_specs_to_config(
     inner_config.audio_channel_count = wav_parameters['nchannels']
 
 
-PRINT_STREAMING_MODES = ['no', 'time', 'confidence']
+PRINT_STREAMING_ADDITIONAL_INFO_MODES = ['no', 'time', 'confidence']
 
 
 def print_streaming(
@@ -105,20 +105,20 @@ def print_streaming(
     show_intermediate: bool = False,
     file_mode: str = 'w',
 ) -> None:
-    if additional_info not in PRINT_STREAMING_MODES:
+    if additional_info not in PRINT_STREAMING_ADDITIONAL_INFO_MODES:
         raise ValueError(
             f"Not allowed value '{additional_info}' of parameter `additional_info`. "
-            f"Allowed values are {PRINT_STREAMING_MODES}"
+            f"Allowed values are {PRINT_STREAMING_ADDITIONAL_INFO_MODES}"
         )
-    if additional_info != PRINT_STREAMING_MODES[0] and show_intermediate:
+    if additional_info != PRINT_STREAMING_ADDITIONAL_INFO_MODES[0] and show_intermediate:
         warnings.warn(
-            f"`show_intermediate=True` will not work if `additional_info != {PRINT_STREAMING_MODES[0]}`. "
-            f"`additional_info={additional_info}`"
+            f"`show_intermediate=True` will not work if "
+            f"`additional_info != {PRINT_STREAMING_ADDITIONAL_INFO_MODES[0]}`. `additional_info={additional_info}`"
         )
-    if additional_info != PRINT_STREAMING_MODES[1] and word_time_offsets:
+    if additional_info != PRINT_STREAMING_ADDITIONAL_INFO_MODES[1] and word_time_offsets:
         warnings.warn(
-            f"`word_time_offsets=True` will not work if `additional_info != {PRINT_STREAMING_MODES[1]}`. "
-            f"`additional_info={additional_info}"
+            f"`word_time_offsets=True` will not work if "
+            f"`additional_info != {PRINT_STREAMING_ADDITIONAL_INFO_MODES[1]}`. `additional_info={additional_info}"
         )
     if output_file is None:
         output_file = [sys.stdout]
@@ -169,11 +169,11 @@ def print_streaming(
                         if word_time_offsets:
                             for f in output_file:
                                 f.write("Timestamps:\n")
-                                f.write('{: <40s}{: <16s}{: <16s}'.format('Word', 'Start (ms)', 'End (ms)'))
-                                for word_info in result.alternatives.words:
+                                f.write('{: <40s}{: <16s}{: <16s}\n'.format('Word', 'Start (ms)', 'End (ms)'))
+                                for word_info in result.alternatives[0].words:
                                     f.write(
                                         f'{word_info.word: <40s}{word_info.start_time: <16.0f}'
-                                        f'{word_info.end_time: <16.0f}'
+                                        f'{word_info.end_time: <16.0f}\n'
                                     )
                     else:
                         partial_transcript += transcript

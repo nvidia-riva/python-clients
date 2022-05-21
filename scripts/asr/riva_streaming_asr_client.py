@@ -27,16 +27,17 @@ def get_args() -> argparse.Namespace:
     return args
 
 
-def print_streaming(args: argparse.Namespace, output_file: os.PathLike) -> None:
+def streaming_transcription_worker(args: argparse.Namespace, output_file: os.PathLike) -> None:
     auth = riva_api.Auth(args.ssl_cert, args.use_ssl, args.server)
     asr_service = riva_api.ASRService(auth)
     config = riva_api.StreamingRecognitionConfig(
         config=riva_api.RecognitionConfig(
             encoding=riva_api.AudioEncoding.LINEAR_PCM,
             language_code=args.language_code,
-            max_alternatives=1,
+            max_alternatives=args.max_alternatives,
             enable_automatic_punctuation=args.automatic_punctuation,
             verbatim_transcripts=not args.no_verbatim_transcripts,
+            enable_word_time_offsets=args.word_time_offsets,
         ),
         interim_results=True,
     )
@@ -56,12 +57,12 @@ def print_streaming(args: argparse.Namespace, output_file: os.PathLike) -> None:
                 output_file=output_file,
                 additional_info='time',
                 file_mode='a',
+                word_time_offsets=args.word_time_offsets,
             )
 
 
 def main() -> None:
     args = get_args()
-
     print("Number of clients:", args.num_clients)
     print("Number of iteration:", args.num_iterations)
     print("Input file:", args.input_file)
@@ -69,7 +70,7 @@ def main() -> None:
     print(f"File duration: {wav_parameters['duration']:.2f}s")
     threads = []
     for i in range(args.num_clients):
-        t = Thread(target=print_streaming, args=[args, f"output_{i:d}.txt"])
+        t = Thread(target=streaming_transcription_worker, args=[args, f"output_{i:d}.txt"])
         t.start()
         threads.append(t)
     for i, t in enumerate(threads):

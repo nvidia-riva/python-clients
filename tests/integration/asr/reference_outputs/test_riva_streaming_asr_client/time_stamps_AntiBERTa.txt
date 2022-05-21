@@ -1,0 +1,28 @@
+Timestamps:
+Word                                    Start (ms)      End (ms)
+AntiBERTa                               1760            2560
+and                                     2640            2720
+ABlooper                                2800            3520
+both                                    3920            4000
+transformer                             4240            4800
+based                                   4880            5120
+language                                5200            5280
+models                                  5600            6000
+are                                     6240            6320
+examples                                6480            6800
+of                                      6880            6960
+the                                     6960            7040
+emerging                                7120            7600
+work                                    7680            7760
+in                                      7920            8000
+using                                   8160            8400
+graph                                   8400            8640
+networks                                9200            9600
+to                                      9760            9840
+design                                  9920            10000
+protein                                 10320           10640
+sequences                               10800           11280
+for                                     11440           11520
+particular                              11680           11760
+target                                  12160           12480
+antigens                                12640           13280
