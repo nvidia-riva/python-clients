@@ -163,7 +163,8 @@ mv output_1.txt "${new_file_name_1}"
 
 # Testing --num-iterations
 num_iterations=2
-exp_options="--input-file examples/${input_files[$i]} --num-iterations ${num_iterations}"
+input_file="en-US_sample.wav"
+exp_options="--input-file examples/${input_file} --num-iterations ${num_iterations}"
 echo "  options: ${exp_options}"
 stdout_file="${test_output_dir}/stdout_num_iterations.txt"
 stderr_file="${test_output_dir}/stderr_num_iterations.txt"
@@ -175,8 +176,30 @@ process_exit_status
 new_file_name="${test_output_dir}/output_0_num_iterations.txt"
 mv output_0.txt "${new_file_name}"
 num_final_transcripts="$(grep "Transcript 0:" "${new_file_name}" | wc -l)"
-if ((num_final_transcripts != num_iterations));then
+if ((num_final_transcripts != num_iterations)); then
   echo "FAILED. Number of final transcripts has to be ${num_iterations} if "\
 "--num-iterations=${num_iterations}, whereas number "\
 "of final transcripts is ${num_final_transcripts}."
+fi
+
+# Testing --simulate-realtime
+input_file="en-US_AntiBERTa_for_word_boosting_testing.wav"
+input_file_length_seconds=14
+exp_options="--input-file examples/${input_file} --simulate-realtime"
+echo "  options: ${exp_options}"
+stdout_file="${test_output_dir}/stdout_simulate_realtime.txt"
+stderr_file="${test_output_dir}/stderr_simulate_realtime.txt"
+start_time=$(date +%s)
+set +e
+python scripts/asr/riva_streaming_asr_client.py ${server_args} ${exp_options} \
+  1>"${stdout_file}" 2>"${stderr_file}"
+retVal=$?
+process_exit_status
+end_time=$(date +%s)
+elapsed=$(( end_time - start_time ))
+new_file_name="${test_output_dir}/output_0_simulate_realtime.txt"
+mv output_0.txt "${new_file_name}"
+if ((elapsed < input_file_length_seconds)); then
+  echo "FAILED. When option --simulate-realtime is provided, time spent on audio processing has to greater "\
+"or equal than audio length. Audio length: ${input_file_length_seconds}s. Time spent: ${elapsed}s."
 fi
