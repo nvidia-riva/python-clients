@@ -55,6 +55,9 @@ def get_args() -> argparse.Namespace:
 
 def main() -> None:
     args = get_args()
+    if args.list_devices:
+        riva_api.audio_io.list_input_devices()
+        return
     auth = riva_api.Auth(args.ssl_cert, args.use_ssl, args.server)
     asr_service = riva_api.ASRService(auth)
     config = riva_api.StreamingRecognitionConfig(

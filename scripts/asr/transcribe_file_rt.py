@@ -32,22 +32,31 @@ from riva_api.argparse_utils import add_asr_config_argparse_parameters, add_conn
 import riva_api.audio_io
 
 
-def get_args():
+def get_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Streaming transcription via Riva AI Services",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
-    parser.add_argument("--input-file", required=True, help="path to local file to stream")
+    parser.add_argument("--input-file", help="path to local file to stream")
     parser.add_argument("--output-device", type=int, default=None, help="output device to use")
     parser = add_connection_argparse_parameters(parser)
     parser.add_argument("--list-devices", action="store_true", help="list output devices indices")
     parser = add_asr_config_argparse_parameters(parser)
     parser.add_argument("--file-streaming-chunk", type=int, default=1024)
-    return parser.parse_args()
+    args = parser.parse_args()
+    if not args.list_devices and args.input_file is None:
+        parser.error(
+            "You have to provide at least one of parameters `--input-file` and `--list-devices` whereas both "
+            "parameters are missing."
+        )
+    return args
 
 
 def main() -> None:
     args = get_args()
+    if args.list_devices:
+        riva_api.audio_io.list_output_devices()
+        return
     auth = riva_api.Auth(args.ssl_cert, args.use_ssl, args.server)
     asr_service = riva_api.ASRService(auth)
     config = riva_api.StreamingRecognitionConfig(
