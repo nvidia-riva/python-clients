@@ -1,5 +1,7 @@
 import argparse
 import os
+import queue
+import time
 from threading import Thread
 
 import riva_api
@@ -27,38 +29,44 @@ def get_args() -> argparse.Namespace:
     return args
 
 
-def streaming_transcription_worker(args: argparse.Namespace, output_file: os.PathLike) -> None:
-    auth = riva_api.Auth(args.ssl_cert, args.use_ssl, args.server)
-    asr_service = riva_api.ASRService(auth)
-    config = riva_api.StreamingRecognitionConfig(
-        config=riva_api.RecognitionConfig(
-            encoding=riva_api.AudioEncoding.LINEAR_PCM,
-            language_code=args.language_code,
-            max_alternatives=args.max_alternatives,
-            enable_automatic_punctuation=args.automatic_punctuation,
-            verbatim_transcripts=not args.no_verbatim_transcripts,
-            enable_word_time_offsets=args.word_time_offsets,
-        ),
-        interim_results=True,
-    )
-    riva_api.add_audio_file_specs_to_config(config, args.input_file)
-    riva_api.add_word_boosting_to_config(config, args.boosted_lm_words, args.boosted_lm_score)
-    for _ in range(args.num_iterations):
-        with riva_api.AudioChunkFileIterator(
-            args.input_file,
-            args.file_streaming_chunk,
-            delay_callback=riva_api.sleep_audio_length if args.simulate_realtime else None,
-        ) as audio_chunk_iterator:
-            riva_api.print_streaming(
-                response_generator=asr_service.streaming_response_generator(
-                    audio_chunks=audio_chunk_iterator,
-                    streaming_config=config,
-                ),
-                output_file=output_file,
-                additional_info='time',
-                file_mode='a',
-                word_time_offsets=args.word_time_offsets,
-            )
+def streaming_transcription_worker(
+    args: argparse.Namespace, output_file: os.PathLike, thread_i: int, exception_queue: queue.Queue
+) -> None:
+    try:
+        auth = riva_api.Auth(args.ssl_cert, args.use_ssl, args.server)
+        asr_service = riva_api.ASRService(auth)
+        config = riva_api.StreamingRecognitionConfig(
+            config=riva_api.RecognitionConfig(
+                encoding=riva_api.AudioEncoding.LINEAR_PCM,
+                language_code=args.language_code,
+                max_alternatives=args.max_alternatives,
+                enable_automatic_punctuation=args.automatic_punctuation,
+                verbatim_transcripts=not args.no_verbatim_transcripts,
+                enable_word_time_offsets=args.word_time_offsets,
+            ),
+            interim_results=True,
+        )
+        riva_api.add_audio_file_specs_to_config(config, args.input_file)
+        riva_api.add_word_boosting_to_config(config, args.boosted_lm_words, args.boosted_lm_score)
+        for _ in range(args.num_iterations):
+            with riva_api.AudioChunkFileIterator(
+                args.input_file,
+                args.file_streaming_chunk,
+                delay_callback=riva_api.sleep_audio_length if args.simulate_realtime else None,
+            ) as audio_chunk_iterator:
+                riva_api.print_streaming(
+                    response_generator=asr_service.streaming_response_generator(
+                        audio_chunks=audio_chunk_iterator,
+                        streaming_config=config,
+                    ),
+                    output_file=output_file,
+                    additional_info='time',
+                    file_mode='a',
+                    word_time_offsets=args.word_time_offsets,
+                )
+    except Exception as e:
+        exception_queue.put((e, thread_i))
+        raise
 
 
 def main() -> None:
@@ -69,12 +77,27 @@ def main() -> None:
     wav_parameters = get_wav_file_parameters(args.input_file)
     print(f"File duration: {wav_parameters['duration']:.2f}s")
     threads = []
+    exception_queue = queue.Queue()
     for i in range(args.num_clients):
-        t = Thread(target=streaming_transcription_worker, args=[args, f"output_{i:d}.txt"])
+        t = Thread(target=streaming_transcription_worker, args=[args, f"output_{i:d}.txt", i, exception_queue])
         t.start()
         threads.append(t)
-    for i, t in enumerate(threads):
-        t.join()
+    while True:
+        try:
+            exc, thread_i = exception_queue.get(block=False)
+        except queue.Empty:
+            pass
+        else:
+            raise RuntimeError(f"A thread with index {thread_i} failed with error:\n{exc}")
+        all_dead = True
+        for t in threads:
+            t.join(0.0)
+            if t.is_alive():
+                all_dead = False
+                break
+        if all_dead:
+            break
+        time.sleep(0.05)
     print(str(args.num_clients), "threads done, output written to output_<thread_id>.txt")
 
 

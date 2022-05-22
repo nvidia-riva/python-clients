@@ -129,7 +129,7 @@ python scripts/asr/riva_streaming_asr_client.py ${server_args} \
   1>"${stdout_file}" \
   2>"${stderr_file}"
 retVal=$?
-process_exit_status
+set -e
 error_string="details = \"Error: Model is not available on server\""
 if [ -z "$(grep "${error_string}" "${stderr_file}")" ]; then
   echo "A grpc error is expected if --language-code=ru-RU because such models are not available on server. "\
