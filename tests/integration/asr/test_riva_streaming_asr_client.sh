@@ -48,15 +48,13 @@ function process_exit_status(){
 
 
 for i in "${!options[@]}"; do
-  echo "  options: --input_file examples/${input_files[$i]} ${options[$i]}"
+  exp_options="--input-file examples/${input_files[$i]} ${options[$i]}"
+  echo "  options: ${exp_options}"
   stdout_file="${test_output_dir}/stdout_options_${i}.txt"
   stderr_file="${test_output_dir}/stderr_options_${i}.txt"
   set +e
-  python scripts/asr/riva_streaming_asr_client.py ${server_args} \
-    --input-file "examples/${input_files[$i]}" \
-    ${options[$i]} \
-    1>"${stdout_file}" \
-    2>"${stderr_file}"
+  python scripts/asr/riva_streaming_asr_client.py ${server_args} ${exp_options} \
+    1>"${stdout_file}" 2>"${stderr_file}"
   retVal=$?
   process_exit_status
   new_file_name="${test_output_dir}/output_0_options_${i}.txt"
@@ -74,19 +72,14 @@ done
 
 # Testing --word-time-offsets
 input_file="en-US_AntiBERTa_for_word_boosting_testing.wav"
-echo "  options: --input-file examples/${input_file} --word-time-offsets "\
+exp_options="--input-file examples/${input_file} --word-time-offsets "\
 "--boosted-lm-words AntiBERTa --boosted-lm-words ABlooper --boosted-lm-score 20.0"
+echo "  options: ${exp_options}"
 stdout_file="${test_output_dir}/stdout_word_time_offsets.txt"
 stderr_file="${test_output_dir}/stderr_word_time_offsets.txt"
 set +e
-python scripts/asr/riva_streaming_asr_client.py ${server_args} \
-  --input-file "examples/${input_file}" \
-  --word-time-offsets \
-  --boosted-lm-words AntiBERTa \
-  --boosted-lm-words ABlooper \
-  --boosted-lm-score 20.0 \
-  1>"${stdout_file}" \
-  2>"${stderr_file}"
+python scripts/asr/riva_streaming_asr_client.py ${server_args} ${exp_options} \
+  1>"${stdout_file}" 2>"${stderr_file}"
 retVal=$?
 process_exit_status
 new_file_name="${test_output_dir}/output_0_word_time_offsets.txt"
@@ -119,15 +112,13 @@ fi
 
 # Testing --language-code
 input_file="en-US_sample.wav"
-echo "  options: --input-file examples/${input_file} --language-code ru-RU"
+exp_options="--input-file examples/${input_file} --language-code ru-RU"
+echo "  options: ${exp_options}"
 stdout_file="${test_output_dir}/stdout_language_code_ru_RU.txt"
 stderr_file="${test_output_dir}/stderr_language_code_ru_RU.txt"
 set +e
-python scripts/asr/riva_streaming_asr_client.py ${server_args} \
-  --input-file "examples/${input_file}" \
-  --language-code ru-RU \
-  1>"${stdout_file}" \
-  2>"${stderr_file}"
+python scripts/asr/riva_streaming_asr_client.py ${server_args} ${exp_options} \
+  1>"${stdout_file}" 2>"${stderr_file}"
 retVal=$?
 set -e
 error_string="details = \"Error: Model is not available on server\""
@@ -141,15 +132,13 @@ set +e
 # Testing --num-clients
 rm output_*.txt
 input_file="en-US_sample.wav"
-echo "  options: --input-file examples/${input_file} --num_clients 2"
+exp_options="--input-file examples/${input_file} --num-clients 2"
+echo "  options: ${exp_options}"
 stdout_file="${test_output_dir}/stdout_num_clients_2.txt"
 stderr_file="${test_output_dir}/stderr_num_clients_2.txt"
 set +e
-python scripts/asr/riva_streaming_asr_client.py ${server_args} \
-  --input-file "examples/${input_file}" \
-  --num-clients 2 \
-  1>"${test_output_dir}/stdout_num_clients_2.txt" \
-  2>"${test_output_dir}/stderr_num_clients_2.txt"
+python scripts/asr/riva_streaming_asr_client.py ${server_args} ${exp_options} \
+  1>"${stdout_file}" 2>"${stderr_file}"
 retVal=$?
 process_exit_status
 num_output_files="$(find . -maxdepth 1 -name "output_*.txt" | wc -l)"
@@ -171,3 +160,23 @@ new_file_name="${test_output_dir}/output_0_num_clients_2.txt"
 mv output_0.txt "${new_file_name}"
 new_file_name_1="${test_output_dir}/output_1_num_clients_2.txt"
 mv output_1.txt "${new_file_name_1}"
+
+# Testing --num-iterations
+num_iterations=2
+exp_options="--input-file examples/${input_files[$i]} --num-iterations ${num_iterations}"
+echo "  options: ${exp_options}"
+stdout_file="${test_output_dir}/stdout_num_iterations.txt"
+stderr_file="${test_output_dir}/stderr_num_iterations.txt"
+set +e
+python scripts/asr/riva_streaming_asr_client.py ${server_args} ${exp_options} \
+  1>"${stdout_file}" 2>"${stderr_file}"
+retVal=$?
+process_exit_status
+new_file_name="${test_output_dir}/output_0_num_iterations.txt"
+mv output_0.txt "${new_file_name}"
+num_final_transcripts="$(grep "Transcript 0:" "${new_file_name}" | wc -l)"
+if ((num_final_transcripts != num_iterations));then
+  echo "FAILED. Number of final transcripts has to be ${num_iterations} if "\
+"--num-iterations=${num_iterations}, whereas number "\
+"of final transcripts is ${num_final_transcripts}."
+fi
