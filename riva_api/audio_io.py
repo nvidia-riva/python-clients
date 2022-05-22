@@ -88,6 +88,7 @@ def get_default_input_device_info() -> Dict[str, Union[int, float, str]]:
 
 def list_output_devices() -> None:
     p = pyaudio.PyAudio()
+    print("Output audio devices:")
     for i in range(p.get_device_count()):
         info = p.get_device_info_by_index(i)
         if info['maxOutputChannels'] < 1:
@@ -98,6 +99,7 @@ def list_output_devices() -> None:
 
 def list_input_devices() -> None:
     p = pyaudio.PyAudio()
+    print("Input audio devices:")
     for i in range(p.get_device_count()):
         info = p.get_device_info_by_index(i)
         if info['maxInputChannels'] < 1:

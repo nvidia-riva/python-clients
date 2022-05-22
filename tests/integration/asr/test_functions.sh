@@ -1,5 +1,6 @@
 source "$(dirname $0)/../helpers.sh"
 
+
 function test_transcript_affecting_params(){
   script_name="$1"
   source "$(dirname $0)/define_test_control_vars.sh"
@@ -98,6 +99,7 @@ function test_simulate_realtime(){
   if ((elapsed < input_file_length_seconds)); then
     echo "FAILED. When option --simulate-realtime is provided, time spent on audio processing has to greater "\
   "or equal than audio length. Audio length: ${input_file_length_seconds}s. Time spent: ${elapsed}s."
+    exit 1
   fi
 }
 
@@ -126,6 +128,30 @@ function test_language_code(){
   if [ -z "$(grep "${error_string}" "${check_file}")" ]; then
     echo "A grpc error is expected if --language-code=ru-RU because such models are not available on server. "\
 "A string '${error_string}' is not found in file ${stderr_file}"
+    exit 1
+  fi
+  set +e
+}
+
+
+function test_list_devices(){
+  script_name="$1"
+  prefix="$2"
+  source "$(dirname $0)/../prepare_test_output_dir.sh" "$(dirname $0)"
+  exp_options="--list-devices"
+  echo "  options: ${exp_options}"
+  stdout_file="${test_output_dir_}/stdout_list_devices.txt"
+  stderr_file="${test_output_dir_}/stderr_list_devices.txt"
+  set +e
+  python "scripts/asr/${script_name}" ${server_args} ${exp_options} \
+    1>"${stdout_file}" 2>"${stderr_file}"
+  retVal=$?
+  process_exit_status
+  list_header="${prefix} audio devices:"
+  list_header_found="$(grep "${list_header}" "${stdout_file}" | wc -l)"
+  if ((list_header_found < 1)); then
+    echo "FAILED: a header '${list_header}' of devices list is not found in standard output. "\
+"See stdout in file '${stdout_file}'."
     exit 1
   fi
   set +e
