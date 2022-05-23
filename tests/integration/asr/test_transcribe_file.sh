@@ -6,6 +6,8 @@ source "$(dirname $0)/test_functions.sh"
 test_output_dir="$(dirname $0)/outputs/test_transcribe_file"
 
 function test_show_intermediate(){
+  mkdir "${test_output_dir}"
+  rm -rf "${test_output_dir}"/*
   input_file="en-US_sample.wav"
   exp_options="--input-file examples/${input_file} --show-intermediate"
   echo "  options: ${exp_options}"
