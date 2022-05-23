@@ -79,9 +79,12 @@ def get_audio_device_info(device_id: int) -> Dict[str, Union[int, float, str]]:
     return info
 
 
-def get_default_input_device_info() -> Dict[str, Union[int, float, str]]:
+def get_default_input_device_info() -> Optional[Dict[str, Union[int, float, str]]]:
     p = pyaudio.PyAudio()
-    info = p.get_default_input_device_info()
+    try:
+        info = p.get_default_input_device_info()
+    except OSError:
+        info = None
     p.terminate()
     return info
 
