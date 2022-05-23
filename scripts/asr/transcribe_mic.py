@@ -33,7 +33,8 @@ import riva_api.audio_io
 
 
 def get_args() -> argparse.Namespace:
-    default_device_index = riva_api.audio_io.get_default_input_device_info()['index']
+    default_device_info = riva_api.audio_io.get_default_input_device_info()
+    default_device_index = None if default_device_info is None else default_device_info['index']
     parser = argparse.ArgumentParser(
         description="Streaming transcription via Riva AI Services",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
