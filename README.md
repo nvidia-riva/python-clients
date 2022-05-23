@@ -38,6 +38,14 @@ pip install dist/*.whl
 3. Docker (for Docker build)
 4. Bazel 5.0.0 (for local build)
 
+## Before using microphone and audio output devices on Unix
+you may need to run commands
+```
+adduser $USER audio
+adduser $USER pulse-access
+```
+and restart.
+
 ## Build
 
 ### Docker
