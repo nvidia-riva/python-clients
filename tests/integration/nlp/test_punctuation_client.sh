@@ -71,6 +71,8 @@ test_interactive
 function test_run_tests(){
   exp_options="--run-tests"
   echo "  options: ${exp_options}"
+  stdout_file="${test_output_dir}/stdout_run_tests.txt"
+  stderr_file="${test_output_dir}/stderr_run_tests.txt"
   success_string="Tests passed: 4"
   success="$(python "scripts/nlp/punctuation_client.py" ${server_args} ${exp_options} 2>"${stderr_file}" \
     | tee "${stdout_file}" \
@@ -82,9 +84,11 @@ function test_run_tests(){
   fi
 }
 
-# Doesn't work on windows because of Korean characters.
+
 if [[ "${OSTYPE}" != msys ]] && [[ "${OSTYPE}" != win32 ]]; then
   test_run_tests
+else
+  echo "Skipping option --run-tests. Cannot be tested on Windows because of Korean characters."
 fi
 
 set +e
