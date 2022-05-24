@@ -17,7 +17,7 @@ def get_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Client app to test Punctuation on Riva", formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
-    parser.add_argument("--model", default="riva_punctuation", type=str, help="Model on Riva Server to execute")
+    parser.add_argument("--model", default="riva-punctuation-en-US", type=str, help="Model on Riva Server to execute")
     parser.add_argument("--query", default="can you prove that you are self aware", type=str, help="Input Query")
     parser.add_argument("--run_tests", default=False, action='store_true', help="Flag to run sanity tests")
     parser.add_argument(
@@ -41,7 +41,7 @@ def run_punct_capit(args):
                 nlp_service.punctuate_text(input_strings=query, model_name=args.model)
             )
             end = time.time()
-            print(f"Inference complete in {end - start * 1000:.4f} ms")
+            print(f"Inference complete in {(end - start) * 1000:.4f} ms")
             print(result, end='\n' * 2)
     else:
         print(

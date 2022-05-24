@@ -1,6 +1,9 @@
 set -e
 source "$(dirname $0)/export_server_vars.sh"
 
+echo "Testing script punctuation_client.py"
+bash "$(dirname $0)/nlp/test_punctuation_client.sh"
+
 echo "Testing script ner_client.py"
 bash "$(dirname $0)/nlp/test_ner_client.sh"
 
