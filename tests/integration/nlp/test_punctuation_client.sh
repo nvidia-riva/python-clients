@@ -69,7 +69,7 @@ function test_interactive(){
 test_interactive
 
 function test_run_tests(){
-  exp_options="--run-tests"
+  exp_options="--run_tests"
   echo "  options: ${exp_options}"
   stdout_file="${test_output_dir}/stdout_run_tests.txt"
   stderr_file="${test_output_dir}/stderr_run_tests.txt"
@@ -88,7 +88,7 @@ function test_run_tests(){
 if [[ "${OSTYPE}" != msys ]] && [[ "${OSTYPE}" != win32 ]]; then
   test_run_tests
 else
-  echo "Skipping option --run-tests. Cannot be tested on Windows because of Korean characters."
+  echo "Skipping testing of option --run_tests. Cannot be tested on Windows because of Korean characters."
 fi
 
 set +e
