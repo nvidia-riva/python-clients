@@ -88,7 +88,7 @@ function test_run_tests(){
 if [[ "${OSTYPE}" != msys ]] && [[ "${OSTYPE}" != win32 ]]; then
   test_run_tests
 else
-  echo "Skipping testing of option --run_tests. Cannot be tested on Windows because of Korean characters."
+  echo "  Skipping testing of option --run_tests. Cannot be tested on Windows because of Korean characters."
 fi
 
 set +e

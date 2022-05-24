@@ -238,9 +238,9 @@ def get_args() -> argparse.Namespace:
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument("--model", default="riva_intent_weather", type=str, help="Model on TRTIS to execute")
-    parser.add_argument("--input_file", type=Path, required=True, help="Input filename")
-    parser.add_argument("--language_code", default='en-US')
-    parser.add_argument("--batch_size", type=int, default=1)
+    parser.add_argument("--input-file", type=Path, required=True, help="Input filename")
+    parser.add_argument("--language-code", default='en-US')
+    parser.add_argument("--batch-size", type=int, default=1)
     parser = add_connection_argparse_parameters(parser)
     args = parser.parse_args()
     args.input_file = args.input_file.expanduser()

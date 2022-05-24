@@ -39,7 +39,8 @@ def main() -> None:
     args = get_args()
     auth = riva_api.Auth(args.ssl_cert, args.use_ssl, args.server)
     service = riva_api.NLPService(auth)
-    print(service.natural_query(args.query, args.context))
+    resp = service.natural_query(args.query, args.context)
+    print(resp)
 
 
 if __name__ == "__main__":

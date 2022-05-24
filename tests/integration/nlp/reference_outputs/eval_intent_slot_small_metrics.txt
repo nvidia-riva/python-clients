@@ -1,0 +1,20 @@
+                 precision    recall  f1-score   support
+
+weather.weather       1.00      1.00      1.00        50
+
+       accuracy                           1.00        50
+      macro avg       1.00      1.00      1.00        50
+   weighted avg       1.00      1.00      1.00        50
+
+                        precision    recall  f1-score   support
+
+B-weatherforecastdaily       0.98      1.00      0.99        49
+        B-weatherplace       1.00      1.00      1.00        28
+         B-weathertime       0.49      1.00      0.66        42
+I-weatherforecastdaily       1.00      0.97      0.99        37
+         I-weathertime       1.00      0.49      0.66        86
+                     O       1.00      1.00      1.00       264
+
+              accuracy                           0.91       506
+             macro avg       0.91      0.91      0.88       506
+          weighted avg       0.96      0.91      0.91       506
