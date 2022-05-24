@@ -18,7 +18,7 @@ function test_show_intermediate(){
     1>"${stdout_file}" 2>"${stderr_file}"
   retVal=$?
   process_exit_status
-  number_of_intermediate_prints="$(grep ">>" "${stdout_file}" | wc -l)"
+  number_of_intermediate_prints="$(grep -F ">>" "${stdout_file}" | wc -l)"
   if ((number_of_intermediate_prints < 1)); then
     echo "FAILED. When option --show-intermediate is provided, there has to be at least 1 intermediate print "\
 "whereas no intermediate prints were found. Intermediate prints start with '>>'. See ${stdout_file}."

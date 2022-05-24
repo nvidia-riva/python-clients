@@ -52,14 +52,14 @@ function test_transcript_affecting_params(){
       mv output_0.txt "${output_test_file}"
     fi
     if [[ "${offline}" == 1 ]]; then
-      transcript_line="$(tac "${output_test_file}" | grep -m 1 'Final transcript:')"
+      transcript_line="$(tac "${output_test_file}" | grep -F -m 1 'Final transcript:')"
       predicted_transcript="${transcript_line#Final transcript: }"
     else
       if [[ "${time_info_before_final_transcript}" == 1 ]]; then
-        transcript_line="$(tac "${output_test_file}" | grep -m 1 'Transcript 0:')"
+        transcript_line="$(tac "${output_test_file}" | grep -F -m 1 'Transcript 0:')"
         predicted_transcript="${transcript_line#*Transcript *: }"
       else
-        transcript_line="$(tac "${output_test_file}" | grep -m 1 '## ')"
+        transcript_line="$(tac "${output_test_file}" | grep -F -m 1 '## ')"
         predicted_transcript="${transcript_line#*## }"
       fi
     fi
@@ -125,7 +125,7 @@ function test_language_code(){
     error_string="details = \"Error: Model is not available on server\""
     check_file="${stderr_file}"
   fi
-  if [ -z "$(grep "${error_string}" "${check_file}")" ]; then
+  if [ -z "$(grep -F "${error_string}" "${check_file}")" ]; then
     echo "A grpc error is expected if --language-code=ru-RU because such models are not available on server. "\
 "A string '${error_string}' is not found in file ${stderr_file}"
     exit 1
@@ -148,7 +148,7 @@ function test_list_devices(){
   retVal=$?
   process_exit_status
   list_header="${prefix} audio devices:"
-  list_header_found="$(grep "${list_header}" "${stdout_file}" | wc -l)"
+  list_header_found="$(grep -F "${list_header}" "${stdout_file}" | wc -l)"
   if ((list_header_found < 1)); then
     echo "FAILED: a header '${list_header}' of devices list is not found in standard output. "\
 "See stdout in file '${stdout_file}'."

@@ -19,8 +19,8 @@ function test_verbose_format(){
     1>"${stdout_file}" 2>"${stderr_file}"
   retVal=$?
   process_exit_status
-  number_of_stability_messages="$(grep "Stability:" "${stdout_file}" | wc -l)"
-  number_of_confidence_messages="$(grep "Confidence:" "${stdout_file}" | wc -l)"
+  number_of_stability_messages="$(grep -F "Stability:" "${stdout_file}" | wc -l)"
+  number_of_confidence_messages="$(grep -F "Confidence:" "${stdout_file}" | wc -l)"
   if ((number_of_stability_messages < 1 || number_of_confidence_messages < 1)); then
     echo "FAILED. Verbose format is wrong. Expected at least 1 stability message and at least 1 confidence message, "\
 "whereas ${number_of_stability_messages} stability messages found and ${number_of_confidence_messages} confidence "\

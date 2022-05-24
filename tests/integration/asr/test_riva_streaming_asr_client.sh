@@ -109,7 +109,7 @@ function test_num_iterations(){
   process_exit_status
   new_file_name="${test_output_dir}/output_0_num_iterations.txt"
   mv output_0.txt "${new_file_name}"
-  num_final_transcripts="$(grep "Transcript 0:" "${new_file_name}" | wc -l)"
+  num_final_transcripts="$(grep -F "Transcript 0:" "${new_file_name}" | wc -l)"
   if ((num_final_transcripts != num_iterations)); then
     echo "FAILED. Number of final transcripts has to be ${num_iterations} if "\
 "--num-iterations=${num_iterations}, whereas number "\

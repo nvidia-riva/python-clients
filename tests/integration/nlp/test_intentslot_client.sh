@@ -20,9 +20,9 @@ function test_not_interactive(){
   target_intent="weather.weather"
   target_slots="['weatherforecastdaily', 'weatherplace']"
   target_slot_tokens="['tomorrow', '?']"
-  found_target_intent="$(grep "${target_intent}" "${stdout_file}" | wc -l)"
-  found_target_slots="$(grep "${target_slots}" "${stdout_file}" | wc -l)"
-  found_target_slot_tokens="$(grep "${target_slot_tokens}" "${stdout_file}" | wc -l)"
+  found_target_intent="$(grep -F "${target_intent}" "${stdout_file}" | wc -l)"
+  found_target_slots="$(grep -F "${target_slots}" "${stdout_file}" | wc -l)"
+  found_target_slot_tokens="$(grep -F "${target_slot_tokens}" "${stdout_file}" | wc -l)"
   if ((found_target_intent < 1 || found_target_slots < 1 || found_target_slot_tokens < 1)); then
     msg="FAILED. Target"
     not_found=0
@@ -68,7 +68,7 @@ function test_grep_vs_file(){
       exit 1
     fi
     ((num++))
-  done < <(grep "${pattern}" "${stdout_file_}")
+  done < <(grep -F "${pattern}" "${stdout_file_}")
   echo "${num}"
 }
 
