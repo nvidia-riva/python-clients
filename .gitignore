@@ -184,4 +184,6 @@ dmypy.json
 .pyre/
 
 tests/integration/asr/outputs
+tests/integration/nlp/outputs
+tests/integration/tts/outputs
 
