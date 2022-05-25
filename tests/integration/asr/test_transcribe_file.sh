@@ -26,7 +26,12 @@ function test_show_intermediate(){
 
 test_show_intermediate
 test_simulate_realtime transcribe_file.py
-test_language_code transcribe_file.py
+test_string_presence \
+  transcribe_file.py \
+  "--input-file examples/en-US_sample.wav --language-code ru-RU" \
+  "details = \"Error: Model is not available on server\"" \
+  language_code_ru_RU \
+  1
 test_transcript_affecting_params transcribe_file.py
 
 set +e

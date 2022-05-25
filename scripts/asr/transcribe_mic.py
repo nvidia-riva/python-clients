@@ -44,7 +44,7 @@ def get_args() -> argparse.Namespace:
     parser = add_asr_config_argparse_parameters(parser)
     parser = add_connection_argparse_parameters(parser)
     parser.add_argument(
-        "--audio-frame-rate",
+        "--sample-rate-hz",
         type=int,
         help="Frame for input device. If not provided, then default value is used.",
         default=16000,
@@ -68,14 +68,14 @@ def main() -> None:
             max_alternatives=1,
             enable_automatic_punctuation=args.automatic_punctuation,
             verbatim_transcripts=not args.no_verbatim_transcripts,
-            sample_rate_hertz=args.audio_frame_rate,
+            sample_rate_hertz=args.sample_rate_hz,
             audio_channel_count=1,
         ),
         interim_results=True,
     )
     riva_api.add_word_boosting_to_config(config, args.boosted_lm_words, args.boosted_lm_score)
     with riva_api.audio_io.MicrophoneStream(
-        args.audio_frame_rate,
+        args.sample_rate_hz,
         args.file_streaming_chunk,
         device=args.input_device,
     ) as audio_chunk_iterator:

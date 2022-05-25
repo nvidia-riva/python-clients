@@ -29,6 +29,11 @@ function test_verbose_format(){
 
 
 test_verbose_format
-test_language_code transcribe_file_verbose.py
+test_string_presence \
+  transcribe_file_verbose.py \
+  "--input-file examples/en-US_sample.wav --language-code ru-RU" \
+  "details = \"Error: Model is not available on server\"" \
+  language_code_ru_RU \
+  1
 test_transcript_affecting_params transcribe_file_verbose.py
 set +e

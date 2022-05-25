@@ -9,7 +9,12 @@ source "$(dirname $0)/../prepare_test_output_dir.sh" "$(dirname $0)" "riva_strea
 
 rm -f output_0.txt
 
-test_language_code riva_streaming_asr_client.py
+test_string_presence \
+  riva_streaming_asr_client.py \
+  "--input-file examples/en-US_sample.wav --language-code ru-RU" \
+  "details = \"Error: Model is not available on server\"" \
+  language_code_ru_RU \
+  1
 test_simulate_realtime riva_streaming_asr_client.py
 test_transcript_affecting_params riva_streaming_asr_client.py
 

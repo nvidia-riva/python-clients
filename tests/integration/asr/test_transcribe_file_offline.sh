@@ -5,6 +5,11 @@ source "$(dirname $0)/test_functions.sh"
 
 source "$(dirname $0)/../prepare_test_output_dir.sh" "$(dirname $0)" "transcribe_file_offline.py"
 
-test_language_code transcribe_file_offline.py
+test_string_presence \
+  transcribe_file_offline.py \
+  "--input-file examples/en-US_sample.wav --language-code ru-RU" \
+  "Error: Model is not availabdle on server" \
+  language_code_ru_RU \
+  0
 test_transcript_affecting_params transcribe_file_offline.py
 set +e

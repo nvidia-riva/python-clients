@@ -102,29 +102,31 @@ function test_simulate_realtime(){
 }
 
 
-function test_language_code(){
+function test_string_presence(){
   script_name="$1"
-  source "$(dirname $0)/define_test_control_vars.sh"
-  input_file="en-US_sample.wav"
-  exp_options="--input-file examples/${input_file} --language-code ru-RU"
+  exp_options="$2"
+  expected_string="$3"
+  test_name="$4"
+  stderr="$5"
   echo "  options: ${exp_options}"
-  stdout_file="${test_output_dir}/stdout_language_code_ru_RU.txt"
-  stderr_file="${test_output_dir}/stderr_language_code_ru_RU.txt"
+  stdout_file="${test_output_dir}/stdout_${test_name}.txt"
+  stderr_file="${test_output_dir}/stderr_${test_name}.txt"
   set +e
   python "scripts/asr/${script_name}" ${server_args} ${exp_options} \
     1>"${stdout_file}" 2>"${stderr_file}"
   retVal=$?
-  set -e
-  if [[ "${offline}" == 1 ]]; then
-    error_string="Error: Model is not available on server"
-    check_file="${stdout_file}"
+  if [[ "${stderr}" == 1 ]]; then
+    set -e
   else
-    error_string="details = \"Error: Model is not available on server\""
-    check_file="${stderr_file}"
+    process_exit_status
   fi
-  if [ -z "$(grep -F "${error_string}" "${check_file}")" ]; then
-    echo "A grpc error is expected if --language-code=ru-RU because such models are not available on server. "\
-"A string '${error_string}' is not found in file ${stderr_file}"
+  if [[ "${stderr}" == 1 ]]; then
+    check_file="${stderr_file}"
+  else
+    check_file="${stdout_file}"
+  fi
+  if [ -z "$(grep -F "${expected_string}" "${check_file}")" ]; then
+    echo "FAILED: a string '${expected_string}' is expected in ${check_file} if options are '${exp_options}'."
     exit 1
   fi
 }
