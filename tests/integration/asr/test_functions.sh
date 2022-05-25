@@ -31,15 +31,14 @@ function test_transcript_affecting_params(){
   )
   expected_final_offline_transcripts=("${expected_final_streaming_transcripts[@]}")
   expected_final_offline_transcripts[3]="hello 35 % of 40 equals 14"
-  source "$(dirname $0)/../prepare_test_output_dir.sh" "$(dirname $0)"
   for i in "${!options[@]}"; do
     if [[ "${test_max_alternatives}" == 0 ]] && [[ "${options[$i]}" == *"--max-alternatives"* ]]; then
       continue
     fi
     exp_options="--input-file examples/${input_files[$i]} ${options[$i]}"
     echo "  options: ${exp_options}"
-    stdout_file="${test_output_dir_}/stdout_options_${i}.txt"
-    stderr_file="${test_output_dir_}/stderr_options_${i}.txt"
+    stdout_file="${test_output_dir}/stdout_options_${i}.txt"
+    stderr_file="${test_output_dir}/stderr_options_${i}.txt"
     set +e
     python "scripts/asr/${script_name}" ${server_args} ${exp_options} \
       1>"${stdout_file}" 2>"${stderr_file}"
@@ -48,7 +47,7 @@ function test_transcript_affecting_params(){
     if [[ "${use_stdout_for_testing}" == 1 ]]; then
       output_test_file="${stdout_file}"
     else
-      output_test_file="${test_output_dir_}/output_0_options_${i}.txt"
+      output_test_file="${test_output_dir}/output_0_options_${i}.txt"
       mv output_0.txt "${output_test_file}"
     fi
     if [[ "${offline}" == 1 ]]; then
@@ -81,13 +80,12 @@ function test_transcript_affecting_params(){
 
 function test_simulate_realtime(){
   script_name="$1"
-  source "$(dirname $0)/../prepare_test_output_dir.sh" "$(dirname $0)"
   input_file="en-US_AntiBERTa_for_word_boosting_testing.wav"
   input_file_length_seconds=14
   exp_options="--input-file examples/${input_file} --simulate-realtime"
   echo "  options: ${exp_options}"
-  stdout_file="${test_output_dir_}/stdout_simulate_realtime.txt"
-  stderr_file="${test_output_dir_}/stderr_simulate_realtime.txt"
+  stdout_file="${test_output_dir}/stdout_simulate_realtime.txt"
+  stderr_file="${test_output_dir}/stderr_simulate_realtime.txt"
   start_time=$(date +%s)
   set +e
   python "scripts/asr/${script_name}" ${server_args} ${exp_options} \
@@ -107,12 +105,11 @@ function test_simulate_realtime(){
 function test_language_code(){
   script_name="$1"
   source "$(dirname $0)/define_test_control_vars.sh"
-  source "$(dirname $0)/../prepare_test_output_dir.sh" "$(dirname $0)"
   input_file="en-US_sample.wav"
   exp_options="--input-file examples/${input_file} --language-code ru-RU"
   echo "  options: ${exp_options}"
-  stdout_file="${test_output_dir_}/stdout_language_code_ru_RU.txt"
-  stderr_file="${test_output_dir_}/stderr_language_code_ru_RU.txt"
+  stdout_file="${test_output_dir}/stdout_language_code_ru_RU.txt"
+  stderr_file="${test_output_dir}/stderr_language_code_ru_RU.txt"
   set +e
   python "scripts/asr/${script_name}" ${server_args} ${exp_options} \
     1>"${stdout_file}" 2>"${stderr_file}"
@@ -130,29 +127,4 @@ function test_language_code(){
 "A string '${error_string}' is not found in file ${stderr_file}"
     exit 1
   fi
-  set +e
-}
-
-
-function test_list_devices(){
-  script_name="$1"
-  prefix="$2"
-  source "$(dirname $0)/../prepare_test_output_dir.sh" "$(dirname $0)"
-  exp_options="--list-devices"
-  echo "  options: ${exp_options}"
-  stdout_file="${test_output_dir_}/stdout_list_devices.txt"
-  stderr_file="${test_output_dir_}/stderr_list_devices.txt"
-  set +e
-  python "scripts/asr/${script_name}" ${server_args} ${exp_options} \
-    1>"${stdout_file}" 2>"${stderr_file}"
-  retVal=$?
-  process_exit_status
-  list_header="${prefix} audio devices:"
-  list_header_found="$(grep -F "${list_header}" "${stdout_file}" | wc -l)"
-  if ((list_header_found < 1)); then
-    echo "FAILED: a header '${list_header}' of devices list is not found in standard output. "\
-"See stdout in file '${stdout_file}'."
-    exit 1
-  fi
-  set +e
 }

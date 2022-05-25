@@ -3,11 +3,9 @@ source "$(dirname $0)/../export_server_vars.sh"
 source "$(dirname $0)/../init_server_cli_params.sh"
 source "$(dirname $0)/test_functions.sh"
 
-test_output_dir="$(dirname $0)/outputs/test_transcribe_file"
+source "$(dirname $0)/../prepare_test_output_dir.sh" "$(dirname $0)" "transcribe_file.py"
 
 function test_show_intermediate(){
-  mkdir -p "${test_output_dir}"
-  rm -rf "${test_output_dir}"/*
   input_file="en-US_sample.wav"
   exp_options="--input-file examples/${input_file} --show-intermediate"
   echo "  options: ${exp_options}"

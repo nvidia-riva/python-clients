@@ -46,7 +46,7 @@ def get_args() -> argparse.Namespace:
     parser.add_argument("--list-devices", action="store_true", help="list output devices indices")
     parser.add_argument("--output-device", type=int, help="Output device to use")
     parser.add_argument("--language-code", default='en-US')
-    parser.add_argument("--sample_rate_hz", type=int, default=44100)
+    parser.add_argument("--sample-rate-hz", type=int, default=44100)
     parser.add_argument("--stream", action="store_true")
     parser = add_connection_argparse_parameters(parser)
     args = parser.parse_args()

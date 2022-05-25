@@ -17,3 +17,24 @@ function test_for_specific_string(){
     exit 1
   fi
 }
+
+
+function test_error_is_raised(){
+  script_name="$1"
+  exp_options="$2"
+  expected_error="$3"
+  test_name="$4"
+  input_file="en-US_sample.wav"
+  echo "  options: ${exp_options}"
+  stdout_file="${test_output_dir}/stdout_${test_name}.txt"
+  stderr_file="${test_output_dir}/stderr_${test_name}.txt"
+  set +e
+  python "scripts/nlp/${script_name}" ${server_args} ${exp_options} \
+    1>"${stdout_file}" 2>"${stderr_file}"
+  set -e
+  if [ -z "$(grep -F "${expected_error}" "${stderr_file}")" ]; then
+    echo "A grpc error is expected if '${exp_options}'. "\
+"An error '${expected_error}' is not found in file ${stderr_file}"
+    exit 1
+  fi
+}

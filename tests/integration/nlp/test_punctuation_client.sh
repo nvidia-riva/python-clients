@@ -2,10 +2,14 @@ set -e
 source "$(dirname $0)/../export_server_vars.sh"
 source "$(dirname $0)/../init_server_cli_params.sh"
 source "$(dirname $0)/../helpers.sh"
+source "$(dirname $0)/test_functions.sh"
 
-test_output_dir="$(dirname $0)/outputs/test_punctuation_client"
-mkdir -p "${test_output_dir}"
-rm -rf "${test_output_dir}"/*
+source "$(dirname $0)/../prepare_test_output_dir.sh" "$(dirname $0)" "punctuation_client.py"
+
+
+test_error_is_raised punctuation_client.py "--model foo" \
+  "Error: Model foo is not a Riva API model, execution cannot be done" \
+  "wrong_model"
 
 
 function test_not_interactive(){
