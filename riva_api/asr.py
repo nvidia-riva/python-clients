@@ -221,18 +221,87 @@ def streaming_request_generator(
 
 
 class ASRService:
+    """
+    Provides streaming and offline recognition services. Calls gRPC with authentication
+    metadata.
+    """
     def __init__(self, auth: Auth) -> None:
+        """
+        Initializes the instance of the class.
+
+        Args:
+            auth (:obj:`Auth`): an instance of :class:`riva_api.auth.Auth` which is used for
+                authentication metadata generation.
+        """
         self.auth = auth
         self.stub = rasr_srv.RivaSpeechRecognitionStub(self.auth.channel)
 
     def streaming_response_generator(
         self, audio_chunks: Iterable[bytes], streaming_config: rasr.StreamingRecognitionConfig
     ) -> Generator[rasr.StreamingRecognizeResponse, None, None]:
+        """
+        Generates speech recognition responses for fragments of speech audio in :param:`audio_chunks`.
+        The purpose of the method is to perform speech recognition "online" - as soon as
+        audio is acquired on small chunks of audio.
+
+        Args:
+            audio_chunks (:obj:`Iterable[bytes]`): an iterable object which contains raw audio fragments
+                of speech. For example, such raw audio can be obtained with
+
+                .. code-block:: python
+
+                    import wave
+                    with wave.open(file_name, 'rb') as wav_f:
+                        raw_audio = wav_f.readframes(n_frames)
+
+            streaming_config (:obj:`rasr.StreamingRecognitionConfig`): a config for streaming. You may find
+                description of config fields in message ``StreamingRecognitionConfig`` in
+                `common repo <https://github.com/nvidia-riva/common/blob/main/riva/proto/riva_asr.proto>`_.
+                An example of creation of streaming config:
+
+                .. code-style:: python
+
+                    from riva_api import RecognitionConfig, StreamingRecognitionConfig
+                    config = RecognitionConfig(enable_automatic_punctuation=True)
+                    streaming_config = StreamingRecognitionConfig(config, interim_results=True)
+
+        Yields:
+            :obj:`rasr.StreamingRecognizeResponse`: responses for audio chunks in :param:`audio_chunks`.
+            You may find description of response fields in declaration of ``StreamingRecognizeResponse``
+            message `here <https://github.com/nvidia-riva/common/blob/main/riva/proto/riva_asr.proto>`_.
+        """
         generator = streaming_request_generator(audio_chunks, streaming_config)
         for response in self.stub.StreamingRecognize(generator, metadata=self.auth.get_auth_metadata()):
             yield response
 
     def offline_recognize(self, audio_bytes: bytes, config: rasr.RecognitionConfig) -> rasr.RecognizeResponse:
+        """
+        Performs speech recognition for raw audio in :param:`audio_bytes`. This method is for processing of
+        huge audio at once - not as it is being generated.
+
+        Args:
+            audio_bytes (:obj:`bytes`): a raw audio. For example it can be obtained with
+
+                .. code-block:: python
+
+                    import wave
+                    with wave.open(file_name, 'rb') as wav_f:
+                        raw_audio = wav_f.readframes(n_frames)
+            config (:obj:`rasr.RecognitionConfig`): a config for offline speech recognition. You may find
+                description of config fields in message ``RecognitionConfig`` in
+                `common repo <https://github.com/nvidia-riva/common/blob/main/riva/proto/riva_asr.proto>`_.
+                An example of creation of config:
+
+                .. code-style:: python
+
+                    from riva_api import RecognitionConfig
+                    config = RecognitionConfig(enable_automatic_punctuation=True)
+
+        Returns:
+            :obj:`rasr.RecognizeResponse`: a response with results of :param:`audio_bytes` processing.
+            You may find description of response fields in declaration of ``RecognizeResponse``
+            message `here <https://github.com/nvidia-riva/common/blob/main/riva/proto/riva_asr.proto>`_.
+        """
         request = rasr.RecognizeRequest(config=config, audio=audio_bytes)
         response = self.stub.Recognize(request, metadata=self.auth.get_auth_metadata())
         return response
