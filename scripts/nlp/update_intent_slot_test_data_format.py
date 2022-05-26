@@ -3,9 +3,15 @@ from pathlib import Path
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument("--input_file", type=Path)
-    parser.add_argument("--output_file", type=Path)
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+        description="Transforms old style file for intent classification and entities classification "
+        "to new style format. Old style is '<intent>TAB<entities>TAB<query>' where <query> is in format "
+        "'BOS <intent> <text> EOS'. This script keeps only <text> in <query> and removes auxiliary "
+        "<query> field."
+    )
+    parser.add_argument("--input_file", type=Path, help="A path to an input .tsv file.", required=True)
+    parser.add_argument("--output_file", type=Path, help="A path to an output .tsv file.", required=True)
     args = parser.parse_args()
     args.input_file = args.input_file.expanduser()
     args.output_file = args.output_file.expanduser()

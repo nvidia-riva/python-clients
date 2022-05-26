@@ -6,6 +6,6 @@ fi
 if [ ! -z "${SSL_CERT}" ]; then
   export SSL_CERT
 fi
-if [ ! -z "${USE_SSL}"] && [[ "${USE_SSL}" != "0" ]]; then
+if [ ! -z "${USE_SSL}" ] && [[ "${USE_SSL}" != "0" ]]; then
   export USE_SSL
 fi
