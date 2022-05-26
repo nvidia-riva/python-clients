@@ -13,7 +13,7 @@ import riva_api.proto.riva_asr_pb2_grpc as rasr_srv
 from riva_api.auth import Auth
 
 
-def get_wav_file_parameters(input_file: os.PathLike) -> Dict[str, Union[int, float]]:
+def get_wav_file_parameters(input_file: Union[str, os.PathLike]) -> Dict[str, Union[int, float]]:
     with wave.open(str(input_file), 'rb') as wf:
         nframes = wf.getnframes()
         rate = wf.getframerate()

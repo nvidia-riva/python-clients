@@ -1,11 +1,11 @@
 import os
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Union
 
 import grpc
 
 
 def create_channel(
-    ssl_cert: Optional[os.PathLike] = None, use_ssl: bool = False, riva_uri: str = "localhost:50051",
+    ssl_cert: Optional[Union[str, os.PathLike]] = None, use_ssl: bool = False, riva_uri: str = "localhost:50051",
 ) -> grpc.Channel:
     if ssl_cert is not None or use_ssl:
         root_certificates = None
