@@ -81,13 +81,46 @@ def prepare_transform_text_request(
 
 
 class NLPService:
+    """
+    Provides
+        - text classification,
+        - token classification,
+        - text transformation,
+        - intent recognition,
+        - punctuation and capitalization recovering,
+        - question answering
+    services.
+    """
     def __init__(self, auth: Auth) -> None:
+        """
+        Initializes the instance of the class.
+
+        Args:
+            auth (:obj:`Auth`): an instance of :class:`riva_api.auth.Auth` which is used for
+                authentication metadata generation.
+        """
         self.auth = auth
         self.stub = rnlp_srv.RivaLanguageUnderstandingStub(self.auth.channel)
 
     def classify_text(
         self, input_strings: Union[List[str], str], model_name: str, language_code: str = 'en-US'
     ) -> rnlp.TextClassResponse:
+        """
+        Classifies text provided in :param:`input_strings`. For example, this method can be used for
+        intent classification.
+
+        Args:
+            input_strings (:obj:`Union[List[str], str]`): a text or a list of texts which will be classified.
+            model_name (:obj:`str`): a name of a model. You check the model name in server logs or in server
+                directory with models. A value for quickstart v2.0.0: ``"riva_intent_weather"``.
+            language_code (:obj:`str`): a language of input text if :param:`model_name` is available for several
+                languages.
+
+        Returns:
+            :obj:`rnlp.TextClassResponse`: a response with :param:`input_strings` classification results.
+            You may find :class:`rnlp.TextClassResponse` fields description
+            `here <https://github.com/nvidia-riva/common/blob/main/riva/proto/riva_nlp.proto>`_.
+        """
         if isinstance(input_strings, str):
             input_strings = [input_strings]
         request = rnlp.TextClassRequest()
@@ -100,6 +133,21 @@ class NLPService:
     def classify_tokens(
         self, input_strings: Union[List[str], str], model_name: str, language_code: str = 'en-US'
     ) -> rnlp.TokenClassResponse:
+        """
+        Classifies tokens in texts in :param:`input_strings`. Can be used for slot classification or NER.
+
+        Args:
+            input_strings (:obj:`Union[List[str], str]`): a text or a list of texts.
+            model_name (:obj:`Union[List[str], str]`): a name of a model. You check the model name in server logs
+                or in server directory with models. Valid values for quickstart v2.0.0: ``"riva_intent_weather"``
+                and ``"riva_ner"``.
+            language_code: a language of input text if :param:`model_name` is available for several
+                languages.
+
+        Returns:
+            :obj:`rnlp.TokenClassResponse`: a response with results. You may find :class:`rnlp.TokenClassResponse`
+            fields description `here <https://github.com/nvidia-riva/common/blob/main/riva/proto/riva_nlp.proto>`_.
+        """
         if isinstance(input_strings, str):
             input_strings = [input_strings]
         request = rnlp.TokenClassRequest()
