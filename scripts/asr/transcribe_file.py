@@ -30,24 +30,53 @@ import riva_api
 from riva_api.argparse_utils import add_asr_config_argparse_parameters, add_connection_argparse_parameters
 
 
-def get_args() -> argparse.Namespace:
+def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Streaming transcription via Riva AI Services",
+        description="Streaming transcription of a file via Riva AI Services.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
-    parser.add_argument("--input-file", required=True, help="path to local file to stream")
+    parser.add_argument("--input-file", help="A path to local file to stream.")
+    parser.add_argument("--list-devices", action="store_true", help="list output devices indices")
     parser.add_argument(
-        "--show-intermediate", action="store_true", help="show intermediate transcripts as they are available"
+        "--show-intermediate", action="store_true", help="Show intermediate transcripts as they are available."
     )
-    parser.add_argument("--file-streaming-chunk", type=int, default=1600)
-    parser.add_argument("--simulate-realtime", action='store_true', help="Option to simulate realtime transcription")
+    parser.add_argument("--output-device", type=int, default=None, help="output device to use")
+    parser.add_argument(
+        "--play-audio",
+        action="store_true",
+        help="Whether to play input audio simultaneously with transcribing. If `--output-device` is not provided, "
+        "then the default output audio device will be used.",
+    )
+    parser.add_argument(
+        "--file-streaming-chunk", type=int, default=1600, help="Number of frames in one chunk sent to server."
+    )
+    parser.add_argument(
+        "--simulate-realtime",
+        action='store_true',
+        help="Option to simulate realtime transcription. Audio fragments are sent to a server at a pace that mimics "
+        "normal speech.",
+    )
+    parser.add_argument(
+        "--print-confidence", action="store_true", help="Whether to print stability and confidence of transcript."
+    )
     parser = add_connection_argparse_parameters(parser)
     parser = add_asr_config_argparse_parameters(parser)
-    return parser.parse_args()
+    args = parser.parse_args()
+    if not args.list_devices and args.input_file is None:
+        parser.error(
+            "You have to provide at least one of parameters `--input-file` and `--list-devices` whereas both "
+            "parameters are missing."
+        )
+    if args.play_audio or args.output_device is not None or args.list_devices:
+        import riva_api.audio_io
+    return args
 
 
 def main() -> None:
-    args = get_args()
+    args = parse_args()
+    if args.list_devices:
+        riva_api.audio_io.list_output_devices()
+        return
     auth = riva_api.Auth(args.ssl_cert, args.use_ssl, args.server)
     asr_service = riva_api.ASRService(auth)
     config = riva_api.StreamingRecognitionConfig(
@@ -62,18 +91,30 @@ def main() -> None:
     )
     riva_api.add_audio_file_specs_to_config(config, args.input_file)
     riva_api.add_word_boosting_to_config(config, args.boosted_lm_words, args.boosted_lm_score)
-    with riva_api.AudioChunkFileIterator(
-        args.input_file,
-        args.file_streaming_chunk,
-        delay_callback=riva_api.sleep_audio_length if args.simulate_realtime else None,
-    ) as audio_chunk_iterator:
-        riva_api.print_streaming(
-            response_generator=asr_service.streaming_response_generator(
-                audio_chunks=audio_chunk_iterator,
-                streaming_config=config,
-            ),
-            show_intermediate=args.show_intermediate,
-        )
+    sound_call_back = None
+    try:
+        if args.play_audio or args.output_device is not None:
+            wp = riva_api.get_wav_file_parameters(args.input_file)
+            sound_call_back = riva_api.audio_io.SoundCallBack(
+                args.output_device, wp['sampwidth'], wp['nchannels'], wp['framerate'],
+            )
+            delay_call_back = sound_call_back
+        else:
+            delay_call_back = riva_api.sleep_audio_length if args.simulate_realtime else None
+        with riva_api.AudioChunkFileIterator(
+            args.input_file, args.file_streaming_chunk, delay_call_back,
+        ) as audio_chunk_iterator:
+            riva_api.print_streaming(
+                response_generator=asr_service.streaming_response_generator(
+                    audio_chunks=audio_chunk_iterator,
+                    streaming_config=config,
+                ),
+                show_intermediate=args.show_intermediate,
+                additional_info="confidence" if args.print_confidence else "no",
+            )
+    finally:
+        if sound_call_back is not None and sound_call_back.opened:
+            sound_call_back.close()
 
 
 if __name__ == "__main__":

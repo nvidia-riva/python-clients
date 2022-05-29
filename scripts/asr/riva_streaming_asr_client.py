@@ -9,18 +9,29 @@ from riva_api.asr import get_wav_file_parameters
 from riva_api.argparse_utils import add_asr_config_argparse_parameters, add_connection_argparse_parameters
 
 
-def get_args() -> argparse.Namespace:
+def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Streaming transcription via Riva AI Services",
+        description="Streaming transcription via Riva AI Services. Unlike `scripts/asr/transcribe_file.py` script "
+        "this script allows to perform transcription several times on the same audio if `--num-iterations` is "
+        "greater than 1. If you `--num-clients` is greater than 1, then a file will be transcribed independently "
+        "in several threads. Unlike other ASR scripts, this script does not print output but saves it in files "
+        "with names in format `output_<thread_num>.txt`.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
-    parser.add_argument("--num-clients", default=1, type=int, help="Number of client threads")
-    parser.add_argument("--num-iterations", default=1, type=int, help="Number of iterations over the file")
+    parser.add_argument("--num-clients", default=1, type=int, help="Number of client threads.")
+    parser.add_argument("--num-iterations", default=1, type=int, help="Number of iterations over the file.")
     parser.add_argument(
-        "--input-file", required=True, type=str, help="Name of the WAV file with LINEAR_PCM encoding to transcribe"
+        "--input-file", required=True, type=str, help="Name of the WAV file with LINEAR_PCM encoding to transcribe."
     )
-    parser.add_argument("--simulate-realtime", action='store_true', help="Option to simulate realtime transcription")
-    parser.add_argument("--file-streaming-chunk", type=int, default=1600)
+    parser.add_argument(
+        "--simulate-realtime",
+        action='store_true',
+        help="Option to simulate realtime transcription. Audio fragments are sent to a server at a pace that mimics "
+        "normal speech.",
+    )
+    parser.add_argument(
+        "--file-streaming-chunk", type=int, default=1600, help="Number of frames in one chunk sent to server."
+    )
     parser = add_connection_argparse_parameters(parser)
     parser = add_asr_config_argparse_parameters(parser, max_alternatives=True, word_time_offsets=True)
     args = parser.parse_args()
@@ -64,13 +75,13 @@ def streaming_transcription_worker(
                     file_mode='a',
                     word_time_offsets=args.word_time_offsets,
                 )
-    except Exception as e:
+    except BaseException as e:
         exception_queue.put((e, thread_i))
         raise
 
 
 def main() -> None:
-    args = get_args()
+    args = parse_args()
     print("Number of clients:", args.num_clients)
     print("Number of iteration:", args.num_iterations)
     print("Input file:", args.input_file)

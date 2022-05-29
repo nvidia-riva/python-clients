@@ -36,7 +36,7 @@ from riva_api.argparse_utils import add_connection_argparse_parameters
 from riva_api.audio_io import SoundCallBack, list_output_devices
 
 
-def get_args() -> argparse.Namespace:
+def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Streaming transcription via Riva AI Services",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
@@ -56,7 +56,7 @@ def get_args() -> argparse.Namespace:
 
 
 def main() -> None:
-    args = get_args()
+    args = parse_args()
     if args.list_devices:
         list_output_devices()
         return

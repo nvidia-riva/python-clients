@@ -199,11 +199,10 @@ def print_streaming(
             else:
                 for f in output_file:
                     f.write('----\n')
-    except Exception:
-        for elem in output_file:
-            if isinstance(elem, io.TextIOWrapper):
+    finally:
+        for fo, elem in zip(file_opened, output_file):
+            if fo:
                 elem.close()
-        raise
 
 
 def print_offline(response: rasr.RecognizeResponse) -> None:

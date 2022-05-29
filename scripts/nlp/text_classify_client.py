@@ -12,7 +12,7 @@ import riva_api
 from riva_api.argparse_utils import add_connection_argparse_parameters
 
 
-def get_args() -> argparse.Namespace:
+def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Client app to test Text Classification on Riva",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
@@ -26,7 +26,7 @@ def get_args() -> argparse.Namespace:
 
 
 def main() -> None:
-    args = get_args()
+    args = parse_args()
     auth = riva_api.Auth(args.ssl_cert, args.use_ssl, args.server)
     service = riva_api.NLPService(auth)
     print(riva_api.nlp.extract_most_probable_text_class_and_confidence(service.classify_text(args.query, args.model)))

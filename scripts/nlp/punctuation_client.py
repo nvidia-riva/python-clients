@@ -13,7 +13,7 @@ import riva_api
 from riva_api.argparse_utils import add_connection_argparse_parameters
 
 
-def get_args() -> argparse.Namespace:
+def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Client app to test Punctuation on Riva", formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
@@ -91,7 +91,7 @@ def run_tests(args):
 
 
 def main() -> None:
-    args = get_args()
+    args = parse_args()
     if args.run_tests:
         exit(run_tests(args))
     else:

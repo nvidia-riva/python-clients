@@ -13,21 +13,19 @@ case and deliver real-time performance. This repo provides performant client exa
 ## CLI interface
 
 - **Automatic Speech Recognition (ASR)**
-    - `riva_streaming_asr_client.py` demonstrates streaming transcription in several threads, prints time stamps.
-    - `transcribe_file.py` performs streaming transcription,
-    - `transcribe_file_offline.py` performs offline transcription,
-    - `transcribe_file_rt.py` performs streaming transcription and simultaneously plays audio,
-    - `transcribe_file_verbose.py` performs streaming transcription and prints confidence,
-    - `transcribe_mic.py` performs streaming transcription of audio acquired through microphone.
+    - `scripts/asr/riva_streaming_asr_client.py` demonstrates streaming transcription in several threads, can prints time stamps.
+    - `scripts/asr/transcribe_file.py` performs streaming transcription,
+    - `scripts/asr/transcribe_file_offline.py` performs offline transcription,
+    - `scripts/asr/transcribe_mic.py` performs streaming transcription of audio acquired through microphone.
 - **Speech Synthesis (TTS)**
-    - `talk.py` synthesizes audio for a text in streaming or offline mode.
+    - `scripts/tts/talk.py` synthesizes audio for a text in streaming or offline mode.
 - **Natural Language Processing (NLP)**
-    - `intentslot_client.py` recognizes intents and slots in input sentences,
-    - `ner_client.py` detects named entities for input sentences,
-    - `punctuation_client.py` restores punctuation and capitalization in input sentences,
-    - `qa_client.py` queries a document with natural language query and prints answer from a document,
-    - `text_classify_client.py` classifies input sentences,
-    - `eval_intent_slot.py` prints intents and slots classification reports for test data.
+    - `scripts/nlp/intentslot_client.py` recognizes intents and slots in input sentences,
+    - `scripts/nlp/ner_client.py` detects named entities for input sentences,
+    - `scripts/nlp/punctuation_client.py` restores punctuation and capitalization in input sentences,
+    - `scripts/nlp/qa_client.py` queries a document with natural language query and prints answer from a document,
+    - `scripts/nlp/text_classify_client.py` classifies input sentences,
+    - `scripts/nlp/eval_intent_slot.py` prints intents and slots classification reports for test data.
   
 ## Installation
 
@@ -40,7 +38,7 @@ git submodule init
 git submodule update
 pip install -r requirements.txt
 python3 setup.py bdist_wheel
-pip install dist/*.whl
+pip install --force-reinstall dist/*.whl
 ```
 
 If you would like to use output and input audio devices 
@@ -65,6 +63,12 @@ adduser $USER pulse-access
 and restart.
 
 ## Usage
+
+### Server
+
+Before running client part of Riva, please set up a server. The simplest
+way to do this is to follow
+[quick start guide](https://docs.nvidia.com/deeplearning/riva/user-guide/docs/quick-start-guide.html#local-deployment-using-quick-start-scripts).
 
 ### Speech Recognition (ASR) Clients
 Riva comes with 2 ASR clients:

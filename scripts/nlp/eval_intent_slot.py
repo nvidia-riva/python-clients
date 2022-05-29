@@ -232,7 +232,7 @@ def intent_slots_classification_report(
     return intent_report, per_label_slot_report
 
 
-def get_args() -> argparse.Namespace:
+def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Program to print accuracy metrics for test data",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
@@ -248,7 +248,7 @@ def get_args() -> argparse.Namespace:
 
 
 def main() -> None:
-    args = get_args()
+    args = parse_args()
     auth = riva_api.Auth(args.ssl_cert, args.use_ssl, args.server)
     service = riva_api.NLPService(auth)
     intent_report, slot_report = intent_slots_classification_report(

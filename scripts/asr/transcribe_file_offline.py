@@ -32,12 +32,12 @@ import riva_api
 from riva_api.argparse_utils import add_asr_config_argparse_parameters, add_connection_argparse_parameters
 
 
-def get_args():
+def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Offline transcription via Riva AI Services",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
-    parser.add_argument("--input-file", required=True, type=Path, help="path to local file to stream")
+    parser.add_argument("--input-file", required=True, type=Path, help="A path to local file to stream.")
     parser = add_connection_argparse_parameters(parser)
     parser = add_asr_config_argparse_parameters(parser)
     args = parser.parse_args()
@@ -46,7 +46,7 @@ def get_args():
 
 
 def main() -> None:
-    args = get_args()
+    args = parse_args()
     auth = riva_api.Auth(args.ssl_cert, args.use_ssl, args.server)
     asr_service = riva_api.ASRService(auth)
     config = riva_api.RecognitionConfig(

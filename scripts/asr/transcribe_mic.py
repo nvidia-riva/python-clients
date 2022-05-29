@@ -32,7 +32,7 @@ from riva_api.argparse_utils import add_asr_config_argparse_parameters, add_conn
 import riva_api.audio_io
 
 
-def get_args() -> argparse.Namespace:
+def parse_args() -> argparse.Namespace:
     default_device_info = riva_api.audio_io.get_default_input_device_info()
     default_device_index = None if default_device_info is None else default_device_info['index']
     parser = argparse.ArgumentParser(
@@ -55,7 +55,7 @@ def get_args() -> argparse.Namespace:
 
 
 def main() -> None:
-    args = get_args()
+    args = parse_args()
     if args.list_devices:
         riva_api.audio_io.list_input_devices()
         return

@@ -123,6 +123,7 @@ class SoundCallBack:
             rate=framerate,
             output=True,
         )
+        self.opened = True
 
     def __call__(self, audio_data: bytes, audio_length: float = None) -> None:
         self.stream.write(audio_data)
@@ -136,3 +137,4 @@ class SoundCallBack:
     def close(self) -> None:
         self.stream.close()
         self.pa.terminate()
+        self.opened = False

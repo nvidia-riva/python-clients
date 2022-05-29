@@ -12,7 +12,7 @@ import riva_api
 from riva_api.argparse_utils import add_connection_argparse_parameters
 
 
-def get_args():
+def parse_args():
     parser = argparse.ArgumentParser(
         description="Riva Question Answering client sample", formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
@@ -36,7 +36,7 @@ def get_args():
 
 
 def main() -> None:
-    args = get_args()
+    args = parse_args()
     auth = riva_api.Auth(args.ssl_cert, args.use_ssl, args.server)
     service = riva_api.NLPService(auth)
     resp = service.natural_query(args.query, args.context)
