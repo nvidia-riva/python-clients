@@ -1,20 +1,33 @@
-[![CircleCI](https://circleci.com/gh/nvidia-riva/cpp-clients.svg?style=shield)](https://circleci.com/gh/nvidia-riva/cpp-clients) [![License](https://img.shields.io/badge/license-MIT-green)](https://opensource.org/licenses/MIT)
+[![License](https://img.shields.io/badge/license-MIT-green)](https://opensource.org/licenses/MIT)
 # NVIDIA Riva Clients
 
-NVIDIA Riva is a GPU-accelerated SDK for building Speech AI applications that are customized for your use case and deliver real-time performance. This repo provides performant client example command-line clients.
+NVIDIA Riva is a GPU-accelerated SDK for building Speech AI applications that are customized for your use 
+case and deliver real-time performance. This repo provides performant client example command-line clients.
 
-## Features
+## Main API
+
+- `riva_api.ASRService` is a class for speech recognition,
+- `riva_api.TTSService` is a class for speech synthesis,
+- `riva_api.NLPService` is a class for natural language processing.
+
+## CLI interface
 
 - **Automatic Speech Recognition (ASR)**
-    - `riva_streaming_asr_client`
-    - `riva_asr_client`
+    - `riva_streaming_asr_client.py` demonstrates streaming transcription in several threads, prints time stamps.
+    - `transcribe_file.py` performs streaming transcription,
+    - `transcribe_file_offline.py` performs offline transcription,
+    - `transcribe_file_rt.py` performs streaming transcription and simultaneously plays audio,
+    - `transcribe_file_verbose.py` performs streaming transcription and prints confidence,
+    - `transcribe_mic.py` performs streaming transcription of audio acquired through microphone.
 - **Speech Synthesis (TTS)**
-    - `riva_tts_client`
-    - `riva_tts_perf_client`
+    - `talk.py` synthesizes audio for a text in streaming or offline mode.
 - **Natural Language Processing (NLP)**
-    - `riva_nlp_classify_tokens`
-    - `riva_nlp_punct`
-    - `riva_nlp_qa`
+    - `intentslot_client.py` recognizes intents and slots in input sentences,
+    - `ner_client.py` detects named entities for input sentences,
+    - `punctuation_client.py` restores punctuation and capitalization in input sentences,
+    - `qa_client.py` queries a document with natural language query and prints answer from a document,
+    - `text_classify_client.py` classifies input sentences,
+    - `eval_intent_slot.py` prints intents and slots classification reports for test data.
   
 ## Installation
 
@@ -25,18 +38,23 @@ NVIDIA Riva is a GPU-accelerated SDK for building Speech AI applications that ar
 ```bash
 git submodule init
 git submodule update
-conda install -c anaconda pyaudio
 pip install -r requirements.txt
 python3 setup.py bdist_wheel
 pip install dist/*.whl
 ```
 
-## Requirements
+If you would like to use output and input audio devices 
+(scripts `scripts/asr/transcribe_file_rt.py`, `scripts/asr/transcribe_mic.py`, `scripts/tts/talk.py` or module 
+`riva_api/audio_io.py`), you will need to install `PyAudio`.
+```bash
+conda install -c anaconda pyaudio
+```
 
-1. Meet the Quick Start [prerequisites](https://docs.nvidia.com/deeplearning/riva/user-guide/docs/quick-start-guide.html#prerequisites)
-2. A NVIDIA Riva Server (Set one up using the [quick start guide](https://docs.nvidia.com/deeplearning/riva/user-guide/docs/quick-start-guide.html#local-deployment-using-quick-start-scripts))
-3. Docker (for Docker build)
-4. Bazel 5.0.0 (for local build)
+For NLP evaluation you will need `transformers` and `sklearn` libraries.
+```bash
+pip install -U scikit-learn
+pip install -U transformers
+```
 
 ## Before using microphone and audio output devices on Unix
 you may need to run commands
@@ -45,52 +63,6 @@ adduser $USER audio
 adduser $USER pulse-access
 ```
 and restart.
-
-## Build
-
-### Docker
-
-To avoid needing to manually build the clients yourself, Riva comes with a ready to use client docker image. This allows you to run the clients through an interactive docker container.
-
-The clients will need access to a Riva Server. If your server is running locally all you need to do is allow the client container access to your local network. 
-If your server is not running locally, all clients come with a command line option `--riva_uri`. This defaults to `localhost:50051`, which is also the default server configuration. As the server is not local, run the client using `--riva_uri [IP]:[PORT]` with your configuration. 
-
-To build the docker image simply run
-```
-DOCKER_BUILDKIT=1 docker build . --tag riva-client
-```
-To start an interactive docker container, with access to your local network, you can then run
-```
-docker run -it --net=host riva-client
-```
-
-Then you can run the clients as command line programs
-
-
-### Local
-Local builds are currently only supported through `bazel 3.7.2`. 
-
-First install the dependencies with:
-```
-sudo apt-get install libasound2-dev
-```
-
-Then, to build all clients, from the project's root directory run:
-```
-bazel build ...
-```
-
-To build a specific client, you can run:
-```
-bazel build //riva/clients/[asr/tts/nlp]:[CLIENT_NAME]
-```
-
-For example, to build the `riva_streaming_asr_client` you would run:
-```
-bazel build //riva/clients/asr:riva_streaming_asr_client
-```
-
-You can find the built binaries in `bazel-bin/riva/clients`
 
 ## Usage
 

@@ -117,8 +117,8 @@ class NLPService:
                 languages.
 
         Returns:
-            :obj:`rnlp.TextClassResponse`: a response with :param:`input_strings` classification results.
-            You may find :class:`rnlp.TextClassResponse` fields description
+            :obj:`riva_api.proto.riva_nlp_pb2.TextClassResponse`: a response with :param:`input_strings`
+            classification results. You may find :class:`TextClassResponse` fields description
             `here <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-nlp-proto>`_.
         """
         if isinstance(input_strings, str):
@@ -145,8 +145,8 @@ class NLPService:
                 languages.
 
         Returns:
-            :obj:`rnlp.TokenClassResponse`: a response with results. You may find :class:`rnlp.TokenClassResponse`
-            fields description
+            :obj:`riva_api.proto.riva_nlp_pb2.TokenClassResponse`: a response with results. You may find
+            :class:`TokenClassResponse` fields description
             `here <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-nlp-proto>`_.
         """
         if isinstance(input_strings, str):
@@ -172,7 +172,8 @@ class NLPService:
             language_code (:obj:`str`): a string containing a language code for the model.
 
         Returns:
-            :obj:`rnlp.TextTransformResponse`: a model response. You may find :class:`rnlp.TextTransformResponse`
+            :obj:`riva_api.proto.riva_nlp_pb2.TextTransformResponse`: a model response. You may find
+            :class:`TextTransformResponse`
             fields description
             `here <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-nlp-proto>`_.
         """
@@ -188,8 +189,8 @@ class NLPService:
             language_code (:obj:`str`): a language code.
 
         Returns:
-            :obj:`rnlp.TokenClassResponse`: a model response. You may find :class:`rnlp.TokenClassResponse`
-            fields description
+            :obj:`riva_api.proto.riva_nlp_pb2.TokenClassResponse`: a model response. You may find
+            :class:`TokenClassResponse` fields description
             `here <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-nlp-proto>`_.
         """
         request = rnlp.AnalyzeEntitiesRequest(query=input_string)
@@ -205,11 +206,13 @@ class NLPService:
 
         Args:
             input_string (:obj:`str`): a string which will be classified.
-            options (:obj:`rnlp.AnalyzeIntentOptions`): an intent options. You may find fields description
+            options (:obj:`riva_api.proto.riva_nlp_pb2.AnalyzeIntentOptions`): an intent options. You may find
+                 fields description
                 `here <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-nlp-proto>`_.
 
         Returns:
-            :obj:`rnlp.AnalyzeIntentResponse`: a response with results. You may find fields description
+            :obj:`riva_api.proto.riva_nlp_pb2.AnalyzeIntentResponse`: a response with results. You may find fields
+            description
             `here <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-nlp-proto>`_.
         """
         request = rnlp.AnalyzeIntentRequest(query=input_string, options=options)
@@ -229,7 +232,8 @@ class NLPService:
             language_code (:obj:`str`): a string containing a language code for the model.
 
         Returns:
-            :obj:`rnlp.TextTransformResponse`: a response with results. You may find fields description
+            :obj:`riva_api.proto.riva_nlp_pb2.TextTransformResponse`: a response with results. You may find fields
+            description
             `here <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-nlp-proto>`_.
         """
         request = prepare_transform_text_request(input_strings, model_name, language_code)
@@ -246,7 +250,8 @@ class NLPService:
             top_n (:obj:`int`): a maximum number of answers to return for the query.
 
         Returns:
-            :obj:`rnlp.NaturalQueryResult`: a response with a result. You may find fields description
+            :obj:`riva_api.proto.riva_nlp_pb2.NaturalQueryResult`: a response with a result. You may find fields
+            description
             `here <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-nlp-proto>`_.
         """
         request = rnlp.NaturalQueryRequest(query=query, context=context, top_n=top_n)
