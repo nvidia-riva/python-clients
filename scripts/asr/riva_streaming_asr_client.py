@@ -2,7 +2,9 @@ import argparse
 import os
 import queue
 import time
+from pathlib import Path
 from threading import Thread
+from typing import Union
 
 import riva_api
 from riva_api.asr import get_wav_file_parameters
@@ -41,8 +43,9 @@ def parse_args() -> argparse.Namespace:
 
 
 def streaming_transcription_worker(
-    args: argparse.Namespace, output_file: os.PathLike, thread_i: int, exception_queue: queue.Queue
+    args: argparse.Namespace, output_file: Union[str, os.PathLike], thread_i: int, exception_queue: queue.Queue
 ) -> None:
+    output_file = Path(output_file).expanduser()
     try:
         auth = riva_api.Auth(args.ssl_cert, args.use_ssl, args.server)
         asr_service = riva_api.ASRService(auth)

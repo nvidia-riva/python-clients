@@ -56,7 +56,7 @@ test_list_devices tts/talk.py "Output"
 
 function test_outputs(){
   additional_options="$1"
-  output_file="${test_output_dir}/output_not_streaming.wav"
+  output_file="${test_output_dir}/$2"
   reference_file="$(dirname $0)/reference_outputs/2_phrases.wav"
   exp_options="--output ${output_file} ${additional_options}"
   inputs=(
@@ -79,7 +79,7 @@ function test_outputs(){
   fi
 }
 
-test_outputs --stream
-test_outputs
+test_outputs --stream output_streaming.wav
+test_outputs "" output_not_streaming.wav
 
 set +e

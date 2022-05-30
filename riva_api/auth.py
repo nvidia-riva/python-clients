@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from typing import List, Optional, Tuple, Union
 
 import grpc
@@ -10,6 +11,7 @@ def create_channel(
     if ssl_cert is not None or use_ssl:
         root_certificates = None
         if ssl_cert is not None:
+            ssl_cert = Path(ssl_cert).expanduser()
             with open(ssl_cert, 'rb') as f:
                 root_certificates = f.read()
         creds = grpc.ssl_channel_credentials(root_certificates)
@@ -22,13 +24,13 @@ def create_channel(
 class Auth:
     def __init__(
         self,
-        ssl_cert: Optional[os.PathLike] = None,
+        ssl_cert: Optional[Union[str, os.PathLike]] = None,
         use_ssl: bool = False,
         uri: str = "localhost:50051",
         api_key: Optional[str] = None,
         auth_token: Optional[str] = None,
     ) -> None:
-        self.ssl_cert: Optional[os.PathLike] = ssl_cert
+        self.ssl_cert: Optional[Path] = None if ssl_cert is None else Path(ssl_cert).expanduser()
         self.uri: str = uri
         self.use_ssl: bool = use_ssl
         self.api_key: Optional[str] = api_key

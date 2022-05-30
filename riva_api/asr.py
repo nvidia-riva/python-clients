@@ -14,6 +14,7 @@ from riva_api.auth import Auth
 
 
 def get_wav_file_parameters(input_file: Union[str, os.PathLike]) -> Dict[str, Union[int, float]]:
+    input_file = Path(input_file).expanduser()
     with wave.open(str(input_file), 'rb') as wf:
         nframes = wf.getnframes()
         rate = wf.getframerate()
@@ -34,17 +35,15 @@ def sleep_audio_length(audio_chunk: bytes, time_to_sleep: float) -> None:
 class AudioChunkFileIterator:
     def __init__(
         self,
-        input_file: os.PathLike,
+        input_file: Union[str, os.PathLike],
         chunk_n_frames: int,
         delay_callback: Optional[Callable[[bytes, float], None]] = None,
-        num_iterations: Optional[int] = 1,
     ) -> None:
         self.input_file: Path = Path(input_file).expanduser()
         self.chunk_n_frames = chunk_n_frames
         self.delay_callback = delay_callback
         self.file_parameters = get_wav_file_parameters(self.input_file)
         self.file_object: Optional[wave.Wave_read] = wave.open(str(self.input_file), 'rb')
-        self.num_iterations = num_iterations
 
     def close(self) -> None:
         self.file_object.close()
@@ -54,7 +53,8 @@ class AudioChunkFileIterator:
         return self
 
     def __exit__(self, type_, value, traceback) -> None:
-        self.file_object.close()
+        if self.file_object is not None:
+            self.file_object.close()
 
     def __iter__(self):
         return self
@@ -62,6 +62,7 @@ class AudioChunkFileIterator:
     def __next__(self) -> bytes:
         data = self.file_object.readframes(self.chunk_n_frames)
         if not data:
+            self.close()
             raise StopIteration
         if self.delay_callback is not None:
             self.delay_callback(
@@ -86,7 +87,7 @@ def add_word_boosting_to_config(
 
 def add_audio_file_specs_to_config(
     config: Union[rasr.StreamingRecognitionConfig, rasr.RecognitionConfig],
-    audio_file: os.PathLike,
+    audio_file: Union[str, os.PathLike],
 ) -> None:
     inner_config: rasr.RecognitionConfig = config if isinstance(config, rasr.RecognitionConfig) else config.config
     wav_parameters = get_wav_file_parameters(audio_file)
@@ -99,7 +100,7 @@ PRINT_STREAMING_ADDITIONAL_INFO_MODES = ['no', 'time', 'confidence']
 
 def print_streaming(
     response_generator: Iterable[rasr.StreamingRecognizeResponse],
-    output_file: Optional[Union[Union[os.PathLike, TextIO], List[Union[os.PathLike, TextIO]]]] = None,
+    output_file: Optional[Union[Union[os.PathLike, str, TextIO], List[Union[os.PathLike, str, TextIO]]]] = None,
     additional_info: str = 'no',
     word_time_offsets: bool = False,
     show_intermediate: bool = False,
@@ -243,6 +244,8 @@ class ASRService:
         The purpose of the method is to perform speech recognition "online" - as soon as
         audio is acquired on small chunks of audio.
 
+        All available audio chunks will be sent to a server on first ``next()`` call.
+
         Args:
             audio_chunks (:obj:`Iterable[bytes]`): an iterable object which contains raw audio fragments
                 of speech. For example, such raw audio can be obtained with
@@ -287,6 +290,7 @@ class ASRService:
                     import wave
                     with wave.open(file_name, 'rb') as wav_f:
                         raw_audio = wav_f.readframes(n_frames)
+
             config (:obj:`riva_api.proto.riva_asr_pb2.RecognitionConfig`): a config for offline speech recognition.
                 You may find description of config fields in message ``RecognitionConfig`` in
                 `common repo <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-asr-proto>`_.

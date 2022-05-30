@@ -94,18 +94,18 @@ def main() -> None:
     )
     riva_api.add_audio_file_specs_to_config(config, args.input_file)
     riva_api.add_word_boosting_to_config(config, args.boosted_lm_words, args.boosted_lm_score)
-    sound_call_back = None
+    sound_callback = None
     try:
         if args.play_audio or args.output_device is not None:
             wp = riva_api.get_wav_file_parameters(args.input_file)
-            sound_call_back = riva_api.audio_io.SoundCallBack(
+            sound_callback = riva_api.audio_io.SoundCallBack(
                 args.output_device, wp['sampwidth'], wp['nchannels'], wp['framerate'],
             )
-            delay_call_back = sound_call_back
+            delay_callback = sound_callback
         else:
-            delay_call_back = riva_api.sleep_audio_length if args.simulate_realtime else None
+            delay_callback = riva_api.sleep_audio_length if args.simulate_realtime else None
         with riva_api.AudioChunkFileIterator(
-            args.input_file, args.file_streaming_chunk, delay_call_back,
+            args.input_file, args.file_streaming_chunk, delay_callback,
         ) as audio_chunk_iterator:
             riva_api.print_streaming(
                 response_generator=asr_service.streaming_response_generator(
@@ -116,8 +116,8 @@ def main() -> None:
                 additional_info="confidence" if args.print_confidence else "no",
             )
     finally:
-        if sound_call_back is not None and sound_call_back.opened:
-            sound_call_back.close()
+        if sound_callback is not None and sound_callback.opened:
+            sound_callback.close()
 
 
 if __name__ == "__main__":
