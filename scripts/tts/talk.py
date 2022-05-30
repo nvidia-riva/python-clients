@@ -38,16 +38,23 @@ from riva_api.audio_io import SoundCallBack, list_output_devices
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Streaming transcription via Riva AI Services",
+        description="A speech synthesis via Riva AI Services.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
-    parser.add_argument("--voice", type=str, help="voice name to use", default="English-US-Female-1")
-    parser.add_argument("-o", "--output", default=None, type=Path, help="Output file to write last utterance")
-    parser.add_argument("--list-devices", action="store_true", help="list output devices indices")
-    parser.add_argument("--output-device", type=int, help="Output device to use")
-    parser.add_argument("--language-code", default='en-US')
-    parser.add_argument("--sample-rate-hz", type=int, default=44100)
-    parser.add_argument("--stream", action="store_true")
+    parser.add_argument("--voice", type=str, help="A voice name to use", default="English-US-Female-1")
+    parser.add_argument("-o", "--output", type=Path, help="Output file .wav file to write synthesized audio.")
+    parser.add_argument("--list-devices", action="store_true", help="List output audio devices indices.")
+    parser.add_argument("--output-device", type=int, help="Output device to use.")
+    parser.add_argument("--language-code", default='en-US', help="A language of input text.")
+    parser.add_argument(
+        "--sample-rate-hz", type=int, default=44100, help="Number of audio frames per second in synthesized audio.")
+    parser.add_argument(
+        "--stream",
+        action="store_true",
+        help="If this option is set, then streaming synthesis is applied. Streaming means that audio is yielded "
+        "as it gets ready. If `--stream` is not set, then a synthesized audio is returned in 1 response only when "
+        "all text is processed.",
+    )
     parser = add_connection_argparse_parameters(parser)
     args = parser.parse_args()
     if args.output is not None:

@@ -3,6 +3,7 @@ import argparse
 import csv
 import itertools
 import os.path
+import warnings
 from pathlib import Path
 from typing import Dict, List, NewType, Optional, Tuple, Union
 
@@ -234,15 +235,33 @@ def intent_slots_classification_report(
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Program to print accuracy metrics for test data",
+        description="Program to print classification reports for intent and slot test data.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument("--model", default="riva_intent_weather", type=str, help="Model on TRTIS to execute")
-    parser.add_argument("--input-file", type=Path, required=True, help="Input filename")
-    parser.add_argument("--language-code", default='en-US')
-    parser.add_argument("--batch-size", type=int, default=1)
+    parser.add_argument(
+        "--input-file",
+        type=Path,
+        required=True,
+        help="A path to an input .tsv file. An input file has to be in a format <intent>TAB<slots>TAB<query>. "
+        "<slots> field contains several comma separated slots, e.g.: <slot>,<slot>. If there are no slots, then "
+        "<slots> is an empty string. Each slot has a format <start>:<end>:<slot_class> where <start> and <end> "
+        "are start and end of a slice applied to a query to get a slot, e.g. in an a sample "
+        "'<intent><TAB>0:4:animal<TAB>cats are nice' `start=0`, `end=4`, `query='cats are nice'` "
+        "and slot `animal='cats'` is acquired by `query[start:end]`."
+        "`data/nlp_test_metrics/weather.fixed.eval.tsv` is an example of a correct input file.",
+    )
+    parser.add_argument("--language-code", default='en-US', help="A language of a model.")
+    parser.add_argument(
+        "--batch-size",
+        type=int,
+        default=1,
+        help="How many examples are sent to server in one request. Currently only `1` is supported.",
+    )
     parser = add_connection_argparse_parameters(parser)
     args = parser.parse_args()
+    if args.batch_size > 1:
+        warnings.warn()
     args.input_file = args.input_file.expanduser()
     return args
 

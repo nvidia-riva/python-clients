@@ -32,7 +32,10 @@ from riva_api.argparse_utils import add_asr_config_argparse_parameters, add_conn
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Streaming transcription of a file via Riva AI Services.",
+        description="Streaming transcription of a file via Riva AI Services. Streaming means that audio is sent to "
+        "server in small chunks and transcripts are returned audio fragments as soon as these transcripts are ready. "
+        "You may play transcribed audio simultaneously with transcribing by setting one of parameters "
+        "`--play-audio` or `--output-device`.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument("--input-file", help="A path to local file to stream.")
@@ -40,7 +43,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--show-intermediate", action="store_true", help="Show intermediate transcripts as they are available."
     )
-    parser.add_argument("--output-device", type=int, default=None, help="output device to use")
+    parser.add_argument("--output-device", type=int, default=None, help="Output audio device to use.")
     parser.add_argument(
         "--play-audio",
         action="store_true",

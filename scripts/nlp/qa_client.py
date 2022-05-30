@@ -12,12 +12,12 @@ import riva_api
 from riva_api.argparse_utils import add_connection_argparse_parameters
 
 
-def parse_args():
+def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Riva Question Answering client sample", formatter_class=argparse.ArgumentDefaultsHelpFormatter
+        description="Riva Question Answering client sample.", formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     parser.add_argument(
-        "--query", type=str, default="How much carbon dioxide was released in 2005?", help="Query for the QA API"
+        "--query", type=str, default="How much carbon dioxide was released in 2005?", help="Query for the QA API."
     )
     parser.add_argument(
         "--context",

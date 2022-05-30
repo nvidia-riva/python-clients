@@ -16,10 +16,10 @@ from riva_api.argparse_utils import add_connection_argparse_parameters
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Client app to test intent slot on Riva", formatter_class=argparse.ArgumentDefaultsHelpFormatter
+        description="Client app to run intent slot on Riva", formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     parser.add_argument(
-        "--model", default="riva_intent_weather", type=str, help="Model on Riva Server to " "execute"
+        "--model", default="riva_intent_weather", type=str, help="Model on Riva Server to execute."
     )
     parser.add_argument("--query", default="What is the weather tomorrow?", type=str, help="Input Query")
     parser.add_argument(

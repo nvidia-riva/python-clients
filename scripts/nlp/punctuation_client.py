@@ -15,11 +15,17 @@ from riva_api.argparse_utils import add_connection_argparse_parameters
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Client app to test Punctuation on Riva", formatter_class=argparse.ArgumentDefaultsHelpFormatter
+        description="Client app to restore Punctuation and Capitalization with Riva",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
-    parser.add_argument("--model", default="riva-punctuation-en-US", type=str, help="Model on Riva Server to execute")
+    parser.add_argument("--model", default="riva-punctuation-en-US", type=str, help="Model on Riva Server to execute.")
     parser.add_argument("--query", default="can you prove that you are self aware", type=str, help="Input Query")
-    parser.add_argument("--run_tests", default=False, action='store_true', help="Flag to run sanity tests")
+    parser.add_argument(
+        "--run_tests",
+        action='store_true',
+        help="Flag to run sanity tests. If this option is chosen, then options `--query` and `--interactive` are "
+        "ignored and a model is run on several hardcoded examples and numbers of passed and failed tests are shown.",
+    )
     parser.add_argument(
         "--interactive",
         action='store_true',
@@ -30,7 +36,7 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def run_punct_capit(args):
+def run_punct_capit(args: argparse.Namespace) -> None:
     auth = riva_api.Auth(args.ssl_cert, args.use_ssl, args.server)
     nlp_service = riva_api.NLPService(auth)
     if args.interactive:
@@ -51,7 +57,7 @@ def run_punct_capit(args):
         )
 
 
-def run_tests(args):
+def run_tests(args: argparse.Namespace) -> int:
     test_inputs = [
         "can you prove that you are self aware",
         "will you have $103 and ₩111 at 12:45 pm",

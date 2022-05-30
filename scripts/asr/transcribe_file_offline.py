@@ -34,7 +34,9 @@ from riva_api.argparse_utils import add_asr_config_argparse_parameters, add_conn
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Offline transcription via Riva AI Services",
+        description="Offline file transcription via Riva AI Services. \"Offline\" means that entire audio "
+        "content of `--input-file` is sent in one request and then a transcript for whole file recieved in "
+        "one response.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument("--input-file", required=True, type=Path, help="A path to local file to stream.")

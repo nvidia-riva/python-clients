@@ -36,11 +36,11 @@ def parse_args() -> argparse.Namespace:
     default_device_info = riva_api.audio_io.get_default_input_device_info()
     default_device_index = None if default_device_info is None else default_device_info['index']
     parser = argparse.ArgumentParser(
-        description="Streaming transcription via Riva AI Services",
+        description="Streaming transcription from microphone via Riva AI Services",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
-    parser.add_argument("--input-device", type=int, default=default_device_index, help="output device to use")
-    parser.add_argument("--list-devices", action="store_true", help="list input devices indices")
+    parser.add_argument("--input-device", type=int, default=default_device_index, help="Input device to use.")
+    parser.add_argument("--list-devices", action="store_true", help="List input devices indices.")
     parser = add_asr_config_argparse_parameters(parser)
     parser = add_connection_argparse_parameters(parser)
     parser.add_argument(
