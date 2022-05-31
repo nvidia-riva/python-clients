@@ -107,7 +107,7 @@ def print_streaming(
     file_mode: str = 'w',
 ) -> None:
     """
-    Prints to provided files or streams streaming speech recognition results.
+    Prints streaming speech recognition results to provided files or streams.
 
     Args:
         responses (:obj:`Iterable[riva_api.proto.riva_asr_pb2.StreamingRecognizeResponse]`): responses acquired during
