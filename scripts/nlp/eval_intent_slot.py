@@ -17,20 +17,18 @@ import riva_api
 from riva_api.argparse_utils import add_connection_argparse_parameters
 
 
-def combine_subwords(tokens):
-    """This function combines subwords into single word
+def combine_subwords(tokens: List[str]) -> List[str]:
+    """
+    This function combines subwords into single word
 
-  Parameters
-  ----------
-  line : list
-      input tokens generated using BERT tokenizer which may have subwords
-      separated by "##".
+    Args:
+        tokens (:obj:`List[str]`): a list tokens generated using BERT tokenizer which may have subwords
+            separated by "##".
 
-  Returns
-  -------
-  list:
-      a list of combined subwords token
-  """
+    Returns:
+        :obj:`List[str]`: a list of tokens which do not contain "##". Instead such tokens are concatenated with
+        preceding tokens.
+    """
     combine_tokens = []
     total_tokens = len(tokens)
     idx = 0
@@ -69,8 +67,12 @@ def read_tsv_file(input_file: Union[str, os.PathLike]) -> List[Dict[str, Union[s
     ```
     <intent_name>TAB<start_char_idx>:<end_char_idx>:<slot_name>,<start_char_idx>:<end_char_idx>:<slot_name>TAB<query>
     ```
-    :param input_file: a path to input file
-    :return: a list of examples for testing. Each example has format:
+    Args:
+        input_file (:obj:`Union[str, os.PathLike]`): a path to an input file
+
+    Returns:
+        :obj:`List[Dict[str, Union[str, List[Dict[str, Union[int, str]]]]]]`: a list of examples for testing. Each
+        example has format:
         ```
         {
             "intent": <intent_name>,

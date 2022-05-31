@@ -9,18 +9,24 @@ from riva_api.argparse_utils import add_asr_config_argparse_parameters, add_conn
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Streaming transcription of a file via Riva AI Services. Streaming means that audio is sent to "
-        "server in small chunks and transcripts are returned audio fragments as soon as these transcripts are ready. "
+        description="Streaming transcription of a file via Riva AI Services. Streaming means that audio is sent to a "
+        "server in small chunks and transcripts are returned as soon as these transcripts are ready. "
         "You may play transcribed audio simultaneously with transcribing by setting one of parameters "
         "`--play-audio` or `--output-device`.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
-    parser.add_argument("--input-file", help="A path to local file to stream.")
-    parser.add_argument("--list-devices", action="store_true", help="list output devices indices")
+    parser.add_argument("--input-file", help="A path to a local file to stream.")
+    parser.add_argument("--list-devices", action="store_true", help="List output devices indices")
     parser.add_argument(
         "--show-intermediate", action="store_true", help="Show intermediate transcripts as they are available."
     )
-    parser.add_argument("--output-device", type=int, default=None, help="Output audio device to use.")
+    parser.add_argument(
+        "--output-device",
+        type=int,
+        default=None,
+        help="Output audio device to use for playing audio simultaneously with transcribing. If this parameter is "
+        "provided, then you do not have to `--play-audio` option."
+    )
     parser.add_argument(
         "--play-audio",
         action="store_true",
@@ -28,7 +34,10 @@ def parse_args() -> argparse.Namespace:
         "then the default output audio device will be used.",
     )
     parser.add_argument(
-        "--file-streaming-chunk", type=int, default=1600, help="Number of frames in one chunk sent to server."
+        "--file-streaming-chunk",
+        type=int,
+        default=1600,
+        help="A maximum number of frames in one chunk sent to server.",
     )
     parser.add_argument(
         "--simulate-realtime",

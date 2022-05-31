@@ -21,7 +21,7 @@ case and deliver real-time performance. This repo provides performant client exa
     - `scripts/tts/talk.py` synthesizes audio for a text in streaming or offline mode.
 - **Natural Language Processing (NLP)**
     - `scripts/nlp/intentslot_client.py` recognizes intents and slots in input sentences,
-    - `scripts/nlp/ner_client.py` detects named entities for input sentences,
+    - `scripts/nlp/ner_client.py` detects named entities in input sentences,
     - `scripts/nlp/punctuation_client.py` restores punctuation and capitalization in input sentences,
     - `scripts/nlp/qa_client.py` queries a document with natural language query and prints answer from a document,
     - `scripts/nlp/text_classify_client.py` classifies input sentences,
@@ -77,45 +77,7 @@ its purpose and parameters.
 
 ### API
 
-To create a service you will need to establish connection to with a server and then pass
-an instance of `Auth` class to a service constructor.
-
-```python
-from riva_api import ASRService, Auth
-auth = Auth()
-service = ASRService(auth)
-```
-
-It is same for `NLPService` and `TTSService`.
-
-#### ASR
-
-For speech recognition you will need to create recognition config (an instance of `riva_api.RecognitionConfig`). 
-A detailed description of config fields is available in Riva 
-[documentation](https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/riva_asr.proto.html?highlight=max%20alternatives#riva-proto-riva-asr-proto).
-If you intend to use streaming recognition, offline config has to wrapped into `riva_api.StreamingRecognitionConfig`.
-
-```python
-import riva_api
-offline_config = riva_api.RecognitionConfig(
-    encoding=riva_api.AudioEncoding.LINEAR_PCM,
-    max_alternatives=1,
-    enable_automatic_punctuation=True,
-    verbatim_transcripts=False,
-)
-streaming_config = riva_api.StreamingRecognitionConfig(config=offline_config, interim_results=True)
-```
-
-You also need to set frame rate and number of channels. If you'd like to process file `examples/en-US_sample.wav`,
-then your code will be
-
-```python
-my_wav_file = 'examples/en-US_sample.wav'
-riva_api.add_audio_file_specs_to_config(offline_config, my_wav_file)
-riva_api.add_audio_file_specs_to_config(streaming_config, my_wav_file)
-```
-
-To set word boosting you may use
+See tutorial notebooks in directory `tutorials`.
 
 
 ## Documentation

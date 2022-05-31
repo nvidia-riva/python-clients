@@ -16,7 +16,7 @@ def parse_args() -> argparse.Namespace:
         "one response.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
-    parser.add_argument("--input-file", required=True, type=Path, help="A path to local file to stream.")
+    parser.add_argument("--input-file", required=True, type=Path, help="A path to a local file to transcribe.")
     parser = add_connection_argparse_parameters(parser)
     parser = add_asr_config_argparse_parameters(parser)
     args = parser.parse_args()

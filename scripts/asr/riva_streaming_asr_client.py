@@ -16,11 +16,11 @@ from riva_api.argparse_utils import add_asr_config_argparse_parameters, add_conn
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Streaming transcription via Riva AI Services. Unlike `scripts/asr/transcribe_file.py` script "
-        "this script allows to perform transcription several times on the same audio if `--num-iterations` is "
-        "greater than 1. If you `--num-clients` is greater than 1, then a file will be transcribed independently "
+        description="Streaming transcription via Riva AI Services. Unlike `scripts/asr/transcribe_file.py` script, "
+        "this script can perform transcription several times on same audio if `--num-iterations` is "
+        "greater than 1. If `--num-clients` is greater than 1, then a file will be transcribed independently "
         "in several threads. Unlike other ASR scripts, this script does not print output but saves it in files "
-        "with names in format `output_<thread_num>.txt`.",
+        "which names follow a format `output_<thread_num>.txt`.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument("--num-clients", default=1, type=int, help="Number of client threads.")

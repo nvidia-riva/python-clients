@@ -16,17 +16,22 @@ def parse_args() -> argparse.Namespace:
         description="Streaming transcription from microphone via Riva AI Services",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
-    parser.add_argument("--input-device", type=int, default=default_device_index, help="Input device to use.")
-    parser.add_argument("--list-devices", action="store_true", help="List input devices indices.")
+    parser.add_argument("--input-device", type=int, default=default_device_index, help="An input audio device to use.")
+    parser.add_argument("--list-devices", action="store_true", help="List input audio device indices.")
     parser = add_asr_config_argparse_parameters(parser)
     parser = add_connection_argparse_parameters(parser)
     parser.add_argument(
         "--sample-rate-hz",
         type=int,
-        help="Frame for input device. If not provided, then default value is used.",
+        help="A number of frames per second in audio streamed from a microphone.",
         default=16000,
     )
-    parser.add_argument("--file-streaming-chunk", type=int, default=1600)
+    parser.add_argument(
+        "--file-streaming-chunk",
+        type=int,
+        default=1600,
+        help="A maximum number of frames in a audio chunk sent to server.",
+    )
     args = parser.parse_args()
     return args
 
