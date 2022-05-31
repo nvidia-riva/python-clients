@@ -12,11 +12,10 @@ def parse_args() -> argparse.Namespace:
         description="Riva Question Answering client sample.", formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     parser.add_argument(
-        "--query", type=str, default="How much carbon dioxide was released in 2005?", help="Query for the QA API."
+        "--query", default="How much carbon dioxide was released in 2005?", help="Query for the QA API."
     )
     parser.add_argument(
         "--context",
-        type=str,
         default="In 2010 the Amazon rainforest experienced another severe drought, in some ways more extreme than the "
         "2005 drought. The affected region was approximate 1,160,000 square miles (3,000,000 km2) of "
         "rainforest, compared to 734,000 square miles (1,900,000 km2) in 2005. The 2010 drought had three "

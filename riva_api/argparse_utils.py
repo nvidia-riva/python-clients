@@ -30,8 +30,8 @@ def add_asr_config_argparse_parameters(
         action='store_true',
         help="If specified, text inverse normalization will be applied",
     )
-    parser.add_argument("--language-code", default="en-US", type=str, help="Language code of the model to be used.")
-    parser.add_argument("--boosted-lm-words", type=str, action='append', help="Words to boost when decoding.")
+    parser.add_argument("--language-code", default="en-US", help="Language code of the model to be used.")
+    parser.add_argument("--boosted-lm-words", action='append', help="Words to boost when decoding.")
     parser.add_argument(
         "--boosted-lm-score", type=float, default=4.0, help="Value by which to boost words when decoding."
     )
@@ -39,8 +39,8 @@ def add_asr_config_argparse_parameters(
 
 
 def add_connection_argparse_parameters(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
-    parser.add_argument("--server", default="localhost:50051", type=str, help="URI to GRPC server endpoint.")
-    parser.add_argument("--ssl_cert", type=str, help="Path to SSL client certificates file.")
+    parser.add_argument("--server", default="localhost:50051", help="URI to GRPC server endpoint.")
+    parser.add_argument("--ssl_cert", help="Path to SSL client certificates file.")
     parser.add_argument(
         "--use_ssl", action='store_true', help="Boolean to control if SSL/TLS encryption should be used."
     )

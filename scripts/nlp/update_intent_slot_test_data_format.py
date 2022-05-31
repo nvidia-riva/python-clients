@@ -11,7 +11,7 @@ def parse_args() -> argparse.Namespace:
         description="Transforms old style file for intent classification and entities classification "
         "to new style format. Old style is '<intent>TAB<entities>TAB<query>' where <query> is in format "
         "'BOS <intent> <text> EOS'. This script keeps only <text> in <query> and removes auxiliary "
-        "<query> field."
+        "<intent> field and BOS and EOS."
     )
     parser.add_argument("--input_file", type=Path, help="A path to an input .tsv file.", required=True)
     parser.add_argument("--output_file", type=Path, help="A path to an output .tsv file.", required=True)

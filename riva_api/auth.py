@@ -44,7 +44,7 @@ class Auth:
                 is :obj:`False` and :param:`ssl_cert` is not :obj:`None`, then SSL is used.
             use_ssl (:obj:`bool`, defaults to :obj:`False`): whether to use SSL. If :param:`ssl_cert` is :obj:`None`,
                 then SSL is still used but with default credentials.
-            uri (:obj:`str`, defaults to :obj:`"localhost:50051"`):
+            uri (:obj:`str`, defaults to :obj:`"localhost:50051"`): a Riva URI.
             api_key (:obj:`str`, `optional`): DISABLED
             auth_token (:obj:`str`), `optional`): DISABLED
         """

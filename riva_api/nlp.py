@@ -90,13 +90,13 @@ class NLPService:
         - token classification,
         - text transformation,
         - intent recognition,
-        - punctuation and capitalization recovering,
+        - punctuation and capitalization restoring,
         - question answering
     services.
     """
     def __init__(self, auth: Auth) -> None:
         """
-        Initializes the instance of the class.
+        Initializes an instance of the class.
 
         Args:
             auth (:obj:`Auth`): an instance of :class:`riva_api.auth.Auth` which is used for
@@ -114,7 +114,7 @@ class NLPService:
 
         Args:
             input_strings (:obj:`Union[List[str], str]`): a text or a list of texts which will be classified.
-            model_name (:obj:`str`): a name of a model. You check the model name in server logs or in server
+            model_name (:obj:`str`): a name of a model. You can look up the model name in server logs or in server
                 directory with models. A value for quickstart v2.0.0: ``"riva_intent_weather"``.
             language_code (:obj:`str`): a language of input text if :param:`model_name` is available for several
                 languages.
@@ -141,7 +141,7 @@ class NLPService:
 
         Args:
             input_strings (:obj:`Union[List[str], str]`): a text or a list of texts.
-            model_name (:obj:`Union[List[str], str]`): a name of a model. You check the model name in server logs
+            model_name (:obj:`Union[List[str], str]`): a name of a model. You can look up the model name in server logs
                 or in server directory with models. Valid values for quickstart v2.0.0: ``"riva_intent_weather"``
                 and ``"riva_ner"``.
             language_code: a language of input text if :param:`model_name` is available for several

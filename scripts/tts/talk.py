@@ -16,7 +16,7 @@ def parse_args() -> argparse.Namespace:
         description="A speech synthesis via Riva AI Services.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
-    parser.add_argument("--voice", type=str, help="A voice name to use", default="English-US-Female-1")
+    parser.add_argument("--voice", help="A voice name to use.", default="English-US-Female-1")
     parser.add_argument("-o", "--output", type=Path, help="Output file .wav file to write synthesized audio.")
     parser.add_argument("--list-devices", action="store_true", help="List output audio devices indices.")
     parser.add_argument("--output-device", type=int, help="Output device to use.")

@@ -11,19 +11,18 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Client app to run NER on Riva", formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
-    parser.add_argument("--model", default="riva_ner", type=str, help="Model on Riva Server to execute.")
+    parser.add_argument("--model", default="riva_ner", help="Model on Riva Server to execute.")
     parser.add_argument(
         "--query", nargs="+", default=["Where is San Francisco?", "Jensen Huang is the CEO of NVIDIA Corporation."]
     )
     parser.add_argument(
         "--test",
         default="label",
-        type=str,
         choices=['label', 'span_start', 'span_end'],
         help="What info will be printed to STDOUT. If 'label', then a class of an entity will be printed. "
         "If 'span_start', then indices of first characters of entities are printed. For example, for a query "
         "'cats are nice' if an entity is 'cats', then 'span_start' is 0. If 'span_end', then indices of "
-        "first character following entities are printed. For example, for the query 'cats are nice' for entity "
+        "first characters following entities are printed. For example, for the query 'cats are nice' for entity "
         "'cats' 'span_end' is 4.",
     )
     parser = add_connection_argparse_parameters(parser)

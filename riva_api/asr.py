@@ -133,7 +133,7 @@ def print_streaming(
             Available only if ``additional_info="time"``.
         show_intermediate (:obj:`bool`, defaults to :obj:`False`): If :obj:`True`, then partial transcripts are
             printed. If printing is performed to a stream (e.g. :obj:`sys.stdout`), then partial transcript is updated
-            on same line of a console.
+            on same line of a console. Available only if ``additional_info="no"``.
         file_mode (:obj:`str`, defaults to :obj:`"w"`): a mode in which files are opened.
 
     Raises:
@@ -254,13 +254,10 @@ def streaming_request_generator(
 
 
 class ASRService:
-    """
-    Provides streaming and offline recognition services. Calls gRPC with authentication
-    metadata.
-    """
+    """Provides streaming and offline recognition services. Calls gRPC stubs with authentication metadata."""
     def __init__(self, auth: Auth) -> None:
         """
-        Initializes the instance of the class.
+        Initializes an instance of the class.
 
         Args:
             auth (:obj:`riva_api.auth.Auth`): an instance of :class:`riva_api.auth.Auth` which is used for

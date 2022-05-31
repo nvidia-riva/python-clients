@@ -65,7 +65,9 @@ def read_tsv_file(input_file: Union[str, os.PathLike]) -> List[Dict[str, Union[s
     """
     Reads .tsv file ``input_file`` with test data in format
     ```
-    <intent_name>TAB<start_char_idx>:<end_char_idx>:<slot_name>,<start_char_idx>:<end_char_idx>:<slot_name>TAB<query>
+    <intent_name>TAB<slots>TAB<query>
+    <slots> := <slot>,<slot>
+    <slot> := <slice_start>:<slice_end>:<slot_name>
     ```
     Args:
         input_file (:obj:`Union[str, os.PathLike]`): a path to an input file
@@ -77,8 +79,8 @@ def read_tsv_file(input_file: Union[str, os.PathLike]) -> List[Dict[str, Union[s
         {
             "intent": <intent_name>,
             "slots": {
-                 "start": <start_character_ind>,
-                 "end": <end_character_ind>,
+                 "start": <slice_start>,
+                 "end": <slice_end>,
                  "slot_name": <slot_name>,
             },
             "query": <query>,
@@ -111,7 +113,30 @@ def read_tsv_file(input_file: Union[str, os.PathLike]) -> List[Dict[str, Union[s
 
 def tokenize_with_alignment(
     query: str, tokenizer: PreTrainedTokenizerBase
-) -> Tuple[List[str], List[int], List[int], List[Tuple[int, int]]]:
+) -> Tuple[List[str], List[Optional[int]], List[Optional[int]], List[Tuple[int, int]]]:
+    """
+    Tokenizes a query :param:`query` using tokenizer :param:`tokenizer`, combines subwords, and calculates slices of
+    tokens in the query.
+
+    Args:
+        query (:obj:`str`): an input query.
+        tokenizer (:obj:`PreTrainedTokenizerBase`): a HuggingFace tokenizer used for tokenizing :param:`query`.
+
+    Returns:
+        :obj:`tuple`: a tuple containing 3 lists of identical length and 4th list which length can differ
+        from the first 3:
+
+            - tokens (:obj:`List[str]`): a list of tokens acquired from :param:`query`.
+            - starts (:obj:`List[Optional[int]]`): a list of slice starts (slices used for extracting tokens from
+                :param:`query`). If a token is UNK, then a corresponding :obj:`starts` element is :obj:`None`.
+            - ends (:obj:`List[Optional[int]]`): a list of slice ends (slices used for extracting tokens from
+                :param:`query`). If a token is UNK, then a corresponding :obj:`ends` element is :obj:`None`.
+            - unk_zones (:obj:`List[Tuple[int, int]]`): a tuple with slices which show position of UNK tokens and
+                spaces surrounding UNK tokens.
+
+    Raises:
+        :obj:`RuntimeError`: if a token is not found in a query.
+    """
     tokenized_query = tokenizer.tokenize(query)
     tokens = combine_subwords(tokenized_query)
     starts, ends, unk_zones = [], [], []
@@ -127,7 +152,9 @@ def tokenize_with_alignment(
             while pos_in_query < len(query) and query[pos_in_query: pos_in_query + len(token)] != token:
                 pos_in_query += 1
             if pos_in_query >= len(query):
-                raise RuntimeError(f"Tokenization of a query lead to removal ")
+                raise RuntimeError(
+                    f"Tokenization of a query '{query}' lead to removal of token '{token}'. Tokens: {tokens}."
+                )
             if unk_zone_start is not None:
                 unk_zones.append((unk_zone_start, pos_in_query))
                 unk_zone_start = None
@@ -143,6 +170,23 @@ def slots_to_bio(
     tokenizer: Optional[PreTrainedTokenizerBase] = None,
     require_correct_slots: bool = True
 ) -> List[List[str]]:
+    """
+    Creates BIO markup for queries in :param:`queries` according slots described in :param:`slots`.
+
+    Args:
+        queries (:obj:`List[str]`): a list of input queries
+        slots (:obj:`List[List[Dict[str, Union[int, str]]]]`): a list of slots for all queries. Slots for a query is a
+            list of dictionaries with keys :obj:`"start"`, :obj:`"end"`, :obj:`"name"`. :obj:`"start"` and :obj:`"end"`
+            if used as slice start and end for corresponding give a slot text.
+        tokenizer (:obj:`PreTrainedTokenizerBase`, `optional`): a tokenizer used for queries tokenization.
+            If :obj:`None`, then `"bert-base-cased"` is used.
+        require_correct_slots (:obj:`bool`, defaults to :obj:`True`): if :obj:`True`, then matching of tokens and
+            slot spans is checked and an error is raised if there is no match. Set this to :obj:`True` if you prepare
+            ground truth and to :obj:`False` if you prepare predictions.
+
+    Returns:
+        :obj:`List[List[str]]`: a BIO markup for queries.
+    """
     if tokenizer is None:
         tokenizer = BertTokenizer.from_pretrained('bert-base-cased')
     bio: List[List[str]] = []
@@ -155,31 +199,39 @@ def slots_to_bio(
                     raise ValueError(
                         f"Slot '{slot['name']}' end offset {slot['end']} cannot be less or equal to slot start offset "
                         f"{slot['start']} in query '{query}' with query index {query_idx}. "
-                        f"Slot spans can be computed incorrectly if batch size if too large. Try smaller batch size. "
                         f"The error can occur if test data mark up is wrong."
                     )
                 else:
                     continue
             slot_start_token_idx, slot_end_token_idx = None, None
-            for i, start in enumerate(starts):
+            for token_i, start in enumerate(starts):
                 if start == slot['start']:
-                    slot_start_token_idx = i
+                    slot_start_token_idx = token_i
                     query_bio[slot_start_token_idx] = f'B-{slot["name"]}'
                     break
             if slot_start_token_idx is None:
                 if require_correct_slots:
                     raise ValueError(
-                        f"Could not find a beginning of slot {slot} in query '{query}'. Acquired tokens: {tokens}. "
-                        f"Aligned token beginning offsets: {starts}. Aligned token ending offsets: {ends}. An error "
-                        f"occurred during processing of {query_idx}th query. This error can appear if query mark up "
-                        f"is broken."
+                        f"Could not find a beginning of slot {slot} in a query '{query}'. Acquired tokens: {tokens}. "
+                        f"Aligned token beginning offsets: {starts}. Aligned token ending offsets: "
+                        f"{ends}. An error occurred during processing of {query_idx}th query. This error "
+                        f"can appear if query mark up is broken."
                     )
                 else:
                     continue
-            for i, end in enumerate(ends):
+            found_end = False
+            for token_i, end in enumerate(ends):
                 if end == slot['end']:
-                    for j in range(slot_start_token_idx + 1, i + 1):
+                    found_end = True
+                    for j in range(slot_start_token_idx + 1, token_i + 1):
                         query_bio[j] = f'I-{slot["name"]}'
+            if not found_end and require_correct_slots:
+                raise ValueError(
+                    f"Could not find an end of slot {slot} in a query '{query}'. Acquired tokens: {tokens}. "
+                    f"Aligned token beginning offsets: {starts}. Aligned token ending offsets: "
+                    f"{ends}. An error occurred during processing of {query_idx}th query. This error "
+                    f"can appear if query mark up is broken."
+                )
         bio.append(query_bio)
     return bio
 
@@ -265,7 +317,7 @@ def parse_args() -> argparse.Namespace:
     parser = add_connection_argparse_parameters(parser)
     args = parser.parse_args()
     if args.batch_size > 1:
-        warnings.warn()
+        warnings.warn("Batch size > 1 is not supported because spans may be calculated incorrectly.")
     args.input_file = args.input_file.expanduser()
     return args
 

@@ -12,10 +12,8 @@ def parse_args() -> argparse.Namespace:
         description="Client app to run Text Classification on Riva.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
-    parser.add_argument(
-        "--model", default="riva_text_classification_domain", type=str, help="Model on Riva Server to execute."
-    )
-    parser.add_argument("--query", default="How much sun does california get?", type=str, help="Input Query")
+    parser.add_argument("--model", default="riva_text_classification_domain", help="Model on Riva Server to execute.")
+    parser.add_argument("--query", default="How much sun does california get?", help="An input query.")
     parser = add_connection_argparse_parameters(parser)
     return parser.parse_args()
 
