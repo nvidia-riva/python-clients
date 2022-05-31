@@ -108,7 +108,7 @@ def main() -> None:
                     if out_f is not None:
                         out_f.writeframesraw(resp.audio)
         finally:
-            if args.output is not None:
+            if out_f is not None:
                 out_f.close()
 
 

@@ -239,7 +239,7 @@ class NLPService:
         request = prepare_transform_text_request(input_strings, model_name, language_code)
         return self.stub.PunctuateText(request, metadata=self.auth.get_auth_metadata())
 
-    def natural_query(self, query: str, context: str, top_n: int = 1) -> rnlp.NaturalQueryResult:
+    def natural_query(self, query: str, context: str, top_n: int = 1) -> rnlp.NaturalQueryResponse:
         """
         A search function that enables querying one or more documents or contexts with a query that is written in
         natural language.
