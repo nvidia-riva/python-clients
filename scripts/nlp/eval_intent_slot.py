@@ -1,4 +1,6 @@
-#!/usr/bin/env python
+# SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: MIT
+
 import argparse
 import csv
 import itertools

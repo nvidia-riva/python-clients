@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: MIT
+
 from riva_api.asr import (
     AudioChunkFileIterator,
     ASRService,

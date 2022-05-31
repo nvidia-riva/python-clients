@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: MIT
+
 set -e
 source "$(dirname $0)/export_server_vars.sh"
 

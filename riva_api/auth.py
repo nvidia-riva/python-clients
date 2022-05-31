@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: MIT
+
 import os
 from pathlib import Path
 from typing import List, Optional, Tuple, Union

@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: MIT
+
 from typing import Any, Generator, List, Tuple, Union
 
 import riva_api.proto.riva_nlp_pb2 as rnlp
