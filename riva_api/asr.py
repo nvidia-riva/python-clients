@@ -99,13 +99,43 @@ PRINT_STREAMING_ADDITIONAL_INFO_MODES = ['no', 'time', 'confidence']
 
 
 def print_streaming(
-    response_generator: Iterable[rasr.StreamingRecognizeResponse],
+    responses: Iterable[rasr.StreamingRecognizeResponse],
     output_file: Optional[Union[Union[os.PathLike, str, TextIO], List[Union[os.PathLike, str, TextIO]]]] = None,
     additional_info: str = 'no',
     word_time_offsets: bool = False,
     show_intermediate: bool = False,
     file_mode: str = 'w',
 ) -> None:
+    """
+    Prints to provided files or streams streaming speech recognition results.
+
+    Args:
+        responses (:obj:`Iterable[riva_api.proto.riva_asr_pb2.StreamingRecognizeResponse]`): responses acquired during
+            streaming speech recognition.
+        output_file (:obj:`Union[Union[os.PathLike, str, TextIO], List[Union[os.PathLike, str, TextIO]]]`, `optional`):
+            a path to an output file or a text stream or a list of paths/streams. If contains several elements, then
+            output will be written to all destinations. If :obj:`None`, then output will be written to STDOUT.
+        additional_info (:obj:`str`, defaults to :obj:`"no"`): a string which can take one of three values:
+            :obj:`"no"`, :obj:`"time"`, :obj:`"confidence"`.
+
+            If :obj:`"no"`, then partial transcript is prefixed by ">>", and final transcript is prefixed with "##".
+            An option :param:`show_intermediate` can be used.
+
+            If :obj:`"time"`, then transcripts are prefixed by time when they were printed. An option
+            :param:`word_time_offsets` can be used.
+
+            If :obj:`"confidence"`, then transcript stability and confidence are printed. Finished and updating
+            parts of a transcript are shown separately.
+        word_time_offsets (:obj:`bool`, defaults to :obj:`False`): If :obj:`True`, then word time stamps are printed.
+            Available only if ``additional_info="time"``.
+        show_intermediate (:obj:`bool`, defaults to :obj:`False`): If :obj:`True`, then partial transcripts are
+            printed. If printing is performed to a stream (e.g. :obj:`sys.stdout`), then partial transcript is updated
+            on same line of a console.
+        file_mode (:obj:`str`, defaults to :obj:`"w"`): a mode in which files are opened.
+
+    Raises:
+        :obj:`ValueError`: if wrong :param:`additional_info` value is passed to this function.
+    """
     if additional_info not in PRINT_STREAMING_ADDITIONAL_INFO_MODES:
         raise ValueError(
             f"Not allowed value '{additional_info}' of parameter `additional_info`. "
@@ -128,14 +158,14 @@ def print_streaming(
     file_opened = [False] * len(output_file)
     try:
         for i, elem in enumerate(output_file):
-            if isinstance(elem, (io.TextIOWrapper, io.TextIOBase)):
+            if isinstance(elem, io.TextIOBase):
                 file_opened[i] = False
             else:
                 file_opened[i] = True
                 output_file[i] = Path(elem).expanduser().open(file_mode)
         start_time = time.time()  # used in 'time` additional_info
         num_chars_printed = 0  # used in 'no' additional_info
-        for response in response_generator:
+        for response in responses:
             if not response.results:
                 continue
             partial_transcript = ""

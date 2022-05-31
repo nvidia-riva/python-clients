@@ -5,7 +5,7 @@ import pyaudio
 
 
 class MicrophoneStream:
-    """Opens a recording stream as a response_generator yielding the audio chunks."""
+    """Opens a recording stream as a responses yielding the audio chunks."""
 
     def __init__(self, rate: int, chunk: int, device: int = None) -> None:
         self._rate = rate
@@ -36,7 +36,7 @@ class MicrophoneStream:
         self._audio_stream.stop_stream()
         self._audio_stream.close()
         self.closed = True
-        # Signal the response_generator to terminate so that the client's
+        # Signal the responses to terminate so that the client's
         # streaming_recognize method will not block the process termination.
         self._buff.put(None)
         self._audio_interface.terminate()

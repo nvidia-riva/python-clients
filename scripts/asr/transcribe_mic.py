@@ -80,7 +80,7 @@ def main() -> None:
         device=args.input_device,
     ) as audio_chunk_iterator:
         riva_api.print_streaming(
-            response_generator=asr_service.streaming_response_generator(
+            responses=asr_service.streaming_response_generator(
                 audio_chunks=audio_chunk_iterator,
                 streaming_config=config,
             ),

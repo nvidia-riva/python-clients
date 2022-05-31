@@ -69,7 +69,7 @@ def streaming_transcription_worker(
                 delay_callback=riva_api.sleep_audio_length if args.simulate_realtime else None,
             ) as audio_chunk_iterator:
                 riva_api.print_streaming(
-                    response_generator=asr_service.streaming_response_generator(
+                    responses=asr_service.streaming_response_generator(
                         audio_chunks=audio_chunk_iterator,
                         streaming_config=config,
                     ),
