@@ -38,7 +38,7 @@ function test_transcript_affecting_params(){
     if [[ "${test_max_alternatives}" == 0 ]] && [[ "${options[$i]}" == *"--max-alternatives"* ]]; then
       continue
     fi
-    exp_options="--input-file examples/${input_files[$i]} ${options[$i]}"
+    exp_options="--input-file data/examples/${input_files[$i]} ${options[$i]}"
     echo "  options: ${exp_options}"
     stdout_file="${test_output_dir}/stdout_options_${i}.txt"
     stderr_file="${test_output_dir}/stderr_options_${i}.txt"
@@ -85,7 +85,7 @@ function test_simulate_realtime(){
   script_name="$1"
   input_file="en-US_AntiBERTa_for_word_boosting_testing.wav"
   input_file_length_seconds=14
-  exp_options="--input-file examples/${input_file} --simulate-realtime"
+  exp_options="--input-file data/examples/${input_file} --simulate-realtime"
   echo "  options: ${exp_options}"
   stdout_file="${test_output_dir}/stdout_simulate_realtime.txt"
   stderr_file="${test_output_dir}/stderr_simulate_realtime.txt"
