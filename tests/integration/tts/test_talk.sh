@@ -38,18 +38,18 @@ function test_string_presence(){
   fi
 }
 
-test_string_presence "" "Time spent:" "not_streaming" 0
+test_string_presence "--play-audio" "Time spent:" "not_streaming" 0
 
-test_string_presence "--stream" "Time to first audio:" "streaming" 0
+test_string_presence "--play-audio --stream" "Time to first audio:" "streaming" 0
 
-test_string_presence "--sample-rate-hz 2" "Invalid sample rate" "wrong_sample_rate" 1
+test_string_presence "--sample-rate-hz 2 --play-audio" "Invalid sample rate" "wrong_sample_rate" 1
 
-test_string_presence "--language-code ru-RU" \
+test_string_presence "--play-audio --language-code ru-RU" \
   "Model is not available on server: Voice English-US-Female-1 for language ru-RU not found." \
   "wrong_language" \
   1
 
-test_string_presence "--voice foo" \
+test_string_presence "--play-audio --voice foo" \
   "\"grpc_message\":\"Model is not available on server: Voice foo for language en-US not found. "\
 "Please specify the voice name in your SynthesizeSpeechRequest.\"" \
   "wrong_voice" \
