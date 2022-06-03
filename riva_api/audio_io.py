@@ -8,7 +8,7 @@ import pyaudio
 
 
 class MicrophoneStream:
-    """Opens a recording stream as a responses yielding the audio chunks."""
+    """Opens a recording stream as responses yielding the audio chunks."""
 
     def __init__(self, rate: int, chunk: int, device: int = None) -> None:
         self._rate = rate
@@ -48,7 +48,7 @@ class MicrophoneStream:
         self.close()
 
     def _fill_buffer(self, in_data, frame_count, time_info, status_flags):
-        """Continuously collect data from the audio stream, into the buffer."""
+        """Continuously collect data from the audio stream into the buffer."""
         self._buff.put(in_data)
         return None, pyaudio.paContinue
 
