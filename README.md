@@ -64,7 +64,7 @@ and restart.
 
 ## Usage
 
-### <span style="color:blue">Server</span>
+### Server
 
 Before running client part of Riva, please set up a server. The simplest
 way to do this is to follow
