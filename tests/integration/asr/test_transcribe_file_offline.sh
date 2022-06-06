@@ -10,7 +10,7 @@ source "$(dirname $0)/../prepare_test_output_dir.sh" "$(dirname $0)" "transcribe
 
 test_string_presence \
   transcribe_file_offline.py \
-  "--input-file examples/en-US_sample.wav --language-code ru-RU" \
+  "--input-file data/examples/en-US_sample.wav --language-code ru-RU" \
   "Error: Model is not available on server" \
   language_code_ru_RU \
   0

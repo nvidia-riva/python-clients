@@ -14,7 +14,7 @@ rm -f output_0.txt
 
 test_string_presence \
   riva_streaming_asr_client.py \
-  "--input-file examples/en-US_sample.wav --language-code ru-RU" \
+  "--input-file data/examples/en-US_sample.wav --language-code ru-RU" \
   "details = \"Error: Model is not available on server\"" \
   language_code_ru_RU \
   1
@@ -24,7 +24,7 @@ test_transcript_affecting_params riva_streaming_asr_client.py
 # Testing --word-time-offsets
 function test_word_time_offsets(){
   input_file="en-US_AntiBERTa_for_word_boosting_testing.wav"
-  exp_options="--input-file examples/${input_file} --word-time-offsets "\
+  exp_options="--input-file data/examples/${input_file} --word-time-offsets "\
 "--boosted-lm-words AntiBERTa --boosted-lm-words ABlooper --boosted-lm-score 20.0"
   echo "  options: ${exp_options}"
   stdout_file="${test_output_dir}/stdout_word_time_offsets.txt"
@@ -69,7 +69,7 @@ test_word_time_offsets
 function test_num_clients(){
   rm -f output_*.txt
   input_file="en-US_sample.wav"
-  exp_options="--input-file examples/${input_file} --num-clients 2"
+  exp_options="--input-file data/examples/${input_file} --num-clients 2"
   echo "  options: ${exp_options}"
   stdout_file="${test_output_dir}/stdout_num_clients_2.txt"
   stderr_file="${test_output_dir}/stderr_num_clients_2.txt"
@@ -104,7 +104,7 @@ test_num_clients
 function test_num_iterations(){
   num_iterations=2
   input_file="en-US_sample.wav"
-  exp_options="--input-file examples/${input_file} --num-iterations ${num_iterations}"
+  exp_options="--input-file data/examples/${input_file} --num-iterations ${num_iterations}"
   echo "  options: ${exp_options}"
   stdout_file="${test_output_dir}/stdout_num_iterations.txt"
   stderr_file="${test_output_dir}/stderr_num_iterations.txt"

@@ -40,8 +40,8 @@ def add_asr_config_argparse_parameters(
 
 def add_connection_argparse_parameters(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
     parser.add_argument("--server", default="localhost:50051", help="URI to GRPC server endpoint.")
-    parser.add_argument("--ssl_cert", help="Path to SSL client certificates file.")
+    parser.add_argument("--ssl-cert", help="Path to SSL client certificates file.")
     parser.add_argument(
-        "--use_ssl", action='store_true', help="Boolean to control if SSL/TLS encryption should be used."
+        "--use-ssl", action='store_true', help="Boolean to control if SSL/TLS encryption should be used."
     )
     return parser

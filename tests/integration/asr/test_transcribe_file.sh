@@ -12,7 +12,7 @@ source "$(dirname $0)/../prepare_test_output_dir.sh" "$(dirname $0)" "transcribe
 
 function test_verbose_format(){
   input_file="en-US_sample.wav"
-  exp_options="--input-file examples/${input_file} --print-confidence"
+  exp_options="--input-file data/examples/${input_file} --print-confidence"
   echo "  options: ${exp_options}"
   stdout_file="${test_output_dir}/stdout_verbose_format.txt"
   stderr_file="${test_output_dir}/stderr_verbose_format.txt"
@@ -40,7 +40,7 @@ test_list_devices asr/transcribe_file.py Output
 
 function test_show_intermediate(){
   input_file="en-US_sample.wav"
-  exp_options="--input-file examples/${input_file} --show-intermediate"
+  exp_options="--input-file data/examples/${input_file} --show-intermediate"
   echo "  options: ${exp_options}"
   stdout_file="${test_output_dir}/stdout_show_intermediate.txt"
   stderr_file="${test_output_dir}/stderr_show_intermediate.txt"
@@ -62,7 +62,7 @@ test_show_intermediate
 test_simulate_realtime transcribe_file.py
 test_string_presence \
   transcribe_file.py \
-  "--input-file examples/en-US_sample.wav --language-code ru-RU" \
+  "--input-file data/examples/en-US_sample.wav --language-code ru-RU" \
   "details = \"Error: Model is not available on server\"" \
   language_code_ru_RU \
   1

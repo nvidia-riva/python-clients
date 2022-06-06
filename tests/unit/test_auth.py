@@ -21,6 +21,6 @@ class TestAuth:
         assert auth.channel == "insecure_channel"
 
     def test_get_auth_metadata(self) -> None:
-        auth = Auth(api_key="api_key", auth_token="auth_token")
+        auth = Auth()
         metadata = auth.get_auth_metadata()
-        assert metadata == [('x-api-key', 'api_key'), ('authorization', 'Bearer auth_token')]
+        assert metadata == []
