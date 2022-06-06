@@ -11,7 +11,7 @@ source "$(dirname $0)/../prepare_test_output_dir.sh" "$(dirname $0)" "transcribe
 test_string_presence \
   transcribe_file_offline.py \
   "--input-file data/examples/en-US_sample.wav --language-code ru-RU" \
-  "Error: Model is not available on server" \
+  "Error: Unavailable model requested. Lang: ru-RU, Type: offline" \
   language_code_ru_RU \
   0
 test_transcript_affecting_params transcribe_file_offline.py

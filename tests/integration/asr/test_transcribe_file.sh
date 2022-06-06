@@ -63,7 +63,7 @@ test_simulate_realtime transcribe_file.py
 test_string_presence \
   transcribe_file.py \
   "--input-file data/examples/en-US_sample.wav --language-code ru-RU" \
-  "details = \"Error: Model is not available on server\"" \
+  "details = \"Error: Unavailable model requested. Lang: ru-RU, Type: online\"" \
   language_code_ru_RU \
   1
 test_transcript_affecting_params transcribe_file.py
