@@ -64,7 +64,7 @@ and restart.
 
 ## Usage
 
-### Server
+### <span style="color:blue">Server</span>
 
 Before running client part of Riva, please set up a server. The simplest
 way to do this is to follow
@@ -81,26 +81,30 @@ You may find a detailed documentation [here](https://docs.nvidia.com/deeplearnin
 
 For transcribing in streaming mode you may use `scripts/asr/transcribe_file.py`.
 ```bash
-python scripts/asr/transcribe_file.py --input-file data/examples/en-US_AntiBERTa_for_word_boosting_testing.wav
+python scripts/asr/transcribe_file.py \
+    --input-file data/examples/en-US_AntiBERTa_for_word_boosting_testing.wav
 ```
 
 You may watch how a transcript grows if you set `--simulate-realtime` and `--show-intermediate`.
 ```bash
-python scripts/asr/transcribe_file.py --input-file data/examples/en-US_AntiBERTa_for_word_boosting_testing.wav \
+python scripts/asr/transcribe_file.py \
+    --input-file data/examples/en-US_AntiBERTa_for_word_boosting_testing.wav \
     --simulate-realtime \
     --show-intermediate
 ```
 
 You may listen audio simultaneously with transcribing (you will need installed PyAudio and access to audio devices).
 ```bash
-python scripts/asr/transcribe_file.py --input-file data/examples/en-US_AntiBERTa_for_word_boosting_testing.wav \
+python scripts/asr/transcribe_file.py \
+    --input-file data/examples/en-US_AntiBERTa_for_word_boosting_testing.wav \
     --play-audio \
     --show-intermediate
 ```
 
 Offline transcription is performed this way.
 ```bash
-python scripts/asr/transcribe_file_offline.py --input-file data/examples/en-US_AntiBERTa_for_word_boosting_testing.wav
+python scripts/asr/transcribe_file_offline.py \
+    --input-file data/examples/en-US_AntiBERTa_for_word_boosting_testing.wav
 ```
 
 You can improve transcription of this audio by word boosting.
@@ -155,13 +159,13 @@ Provide query and context to **QA** client.
 ```bash
 python scripts/nlp/qa_client.py \
   --query "How many gigatons of carbon dioxide was released in 2005?" \
-  --context "In 2010 the Amazon rainforest experienced another severe drought, in some ways more extreme than the "\
-"2005 drought. The affected region was approximate 1,160,000 square miles (3,000,000 km2) of "\
-"rainforest, compared to 734,000 square miles (1,900,000 km2) in 2005. The 2010 drought had three "\
-"epicenters where vegetation died off, whereas in 2005 the drought was focused on the southwestern "\
-"part. The findings were published in the journal Science. In a typical year the Amazon absorbs 1.5 "\
-"gigatons of carbon dioxide; during 2005 instead 5 gigatons were released and in 2010 8 gigatons were "\
-"released."
+  --context "In 2010 the Amazon rainforest experienced another severe drought, in some ways "\
+"more extreme than the 2005 drought. The affected region was approximate 1,160,000 square "\
+"miles (3,000,000 km2) of rainforest, compared to 734,000 square miles (1,900,000 km2) in "\
+"2005. The 2010 drought had three epicenters where vegetation died off, whereas in 2005 the "\
+"drought was focused on the southwestern part. The findings were published in the journal "\
+"Science. In a typical year the Amazon absorbs 1.5 gigatons of carbon dioxide; during 2005 "\
+"instead 5 gigatons were released and in 2010 8 gigatons were released."
 ```
 
 **Text classification** requires only a query.
