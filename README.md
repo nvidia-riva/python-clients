@@ -139,19 +139,19 @@ python scripts/nlp/punctuation_client.py --interactive
 **NER** client can output 1 of the following: label name, span start, span end
 ```bash
 python scripts/nlp/ner_client.py \
-  --query "Where is San Francisco?", "Jensen Huang is the CEO of NVIDIA Corporation." \
+  --query "Where is San Francisco?" "Jensen Huang is the CEO of NVIDIA Corporation." \
   --test label
 ```
 or
 ```bash
 python scripts/nlp/ner_client.py \
-  --query "Where is San Francisco?", "Jensen Huang is the CEO of NVIDIA Corporation." \
+  --query "Where is San Francisco?" "Jensen Huang is the CEO of NVIDIA Corporation." \
   --test span_start
 ```
 or
 ```bash
 python scripts/nlp/ner_client.py \
-  --query "Where is San Francisco?", "Jensen Huang is the CEO of NVIDIA Corporation." \
+  --query "Where is San Francisco?" "Jensen Huang is the CEO of NVIDIA Corporation." \
   --test span_end
 ```
 
