@@ -45,8 +45,8 @@ class SpeechSynthesisService:
             sample_rate_hz (:obj:`int`): number of frames per second in output audio.
 
         Returns:
-            :obj:`rtts.SynthesizeSpeechResponse`: a response with output. You may find :class:`rtts.SynthesizeSpeechResponse`
-            fields description
+            :obj:`riva_api.proto.riva_tts_pb2.SynthesizeSpeechResponse`: a response with output. You may find
+            :class:`riva_api.proto.riva_tts_pb2.SynthesizeSpeechResponse` fields description
             `here <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-tts-proto>`_.
         """
         req = rtts.SynthesizeSpeechRequest(
@@ -79,8 +79,8 @@ class SpeechSynthesisService:
             sample_rate_hz (:obj:`int`): number of frames per second in output audio.
 
         Yields:
-            :obj:`rtts.SynthesizeSpeechResponse`: a response with output. You may find :class:`rtts.SynthesizeSpeechResponse`
-            fields description
+            :obj:`riva_api.proto.riva_tts_pb2.SynthesizeSpeechResponse`: a response with output. You may find
+            :class:`riva_api.proto.riva_tts_pb2.SynthesizeSpeechResponse` fields description
             `here <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-tts-proto>`_.
         """
         req = rtts.SynthesizeSpeechRequest(
