@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: MIT
 
+import importlib
 import pathlib
 import re
 import shutil
@@ -11,9 +12,28 @@ import setuptools
 from setuptools.command.build_py import build_py
 
 
+spec = importlib.util.spec_from_file_location('package_info', 'nemo/package_info.py')
+package_info = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(package_info)
+
+
+__contact_emails__ = package_info.__contact_emails__
+__contact_names__ = package_info.__contact_names__
+__description__ = package_info.__description__
+__download_url__ = package_info.__download_url__
+__homepage__ = package_info.__homepage__
+__keywords__ = package_info.__keywords__
+__license__ = package_info.__license__
+__package_name__ = package_info.__package_name__
+__repository_url__ = package_info.__repository_url__
+__version__ = package_info.__version__
+
+
 setup_py_dir = pathlib.Path(__file__).parent.absolute()
 
-long_description = ""
+with open("README.md", "r", encoding='utf-8') as fh:
+    long_description = fh.read()
+long_description_content_type = "text/markdown"
 
 CHANGE_PB2_LOC_PATTERN = re.compile('from riva.proto import (.+_pb2.*)')
 
@@ -66,13 +86,19 @@ def get_version():
 
 
 setuptools.setup(
-    name="riva-api",
-    version=get_version(),
-    author="apeganov",
-    author_email="apeganov@nvidia.com",
-    description="Python implementation of the Riva API",
+    name=__package_name__,
+    license=__license__,
+    version=__version__,
+    author=__contact_names__,
+    author_email=__contact_emails__,
+    description=__description__,
     long_description=long_description,
-    url="https://github.com/nvidia-riva/python-clients",
+    long_description_content_type=long_description_content_type,
+    url=__repository_url__,
+    maintainer=__contact_names__,
+    maintainer_email=__contact_emails__,
+    keywords=__keywords__,
+    download_url=__download_url__,
     packages=setuptools.find_packages(),
     cmdclass={"build_py": BuildPyCommand},
     classifiers=[

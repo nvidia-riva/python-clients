@@ -19,6 +19,19 @@ from riva_api.nlp import (
     extract_most_probable_text_class_and_confidence,
     extract_most_probable_token_classification_predictions,
 )
+from riva_api.package_info import (
+    __contact_emails__,
+    __contact_names__,
+    __description__,
+    __download_url__,
+    __homepage__,
+    __keywords__,
+    __license__,
+    __package_name__,
+    __repository_url__,
+    __shortversion__,
+    __version__,
+)
 from riva_api.proto.riva_audio_pb2 import AudioEncoding
 from riva_api.proto.riva_asr_pb2 import RecognitionConfig, StreamingRecognitionConfig
 from riva_api.tts import SpeechSynthesisService
