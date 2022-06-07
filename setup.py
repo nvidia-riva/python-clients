@@ -12,7 +12,7 @@ import setuptools
 from setuptools.command.build_py import build_py
 
 
-spec = importlib.util.spec_from_file_location('package_info', 'nemo/package_info.py')
+spec = importlib.util.spec_from_file_location('package_info', 'riva_api/package_info.py')
 package_info = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(package_info)
 
