@@ -98,7 +98,6 @@ setuptools.setup(
     maintainer=__contact_names__,
     maintainer_email=__contact_emails__,
     keywords=__keywords__,
-    download_url=__download_url__,
     packages=setuptools.find_packages(),
     cmdclass={"build_py": BuildPyCommand},
     classifiers=[
