@@ -106,7 +106,10 @@ setuptools.setup(
         "Programming Language :: Python :: 3",
     ],
     python_requires='>=3.6',
-    install_requires=['grpcio-tools'],
+    install_requires=[
+        'grpcio-tools',
+        'nvidia-riva/common @ git+ssh://git@github.com:nvidia-riva/common.git@main'
+    ],
     setup_requires=['grpcio-tools'],
     exclude=['tests', 'tutorials'],
 )
