@@ -62,6 +62,13 @@ class BuildPyCommand(build_py):
             completed_git_clone = sp.run(subprocess_args)
             if completed_git_clone.returncode > 0:
                 raise RuntimeError(f"Could not properly finish cloning of common repo")
+            # subprocess_args = ['git', 'submodule', 'update', '--init']
+            # completed_git_submodule_process = sp.run(subprocess_args)
+            # if completed_git_submodule_process.returncode > 0:
+            #     raise RuntimeError(
+            #         f"Could not properly finish `{' '.join(subprocess_args)}' command."
+            #         f"Return code: {completed_git_submodule_process.returncode}"
+            #     )
             os.chdir(cwd)
             print("glob dir: ", str(setup_py_dir / 'common/riva/proto/*.proto'))
             for proto in glob(str(setup_py_dir / 'common/riva/proto/*.proto')):
@@ -113,7 +120,7 @@ setuptools.setup(
     maintainer=__contact_names__,
     maintainer_email=__contact_emails__,
     keywords=__keywords__,
-    packages=setuptools.find_packages(),
+    packages=setuptools.find_packages(exclude=['tests', 'tutorials', 'scripts']),
     cmdclass={"build_py": BuildPyCommand},
     classifiers=[
         "Development Status :: 4 - Beta",
@@ -123,5 +130,4 @@ setuptools.setup(
     python_requires='>=3.6',
     install_requires=['grpcio-tools'],
     setup_requires=['grpcio-tools'],
-    exclude=['tests', 'tutorials', 'scripts'],
 )
