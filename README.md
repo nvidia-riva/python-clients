@@ -30,8 +30,9 @@ case and deliver real-time performance. This repo provides performant client exa
 ## Installation
 
 1. Create a ``conda`` environment and activate it
-2. Clone ``riva-python-clients`` repo and change to the repo root
-3. Run commands
+2. From source: 
+    - Clone ``riva-python-clients`` repo and change to the repo root
+    - Run commands
 
 ```bash
 git submodule init
@@ -39,6 +40,10 @@ git submodule update
 pip install -r requirements.txt
 python3 setup.py bdist_wheel
 pip install --force-reinstall dist/*.whl
+```
+3. `pip`:
+```bash
+pip install riva-api
 ```
 
 If you would like to use output and input audio devices 
