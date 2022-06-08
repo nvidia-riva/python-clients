@@ -2,9 +2,11 @@
 # SPDX-License-Identifier: MIT
 
 import importlib
+import os
 import pathlib
 import re
 import shutil
+import subprocess as sp
 from glob import glob
 
 import grpc_tools.protoc
@@ -48,6 +50,19 @@ class BuildPyCommand(build_py):
                         shutil.rmtree(str(elem))
                     else:
                         elem.unlink()
+            cwd = os.getcwd()
+            os.chdir(str(setup_py_dir))
+            common_dir = setup_py_dir / 'common'
+            if common_dir.exists():
+                if common_dir.is_dir():
+                    shutil.rmtree(str(common_dir))
+                else:
+                    raise ValueError(f"Found unexpected file {common_dir} in repo root. It should be a directory.")
+            subprocess_args = ['git', 'clone', 'https://github.com/nvidia-riva/common.git', str(common_dir)]
+            completed_git_clone = sp.run(subprocess_args)
+            if completed_git_clone.returncode > 0:
+                raise RuntimeError(f"Could not properly finish cloning of common repo")
+            os.chdir(cwd)
             print("glob dir: ", str(setup_py_dir / 'common/riva/proto/*.proto'))
             for proto in glob(str(setup_py_dir / 'common/riva/proto/*.proto')):
                 print(proto)
@@ -106,10 +121,7 @@ setuptools.setup(
         "Programming Language :: Python :: 3",
     ],
     python_requires='>=3.6',
-    install_requires=[
-        'grpcio-tools',
-        'nvidia-riva/common @ git+ssh://git@github.com:nvidia-riva/common.git@main'
-    ],
+    install_requires=['grpcio-tools'],
     setup_requires=['grpcio-tools'],
     exclude=['tests', 'tutorials'],
 )
