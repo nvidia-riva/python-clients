@@ -123,5 +123,5 @@ setuptools.setup(
     python_requires='>=3.6',
     install_requires=['grpcio-tools'],
     setup_requires=['grpcio-tools'],
-    exclude=['tests', 'tutorials'],
+    exclude=['tests', 'tutorials', 'scripts'],
 )
