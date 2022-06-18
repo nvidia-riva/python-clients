@@ -288,7 +288,8 @@ class ASRService:
 
             streaming_config (:obj:`riva_api.proto.riva_asr_pb2.StreamingRecognitionConfig`): a config for streaming.
                 You may find description of config fields in message ``StreamingRecognitionConfig`` in
-                `common repo <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-asr-proto>`_.
+                `common repo
+                <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-asr-proto>`_.
                 An example of creation of streaming config:
 
                 .. code-style:: python
@@ -301,7 +302,8 @@ class ASRService:
             :obj:`riva_api.proto.riva_asr_pb2.StreamingRecognizeResponse`: responses for audio chunks in
             :param:`audio_chunks`. You may find description of response fields in declaration of
             ``StreamingRecognizeResponse``
-            message `here <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-asr-proto>`_.
+            message `here
+            <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-asr-proto>`_.
         """
         generator = streaming_request_generator(audio_chunks, streaming_config)
         for response in self.stub.StreamingRecognize(generator, metadata=self.auth.get_auth_metadata()):
@@ -323,7 +325,8 @@ class ASRService:
 
             config (:obj:`riva_api.proto.riva_asr_pb2.RecognitionConfig`): a config for offline speech recognition.
                 You may find description of config fields in message ``RecognitionConfig`` in
-                `common repo <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-asr-proto>`_.
+                `common repo
+                <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-asr-proto>`_.
                 An example of creation of config:
 
                 .. code-style:: python
@@ -334,7 +337,8 @@ class ASRService:
         Returns:
             :obj:`riva_api.proto.riva_asr_pb2.RecognizeResponse`: a response with results of :param:`audio_bytes`
             processing. You may find description of response fields in declaration of ``RecognizeResponse``
-            message `here <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-asr-proto>`_.
+            message `here
+            <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-asr-proto>`_.
         """
         request = rasr.RecognizeRequest(config=config, audio=audio_bytes)
         response = self.stub.Recognize(request, metadata=self.auth.get_auth_metadata())

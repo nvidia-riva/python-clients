@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: MIT
 
-from typing import Generator
+from typing import Generator, Optional
 
 import riva_api.proto.riva_tts_pb2 as rtts
 import riva_api.proto.riva_tts_pb2_grpc as rtts_srv
@@ -19,8 +19,8 @@ class SpeechSynthesisService:
         Initializes an instance of the class.
 
         Args:
-            auth (:obj:`Auth`): an instance of :class:`riva_api.auth.Auth` which is used for
-                authentication metadata generation.
+            auth (:obj:`Auth`): an instance of :class:`riva_api.auth.Auth` which is used for authentication metadata
+                generation.
         """
         self.auth = auth
         self.stub = rtts_srv.RivaSpeechSynthesisStub(self.auth.channel)
@@ -28,7 +28,7 @@ class SpeechSynthesisService:
     def synthesize(
         self,
         text: str,
-        voice_name: str,
+        voice_name: Optional[str] = None,
         language_code: str = 'en-US',
         encoding: AudioEncoding = AudioEncoding.LINEAR_PCM,
         sample_rate_hz: int = 44100,
@@ -38,30 +38,32 @@ class SpeechSynthesisService:
 
         Args:
             text (:obj:`str`): an input text.
-            voice_name (:obj:`str`): a name of the voice, e.g. ``"English-US-Female-1"``. You may find available
-                voices in server logs or in server model directory.
+            voice_name (:obj:`str`, `optional`): a name of the voice, e.g. ``"English-US-Female-1"``. You may find
+                available voices in server logs or in server model directory. If this parameter is :obj:`None`, then
+                a server will select the first available model with correct :param:`language_code` value.
             language_code (:obj:`str`): a language to use.
             encoding (:obj:`AudioEncoding`): an output audio encoding, e.g. ``AudioEncoding.LINEAR_PCM``.
             sample_rate_hz (:obj:`int`): number of frames per second in output audio.
 
         Returns:
             :obj:`riva_api.proto.riva_tts_pb2.SynthesizeSpeechResponse`: a response with output. You may find
-            :class:`riva_api.proto.riva_tts_pb2.SynthesizeSpeechResponse` fields description
-            `here <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-tts-proto>`_.
+            :class:`riva_api.proto.riva_tts_pb2.SynthesizeSpeechResponse` fields description `here
+            <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-tts-proto>`_.
         """
         req = rtts.SynthesizeSpeechRequest(
             text=text,
-            voice_name=voice_name,
             language_code=language_code,
             sample_rate_hz=sample_rate_hz,
             encoding=encoding,
         )
+        if voice_name is not None:
+            req.voice_name = voice_name
         return self.stub.Synthesize(req, metadata=self.auth.get_auth_metadata())
 
     def synthesize_online(
         self,
         text: str,
-        voice_name: str,
+        voice_name: Optional[str] = None,
         language_code: str = 'en-US',
         encoding: AudioEncoding = AudioEncoding.LINEAR_PCM,
         sample_rate_hz: int = 44100,
@@ -72,22 +74,24 @@ class SpeechSynthesisService:
 
         Args:
             text (:obj:`str`): an input text.
-            voice_name (:obj:`str`): a name of the voice, e.g. ``"English-US-Female-1"``. You may find available
-                voices in server logs or in server model directory.
+            voice_name (:obj:`str`, `optional`): a name of the voice, e.g. ``"English-US-Female-1"``. You may find
+                available voices in server logs or in server model directory. If this parameter is :obj:`None`, then
+                a server will select the first available model with correct :param:`language_code` value.
             language_code (:obj:`str`): a language to use.
             encoding (:obj:`AudioEncoding`): an output audio encoding, e.g. ``AudioEncoding.LINEAR_PCM``.
             sample_rate_hz (:obj:`int`): number of frames per second in output audio.
 
         Yields:
             :obj:`riva_api.proto.riva_tts_pb2.SynthesizeSpeechResponse`: a response with output. You may find
-            :class:`riva_api.proto.riva_tts_pb2.SynthesizeSpeechResponse` fields description
-            `here <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-tts-proto>`_.
+            :class:`riva_api.proto.riva_tts_pb2.SynthesizeSpeechResponse` fields description `here
+            <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-tts-proto>`_.
         """
         req = rtts.SynthesizeSpeechRequest(
             text=text,
-            voice_name=voice_name,
             language_code=language_code,
             sample_rate_hz=sample_rate_hz,
             encoding=encoding,
         )
+        if voice_name is not None:
+            req.voice_name = voice_name
         return self.stub.SynthesizeOnline(req, metadata=self.auth.get_auth_metadata())

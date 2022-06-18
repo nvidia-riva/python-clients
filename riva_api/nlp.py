@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: MIT
 
-from typing import Any, Generator, List, Tuple, Union
+from typing import Any, Generator, List, Optional, Tuple, Union
 
 import riva_api.proto.riva_nlp_pb2 as rnlp
 import riva_api.proto.riva_nlp_pb2_grpc as rnlp_srv
@@ -76,7 +76,8 @@ def prepare_transform_text_request(
     if isinstance(input_strings, str):
         input_strings = [input_strings]
     request = rnlp.TextTransformRequest()
-    request.model.model_name = model_name
+    if model_name is not None:
+        request.model.model_name = model_name
     request.model.language_code = language_code
     for q in input_strings:
         request.text.append(q)
@@ -122,7 +123,8 @@ class NLPService:
         Returns:
             :obj:`riva_api.proto.riva_nlp_pb2.TextClassResponse`: a response with :param:`input_strings`
             classification results. You may find :class:`TextClassResponse` fields description
-            `here <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-nlp-proto>`_.
+            `here
+            <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-nlp-proto>`_.
         """
         if isinstance(input_strings, str):
             input_strings = [input_strings]
@@ -150,7 +152,8 @@ class NLPService:
         Returns:
             :obj:`riva_api.proto.riva_nlp_pb2.TokenClassResponse`: a response with results. You may find
             :class:`TokenClassResponse` fields description
-            `here <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-nlp-proto>`_.
+            `here
+            <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-nlp-proto>`_.
         """
         if isinstance(input_strings, str):
             input_strings = [input_strings]
@@ -178,7 +181,8 @@ class NLPService:
             :obj:`riva_api.proto.riva_nlp_pb2.TextTransformResponse`: a model response. You may find
             :class:`TextTransformResponse`
             fields description
-            `here <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-nlp-proto>`_.
+            `here
+            <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-nlp-proto>`_.
         """
         request = prepare_transform_text_request(input_strings, model_name, language_code)
         return self.stub.TransformText(request, metadata=self.auth.get_auth_metadata())
@@ -194,13 +198,16 @@ class NLPService:
         Returns:
             :obj:`riva_api.proto.riva_nlp_pb2.TokenClassResponse`: a model response. You may find
             :class:`TokenClassResponse` fields description
-            `here <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-nlp-proto>`_.
+            `here
+            <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-nlp-proto>`_.
         """
         request = rnlp.AnalyzeEntitiesRequest(query=input_string)
         request.options.lang = language_code
         return self.stub.AnalyzeEntities(request, metadata=self.auth.get_auth_metadata())
 
-    def analyze_intent(self, input_string: str, options: rnlp.AnalyzeIntentOptions) -> rnlp.AnalyzeIntentResponse:
+    def analyze_intent(
+        self, input_string: str, options: Optional[rnlp.AnalyzeIntentOptions] = None
+    ) -> rnlp.AnalyzeIntentResponse:
         """
         Accepts an input string and returns the most likely intent as well as slots relevant to that intent.
 
@@ -209,20 +216,24 @@ class NLPService:
 
         Args:
             input_string (:obj:`str`): a string which will be classified.
-            options (:obj:`riva_api.proto.riva_nlp_pb2.AnalyzeIntentOptions`): an intent options. You may find
-                 fields description
-                `here <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-nlp-proto>`_.
-
+            options (:obj:`riva_api.proto.riva_nlp_pb2.AnalyzeIntentOptions`, `optional`,
+                 defaults to :obj:`riva_api.proto.riva_nlp_pb2.AnalyzeIntentOptions()`):
+                 an intent options. You may find fields description `here
+                <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-nlp-proto>`_.
+                Defaults to an instance of :obj:`AnalyzeIntentOptions` created without parameters.
         Returns:
             :obj:`riva_api.proto.riva_nlp_pb2.AnalyzeIntentResponse`: a response with results. You may find fields
             description
-            `here <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-nlp-proto>`_.
+            `here
+            <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-nlp-proto>`_.
         """
+        if options is None:
+            options = rnlp.AnalyzeIntentOptions()
         request = rnlp.AnalyzeIntentRequest(query=input_string, options=options)
         return self.stub.AnalyzeIntent(request, metadata=self.auth.get_auth_metadata())
 
     def punctuate_text(
-        self, input_strings: Union[List[str], str], model_name: str, language_code: str = 'en-US',
+        self, input_strings: Union[List[str], str], model_name: Optional[str] = None, language_code: str = 'en-US',
     ) -> rnlp.TextTransformResponse:
         """
         Takes text with no- or limited- punctuation and returns the same text with corrected punctuation and
@@ -231,13 +242,14 @@ class NLPService:
         Args:
             input_strings (:obj:`Union[List[str], str]`): a string or a list of strings which will be
                 processed.
-            model_name (:obj:`str`): a name of a model.
+            model_name (:obj:`str`, `optional`): a name of a model.
             language_code (:obj:`str`): a string containing a language code for the model.
 
         Returns:
             :obj:`riva_api.proto.riva_nlp_pb2.TextTransformResponse`: a response with results. You may find fields
             description
-            `here <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-nlp-proto>`_.
+            `here
+            <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-nlp-proto>`_.
         """
         request = prepare_transform_text_request(input_strings, model_name, language_code)
         return self.stub.PunctuateText(request, metadata=self.auth.get_auth_metadata())
@@ -255,7 +267,8 @@ class NLPService:
         Returns:
             :obj:`riva_api.proto.riva_nlp_pb2.NaturalQueryResult`: a response with a result. You may find fields
             description
-            `here <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-nlp-proto>`_.
+            `here
+            <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-nlp-proto>`_.
         """
         request = rnlp.NaturalQueryRequest(query=query, context=context, top_n=top_n)
         return self.stub.NaturalQuery(request, metadata=self.auth.get_auth_metadata())

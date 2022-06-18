@@ -13,7 +13,11 @@ def parse_args() -> argparse.Namespace:
         description="Client app to restore Punctuation and Capitalization with Riva",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
-    parser.add_argument("--model", default="riva-punctuation-en-US", help="Model on Riva Server to execute.")
+    parser.add_argument(
+        "--model",
+        help="Model on Riva Server to execute. If this parameter is missing, than server will try to select a first "
+        "available Punctuation & Capitalization model.",
+    )
     parser.add_argument("--query", default="can you prove that you are self aware", help="Input Query")
     parser.add_argument(
         "--run_tests",
