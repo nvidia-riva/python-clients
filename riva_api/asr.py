@@ -6,10 +6,11 @@ import os
 import sys
 import time
 import warnings
+import wave
 from pathlib import Path
 from typing import Callable, Dict, Generator, Iterable, List, Optional, TextIO, Union
 
-import wave
+from grpc._channel import _MultiThreadedRendezvous
 
 import riva_api.proto.riva_asr_pb2 as rasr
 import riva_api.proto.riva_asr_pb2_grpc as rasr_srv
@@ -309,7 +310,9 @@ class ASRService:
         for response in self.stub.StreamingRecognize(generator, metadata=self.auth.get_auth_metadata()):
             yield response
 
-    def offline_recognize(self, audio_bytes: bytes, config: rasr.RecognitionConfig) -> rasr.RecognizeResponse:
+    def offline_recognize(
+        self, audio_bytes: bytes, config: rasr.RecognitionConfig, future: bool = False
+    ) -> Union[rasr.RecognizeResponse, _MultiThreadedRendezvous]:
         """
         Performs speech recognition for raw audio in :param:`audio_bytes`. This method is for processing of
         huge audio at once - not as it is being generated.
@@ -333,13 +336,17 @@ class ASRService:
 
                     from riva_api import RecognitionConfig
                     config = RecognitionConfig(enable_automatic_punctuation=True)
+            future (:obj:`bool`, defaults to :obj:`False`): whether to return an async result instead of usual
+                response. You can get a response by calling ``result()`` method of the future object.
 
         Returns:
-            :obj:`riva_api.proto.riva_asr_pb2.RecognizeResponse`: a response with results of :param:`audio_bytes`
-            processing. You may find description of response fields in declaration of ``RecognizeResponse``
-            message `here
+            :obj:`Union[riva_api.proto.riva_asr_pb2.RecognizeResponse, grpc._channel._MultiThreadedRendezvous]``: a
+            response with results of :param:`audio_bytes` processing. You may find description of response fields in
+            declaration of ``RecognizeResponse`` message `here
             <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-asr-proto>`_.
+            If :param:`future` is :obj:`True`, then a future object is returned. You may retrieve a response from a
+            future object by calling ``result()`` method.
         """
         request = rasr.RecognizeRequest(config=config, audio=audio_bytes)
-        response = self.stub.Recognize(request, metadata=self.auth.get_auth_metadata())
-        return response
+        func = self.stub.Recognize.future if future else self.stub.Recognize
+        return func(request, metadata=self.auth.get_auth_metadata())

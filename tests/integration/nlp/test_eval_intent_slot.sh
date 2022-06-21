@@ -14,9 +14,13 @@ test_error_is_raised intentslot_client.py "--model foo" \
   "wrong_model"
 
 function test_on_small_file(){
+  additional_options="$1"
   input_file="$(dirname $0)/../../../data/nlp_test_metrics/weather.fixed.eval.small.tsv"
   reference_file="$(dirname $0)/reference_outputs/eval_intent_slot_small_metrics.txt"
   exp_options="--input-file ${input_file}"
+  if [ ! -z "${additional_options}" ]; then
+    exp_options="${exp_options} ${additional_options}"
+  fi
   echo "  options: ${exp_options}"
   stdout_file="${test_output_dir}/stdout.txt"
   stderr_file="${test_output_dir}/stderr.txt"
@@ -39,7 +43,8 @@ function test_on_small_file(){
   done 3< <(sed -n "1,${num_lines_in_reference}p" "${stdout_file}") 4<"${reference_file}"
 }
 
-test_on_small_file
+test_on_small_file "--max-async-requests-to-queue 0"
 
+test_on_small_file
 
 set +e

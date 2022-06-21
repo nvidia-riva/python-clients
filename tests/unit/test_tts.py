@@ -31,6 +31,9 @@ def response_generator(chunk_size: int = STREAMING_CHUNK_SIZE) -> Generator[rtts
 SYNTHESIZE_MOCK = Mock(
     return_value=rtts.SynthesizeSpeechResponse(audio=AUDIO_BYTES_1_SECOND)
 )
+SYNTHESIZE_MOCK.future = Mock(
+    return_value=rtts.SynthesizeSpeechResponse(audio=AUDIO_BYTES_1_SECOND)
+)
 SYNTHESIZE_ONLINE_MOCK = Mock(return_value=response_generator())
 
 
@@ -56,6 +59,24 @@ class TestSpeechSynthesisService:
         resp = service.synthesize(TEXT, VOICE_NAME, LANGUAGE_CODE, ENCODING, SAMPLE_RATE_HZ)
         assert isinstance(resp, rtts.SynthesizeSpeechResponse)
         SYNTHESIZE_MOCK.assert_called_with(
+            rtts.SynthesizeSpeechRequest(
+                text=TEXT,
+                voice_name=VOICE_NAME,
+                language_code=LANGUAGE_CODE,
+                encoding=ENCODING,
+                sample_rate_hz=SAMPLE_RATE_HZ,
+            ),
+            metadata=return_value_of_get_auth_metadata,
+        )
+
+    def test_synthesize_future(self) -> None:
+        auth, return_value_of_get_auth_metadata = set_auth_mock()
+        SYNTHESIZE_MOCK.reset_mock()
+        SYNTHESIZE_MOCK.future.reset_mock()
+        service = SpeechSynthesisService(auth)
+        resp = service.synthesize(TEXT, VOICE_NAME, LANGUAGE_CODE, ENCODING, SAMPLE_RATE_HZ, future=True)
+        assert isinstance(resp, rtts.SynthesizeSpeechResponse)
+        SYNTHESIZE_MOCK.future.assert_called_with(
             rtts.SynthesizeSpeechRequest(
                 text=TEXT,
                 voice_name=VOICE_NAME,
