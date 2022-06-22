@@ -234,8 +234,8 @@ class NLPService:
         Args:
             input_string (:obj:`str`): a string which will be classified.
             options (:obj:`riva_api.proto.riva_nlp_pb2.AnalyzeIntentOptions`, `optional`,
-                 defaults to :obj:`riva_api.proto.riva_nlp_pb2.AnalyzeIntentOptions()`):
-                 an intent options. You may find fields description `here
+                defaults to :obj:`riva_api.proto.riva_nlp_pb2.AnalyzeIntentOptions()`):
+                an intent options. You may find fields description `here
                 <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-nlp-proto>`_.
                 Defaults to an instance of :obj:`AnalyzeIntentOptions` created without parameters.
             future (:obj:`bool`, defaults to :obj:`False`): whether to return an async result instead of usual
