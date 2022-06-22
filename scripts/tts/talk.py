@@ -18,7 +18,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--voice",
-        help="A voice name to use. If this parameter is missing, than a server will try a first available model "
+        help="A voice name to use. If this parameter is missing, then the server will try a first available model "
         "based on parameter `--language-code`.",
     )
     parser.add_argument("-o", "--output", type=Path, help="Output file .wav file to write synthesized audio.")
