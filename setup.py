@@ -52,16 +52,23 @@ class BuildPyCommand(build_py):
                         elem.unlink()
             cwd = os.getcwd()
             os.chdir(str(setup_py_dir))
-            common_dir = setup_py_dir / 'common'
-            if common_dir.exists():
-                if common_dir.is_dir():
-                    shutil.rmtree(str(common_dir))
-                else:
-                    raise ValueError(f"Found unexpected file {common_dir} in repo root. It should be a directory.")
-            subprocess_args = ['git', 'clone', 'https://github.com/nvidia-riva/common.git', str(common_dir)]
-            completed_git_clone = sp.run(subprocess_args)
-            if completed_git_clone.returncode > 0:
-                raise RuntimeError(f"Could not properly finish cloning of common repo")
+
+            # # A code which makes sdist distributions installable by `pip`
+            #
+            # common_dir = setup_py_dir / 'common'
+            # if common_dir.exists():
+            #     if common_dir.is_dir():
+            #         shutil.rmtree(str(common_dir))
+            #     else:
+            #         raise ValueError(f"Found unexpected file {common_dir} in repo root. It should be a directory.")
+            # subprocess_args = ['git', 'clone', 'https://github.com/nvidia-riva/common.git', str(common_dir)]
+            # completed_git_clone = sp.run(subprocess_args)
+            # if completed_git_clone.returncode > 0:
+            #     raise RuntimeError(f"Could not properly finish cloning of common repo")
+
+            # # A code which may be improved in future to replace a commented block above.
+            # # `git submodule` commands are preferable compared to `git clone`.
+            #
             # subprocess_args = ['git', 'submodule', 'update', '--init']
             # completed_git_submodule_process = sp.run(subprocess_args)
             # if completed_git_submodule_process.returncode > 0:
@@ -69,6 +76,7 @@ class BuildPyCommand(build_py):
             #         f"Could not properly finish `{' '.join(subprocess_args)}' command."
             #         f"Return code: {completed_git_submodule_process.returncode}"
             #     )
+
             os.chdir(cwd)
             print("glob dir: ", str(setup_py_dir / 'common/riva/proto/*.proto'))
             for proto in glob(str(setup_py_dir / 'common/riva/proto/*.proto')):

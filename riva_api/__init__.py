@@ -32,6 +32,7 @@ from riva_api.package_info import (
     __shortversion__,
     __version__,
 )
-from riva_api.proto.riva_audio_pb2 import AudioEncoding
 from riva_api.proto.riva_asr_pb2 import RecognitionConfig, StreamingRecognitionConfig
+from riva_api.proto.riva_audio_pb2 import AudioEncoding
+from riva_api.proto.riva_nlp_pb2 import AnalyzeIntentOptions
 from riva_api.tts import SpeechSynthesisService
