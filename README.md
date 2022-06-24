@@ -43,7 +43,7 @@ pip install --force-reinstall dist/*.whl
 ```
 3. `pip`:
 ```bash
-pip install riva-api
+pip install nvidia-riva-client
 ```
 
 If you would like to use output and input audio devices 
