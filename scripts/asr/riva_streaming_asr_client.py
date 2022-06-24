@@ -9,9 +9,9 @@ from pathlib import Path
 from threading import Thread
 from typing import Union
 
-import riva_api
-from riva_api.asr import get_wav_file_parameters
-from riva_api.argparse_utils import add_asr_config_argparse_parameters, add_connection_argparse_parameters
+import riva.client
+from riva.client.asr import get_wav_file_parameters
+from riva.client.argparse_utils import add_asr_config_argparse_parameters, add_connection_argparse_parameters
 
 
 def parse_args() -> argparse.Namespace:
@@ -50,11 +50,11 @@ def streaming_transcription_worker(
 ) -> None:
     output_file = Path(output_file).expanduser()
     try:
-        auth = riva_api.Auth(args.ssl_cert, args.use_ssl, args.server)
-        asr_service = riva_api.ASRService(auth)
-        config = riva_api.StreamingRecognitionConfig(
-            config=riva_api.RecognitionConfig(
-                encoding=riva_api.AudioEncoding.LINEAR_PCM,
+        auth = riva.client.Auth(args.ssl_cert, args.use_ssl, args.server)
+        asr_service = riva.client.ASRService(auth)
+        config = riva.client.StreamingRecognitionConfig(
+            config=riva.client.RecognitionConfig(
+                encoding=riva.client.AudioEncoding.LINEAR_PCM,
                 language_code=args.language_code,
                 max_alternatives=args.max_alternatives,
                 enable_automatic_punctuation=args.automatic_punctuation,
@@ -63,15 +63,15 @@ def streaming_transcription_worker(
             ),
             interim_results=True,
         )
-        riva_api.add_audio_file_specs_to_config(config, args.input_file)
-        riva_api.add_word_boosting_to_config(config, args.boosted_lm_words, args.boosted_lm_score)
+        riva.client.add_audio_file_specs_to_config(config, args.input_file)
+        riva.client.add_word_boosting_to_config(config, args.boosted_lm_words, args.boosted_lm_score)
         for _ in range(args.num_iterations):
-            with riva_api.AudioChunkFileIterator(
+            with riva.client.AudioChunkFileIterator(
                 args.input_file,
                 args.file_streaming_chunk,
-                delay_callback=riva_api.sleep_audio_length if args.simulate_realtime else None,
+                delay_callback=riva.client.sleep_audio_length if args.simulate_realtime else None,
             ) as audio_chunk_iterator:
-                riva_api.print_streaming(
+                riva.client.print_streaming(
                     responses=asr_service.streaming_response_generator(
                         audio_chunks=audio_chunk_iterator,
                         streaming_config=config,

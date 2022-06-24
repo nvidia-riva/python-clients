@@ -6,9 +6,9 @@ case and deliver real-time performance. This repo provides performant client exa
 
 ## Main API
 
-- `riva_api.ASRService` is a class for speech recognition,
-- `riva_api.TTSService` is a class for speech synthesis,
-- `riva_api.NLPService` is a class for natural language processing.
+- `riva.client.ASRService` is a class for speech recognition,
+- `riva.client.TTSService` is a class for speech synthesis,
+- `riva.client.NLPService` is a class for natural language processing.
 
 ## CLI interface
 
@@ -48,7 +48,7 @@ pip install riva-api
 
 If you would like to use output and input audio devices 
 (scripts `scripts/asr/transcribe_file_rt.py`, `scripts/asr/transcribe_mic.py`, `scripts/tts/talk.py` or module 
-`riva_api/audio_io.py`), you will need to install `PyAudio`.
+`riva.client/audio_io.py`), you will need to install `PyAudio`.
 ```bash
 conda install -c anaconda pyaudio
 ```
