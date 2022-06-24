@@ -6,9 +6,9 @@ from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union
 from google.protobuf.message import Message
 from grpc._channel import _MultiThreadedRendezvous
 
-import riva_api.proto.riva_nlp_pb2 as rnlp
-import riva_api.proto.riva_nlp_pb2_grpc as rnlp_srv
-from riva_api import Auth
+import riva.client.proto.riva_nlp_pb2 as rnlp
+import riva.client.proto.riva_nlp_pb2_grpc as rnlp_srv
+from riva.client import Auth
 
 
 def extract_all_text_classes_and_confidences(
@@ -103,7 +103,7 @@ class NLPService:
         Initializes an instance of the class.
 
         Args:
-            auth (:obj:`Auth`): an instance of :class:`riva_api.auth.Auth` which is used for
+            auth (:obj:`Auth`): an instance of :class:`riva.client.auth.Auth` which is used for
                 authentication metadata generation.
         """
         self.auth = auth
@@ -125,7 +125,7 @@ class NLPService:
             future (:obj:`bool`, defaults to :obj:`False`): whether to return an async result instead of usual
                 response. You can get a response by calling ``result()`` method of the future object.
         Returns:
-            :obj:`Union[riva_api.proto.riva_nlp_pb2.TextClassResponse, grpc._channel._MultiThreadedRendezvous]`: a
+            :obj:`Union[riva.client.proto.riva_nlp_pb2.TextClassResponse, grpc._channel._MultiThreadedRendezvous]`: a
             response with :param:`input_strings` classification results. You may find :class:`TextClassResponse`
             fields description `here
             <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-nlp-proto>`_.
@@ -158,7 +158,7 @@ class NLPService:
             future (:obj:`bool`, defaults to :obj:`False`): whether to return an async result instead of usual
                 response. You can get a response by calling ``result()`` method of the future object.
         Returns:
-            :obj:`Union[riva_api.proto.riva_nlp_pb2.TokenClassResponse, grpc._channel._MultiThreadedRendezvous]`: a
+            :obj:`Union[riva.client.proto.riva_nlp_pb2.TokenClassResponse, grpc._channel._MultiThreadedRendezvous]`: a
             response with results. You may find :class:`TokenClassResponse` fields description `here
             <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-nlp-proto>`_.
             If :param:`future` is :obj:`True`, then a future object is returned. You may retrieve a response from a
@@ -189,7 +189,7 @@ class NLPService:
             future (:obj:`bool`, defaults to :obj:`False`): whether to return an async result instead of usual
                 response. You can get a response by calling ``result()`` method of the future object.
         Returns:
-            :obj:`Union[riva_api.proto.riva_nlp_pb2.TextTransformResponse, grpc._channel._MultiThreadedRendezvous]`: a
+            :obj:`Union[riva.client.proto.riva_nlp_pb2.TextTransformResponse, grpc._channel._MultiThreadedRendezvous]`: a
             model response. You may find :class:`TextTransformResponse` fields description `here
             <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-nlp-proto>`_.
             If :param:`future` is :obj:`True`, then a future object is returned. You may retrieve a response from a
@@ -211,7 +211,7 @@ class NLPService:
             future (:obj:`bool`, defaults to :obj:`False`): whether to return an async result instead of usual
                 response. You can get a response by calling ``result()`` method of the future object.
         Returns:
-            :obj:`Union[riva_api.proto.riva_nlp_pb2.TokenClassResponse, grpc._channel._MultiThreadedRendezvous]`: a
+            :obj:`Union[riva.client.proto.riva_nlp_pb2.TokenClassResponse, grpc._channel._MultiThreadedRendezvous]`: a
             model response. You may find :class:`TokenClassResponse` fields description `here
             <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-nlp-proto>`_.
             If :param:`future` is :obj:`True`, then a future object is returned. You may retrieve a response from a
@@ -233,15 +233,15 @@ class NLPService:
 
         Args:
             input_string (:obj:`str`): a string which will be classified.
-            options (:obj:`riva_api.proto.riva_nlp_pb2.AnalyzeIntentOptions`, `optional`,
-                defaults to :obj:`riva_api.proto.riva_nlp_pb2.AnalyzeIntentOptions()`):
+            options (:obj:`riva.client.proto.riva_nlp_pb2.AnalyzeIntentOptions`, `optional`,
+                defaults to :obj:`riva.client.proto.riva_nlp_pb2.AnalyzeIntentOptions()`):
                 an intent options. You may find fields description `here
                 <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-nlp-proto>`_.
                 Defaults to an instance of :obj:`AnalyzeIntentOptions` created without parameters.
             future (:obj:`bool`, defaults to :obj:`False`): whether to return an async result instead of usual
                 response. You can get a response by calling ``result()`` method of the future object.
         Returns:
-            :obj:`Union[riva_api.proto.riva_nlp_pb2.AnalyzeIntentResponse, grpc._channel._MultiThreadedRendezvous]`: a
+            :obj:`Union[riva.client.proto.riva_nlp_pb2.AnalyzeIntentResponse, grpc._channel._MultiThreadedRendezvous]`: a
             response with results. You may find fields description `here
             <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-nlp-proto>`_.
             If :param:`future` is :obj:`True`, then a future object is returned. You may retrieve a response from a
@@ -272,7 +272,7 @@ class NLPService:
             future (:obj:`bool`, defaults to :obj:`False`): whether to return an async result instead of usual
                 response. You can get a response by calling ``result()`` method of the future object.
         Returns:
-            :obj:`Union[riva_api.proto.riva_nlp_pb2.TextTransformResponse, grpc._channel._MultiThreadedRendezvous]`: a
+            :obj:`Union[riva.client.proto.riva_nlp_pb2.TextTransformResponse, grpc._channel._MultiThreadedRendezvous]`: a
             response with results. You may find fields description `here
             <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-nlp-proto>`_.
             If :param:`future` is :obj:`True`, then a future object is returned. You may retrieve a response from a

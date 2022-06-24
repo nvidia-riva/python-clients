@@ -5,9 +5,9 @@ from math import ceil
 from typing import Any, Generator
 from unittest.mock import patch, Mock
 
-import riva_api.proto.riva_tts_pb2 as rtts
-from riva_api import AudioEncoding
-from riva_api.tts import SpeechSynthesisService
+import riva.client.proto.riva_tts_pb2 as rtts
+from riva.client import AudioEncoding
+from riva.client.tts import SpeechSynthesisService
 
 from .helpers import set_auth_mock
 
@@ -50,7 +50,7 @@ def is_iterable(obj: Any) -> bool:
     return True
 
 
-@patch("riva_api.proto.riva_tts_pb2_grpc.RivaSpeechSynthesisStub.__init__", riva_tts_stub_init_patch)
+@patch("riva.client.proto.riva_tts_pb2_grpc.RivaSpeechSynthesisStub.__init__", riva_tts_stub_init_patch)
 class TestSpeechSynthesisService:
     def test_synthesize(self) -> None:
         auth, return_value_of_get_auth_metadata = set_auth_mock()

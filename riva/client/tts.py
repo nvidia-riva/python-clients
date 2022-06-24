@@ -5,10 +5,10 @@ from typing import Generator, Optional, Union
 
 from grpc._channel import _MultiThreadedRendezvous
 
-import riva_api.proto.riva_tts_pb2 as rtts
-import riva_api.proto.riva_tts_pb2_grpc as rtts_srv
-from riva_api import Auth
-from riva_api.proto.riva_audio_pb2 import AudioEncoding
+import riva.client.proto.riva_tts_pb2 as rtts
+import riva.client.proto.riva_tts_pb2_grpc as rtts_srv
+from riva.client import Auth
+from riva.client.proto.riva_audio_pb2 import AudioEncoding
 
 
 class SpeechSynthesisService:
@@ -21,7 +21,7 @@ class SpeechSynthesisService:
         Initializes an instance of the class.
 
         Args:
-            auth (:obj:`Auth`): an instance of :class:`riva_api.auth.Auth` which is used for authentication metadata
+            auth (:obj:`Auth`): an instance of :class:`riva.client.auth.Auth` which is used for authentication metadata
                 generation.
         """
         self.auth = auth

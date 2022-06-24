@@ -3,14 +3,14 @@
 
 import argparse
 
-import riva_api
-from riva_api.argparse_utils import add_asr_config_argparse_parameters, add_connection_argparse_parameters
+import riva.client
+from riva.client.argparse_utils import add_asr_config_argparse_parameters, add_connection_argparse_parameters
 
-import riva_api.audio_io
+import riva.client.audio_io
 
 
 def parse_args() -> argparse.Namespace:
-    default_device_info = riva_api.audio_io.get_default_input_device_info()
+    default_device_info = riva.client.audio_io.get_default_input_device_info()
     default_device_index = None if default_device_info is None else default_device_info['index']
     parser = argparse.ArgumentParser(
         description="Streaming transcription from microphone via Riva AI Services",
@@ -39,13 +39,13 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
     if args.list_devices:
-        riva_api.audio_io.list_input_devices()
+        riva.client.audio_io.list_input_devices()
         return
-    auth = riva_api.Auth(args.ssl_cert, args.use_ssl, args.server)
-    asr_service = riva_api.ASRService(auth)
-    config = riva_api.StreamingRecognitionConfig(
-        config=riva_api.RecognitionConfig(
-            encoding=riva_api.AudioEncoding.LINEAR_PCM,
+    auth = riva.client.Auth(args.ssl_cert, args.use_ssl, args.server)
+    asr_service = riva.client.ASRService(auth)
+    config = riva.client.StreamingRecognitionConfig(
+        config=riva.client.RecognitionConfig(
+            encoding=riva.client.AudioEncoding.LINEAR_PCM,
             language_code=args.language_code,
             max_alternatives=1,
             enable_automatic_punctuation=args.automatic_punctuation,

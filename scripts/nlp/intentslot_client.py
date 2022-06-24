@@ -5,8 +5,8 @@ import argparse
 import time
 from typing import List
 
-import riva_api
-from riva_api.argparse_utils import add_connection_argparse_parameters
+import riva.client
+from riva.client.argparse_utils import add_connection_argparse_parameters
 
 
 def parse_args() -> argparse.Namespace:
@@ -44,7 +44,7 @@ def pretty_print_result(
 
 def main() -> None:
     args = parse_args()
-    auth = riva_api.Auth(args.ssl_cert, args.use_ssl, args.server)
+    auth = riva.client.Auth(args.ssl_cert, args.use_ssl, args.server)
     service = riva_api.NLPService(auth)
     if args.interactive:
         while True:
