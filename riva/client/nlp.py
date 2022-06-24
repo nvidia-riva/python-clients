@@ -1,7 +1,10 @@
 # SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: MIT
 
-from typing import Any, Generator, List, Tuple, Union
+from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union
+
+from google.protobuf.message import Message
+from grpc._channel import _MultiThreadedRendezvous
 
 import riva_api.proto.riva_nlp_pb2 as rnlp
 import riva_api.proto.riva_nlp_pb2_grpc as rnlp_srv
@@ -76,7 +79,8 @@ def prepare_transform_text_request(
     if isinstance(input_strings, str):
         input_strings = [input_strings]
     request = rnlp.TextTransformRequest()
-    request.model.model_name = model_name
+    if model_name is not None:
+        request.model.model_name = model_name
     request.model.language_code = language_code
     for q in input_strings:
         request.text.append(q)
@@ -106,8 +110,8 @@ class NLPService:
         self.stub = rnlp_srv.RivaLanguageUnderstandingStub(self.auth.channel)
 
     def classify_text(
-        self, input_strings: Union[List[str], str], model_name: str, language_code: str = 'en-US'
-    ) -> rnlp.TextClassResponse:
+        self, input_strings: Union[List[str], str], model_name: str, language_code: str = 'en-US', future: bool = False
+    ) -> Union[rnlp.TextClassResponse, _MultiThreadedRendezvous]:
         """
         Classifies text provided in :param:`input_strings`. For example, this method can be used for
         intent classification.
@@ -118,11 +122,15 @@ class NLPService:
                 directory with models. A value for quickstart v2.0.0: ``"riva_intent_weather"``.
             language_code (:obj:`str`): a language of input text if :param:`model_name` is available for several
                 languages.
-
+            future (:obj:`bool`, defaults to :obj:`False`): whether to return an async result instead of usual
+                response. You can get a response by calling ``result()`` method of the future object.
         Returns:
-            :obj:`riva_api.proto.riva_nlp_pb2.TextClassResponse`: a response with :param:`input_strings`
-            classification results. You may find :class:`TextClassResponse` fields description
-            `here <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-nlp-proto>`_.
+            :obj:`Union[riva_api.proto.riva_nlp_pb2.TextClassResponse, grpc._channel._MultiThreadedRendezvous]`: a
+            response with :param:`input_strings` classification results. You may find :class:`TextClassResponse`
+            fields description `here
+            <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-nlp-proto>`_.
+            If :param:`future` is :obj:`True`, then a future object is returned. You may retrieve a response from a
+            future object by calling ``result()`` method.
         """
         if isinstance(input_strings, str):
             input_strings = [input_strings]
@@ -131,11 +139,12 @@ class NLPService:
         request.model.language_code = language_code
         for q in input_strings:
             request.text.append(q)
-        return self.stub.ClassifyText(request, metadata=self.auth.get_auth_metadata())
+        func = self.stub.ClassifyText.future if future else self.stub.ClassifyText
+        return func(request, metadata=self.auth.get_auth_metadata())
 
     def classify_tokens(
-        self, input_strings: Union[List[str], str], model_name: str, language_code: str = 'en-US'
-    ) -> rnlp.TokenClassResponse:
+        self, input_strings: Union[List[str], str], model_name: str, language_code: str = 'en-US', future: bool = False
+    ) -> Union[rnlp.TokenClassResponse, _MultiThreadedRendezvous]:
         """
         Classifies tokens in texts in :param:`input_strings`. Can be used for slot classification or NER.
 
@@ -146,11 +155,14 @@ class NLPService:
                 and ``"riva_ner"``.
             language_code: a language of input text if :param:`model_name` is available for several
                 languages.
-
+            future (:obj:`bool`, defaults to :obj:`False`): whether to return an async result instead of usual
+                response. You can get a response by calling ``result()`` method of the future object.
         Returns:
-            :obj:`riva_api.proto.riva_nlp_pb2.TokenClassResponse`: a response with results. You may find
-            :class:`TokenClassResponse` fields description
-            `here <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-nlp-proto>`_.
+            :obj:`Union[riva_api.proto.riva_nlp_pb2.TokenClassResponse, grpc._channel._MultiThreadedRendezvous]`: a
+            response with results. You may find :class:`TokenClassResponse` fields description `here
+            <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-nlp-proto>`_.
+            If :param:`future` is :obj:`True`, then a future object is returned. You may retrieve a response from a
+            future object by calling ``result()`` method.
         """
         if isinstance(input_strings, str):
             input_strings = [input_strings]
@@ -159,11 +171,12 @@ class NLPService:
         request.model.language_code = language_code
         for q in input_strings:
             request.text.append(q)
-        return self.stub.ClassifyTokens(request, metadata=self.auth.get_auth_metadata())
+        func = self.stub.ClassifyTokens.future if future else self.stub.ClassifyTokens
+        return func(request, metadata=self.auth.get_auth_metadata())
 
     def transform_text(
-        self, input_strings: Union[List[str], str], model_name: str, language_code: str = 'en-US',
-    ) -> rnlp.TextTransformResponse:
+        self, input_strings: Union[List[str], str], model_name: str, language_code: str = 'en-US', future: bool = False
+    ) -> Union[rnlp.TextTransformResponse, _MultiThreadedRendezvous]:
         """
         The behavior of the function is defined entirely by the underlying model and may be used for
         tasks like translation, adding punctuation, augment the input directly, etc.
@@ -173,34 +186,45 @@ class NLPService:
                 transformed.
             model_name (:obj:`str`): a name of a model.
             language_code (:obj:`str`): a string containing a language code for the model.
-
+            future (:obj:`bool`, defaults to :obj:`False`): whether to return an async result instead of usual
+                response. You can get a response by calling ``result()`` method of the future object.
         Returns:
-            :obj:`riva_api.proto.riva_nlp_pb2.TextTransformResponse`: a model response. You may find
-            :class:`TextTransformResponse`
-            fields description
-            `here <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-nlp-proto>`_.
+            :obj:`Union[riva_api.proto.riva_nlp_pb2.TextTransformResponse, grpc._channel._MultiThreadedRendezvous]`: a
+            model response. You may find :class:`TextTransformResponse` fields description `here
+            <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-nlp-proto>`_.
+            If :param:`future` is :obj:`True`, then a future object is returned. You may retrieve a response from a
+            future object by calling ``result()`` method.
         """
         request = prepare_transform_text_request(input_strings, model_name, language_code)
-        return self.stub.TransformText(request, metadata=self.auth.get_auth_metadata())
+        func = self.stub.TransformText.future if future else self.stub.TransformText
+        return func(request, metadata=self.auth.get_auth_metadata())
 
-    def analyze_entities(self, input_string: str, language_code: str = 'en-US') -> rnlp.TokenClassResponse:
+    def analyze_entities(
+        self, input_string: str, language_code: str = 'en-US', future: bool = False
+    ) -> Union[rnlp.TokenClassResponse, _MultiThreadedRendezvous]:
         """
         Accepts an input string and returns all named entities within the text, as well as a category and likelihood.
 
         Args:
             input_string (:obj:`str`): a string which will be processed.
             language_code (:obj:`str`): a language code.
-
+            future (:obj:`bool`, defaults to :obj:`False`): whether to return an async result instead of usual
+                response. You can get a response by calling ``result()`` method of the future object.
         Returns:
-            :obj:`riva_api.proto.riva_nlp_pb2.TokenClassResponse`: a model response. You may find
-            :class:`TokenClassResponse` fields description
-            `here <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-nlp-proto>`_.
+            :obj:`Union[riva_api.proto.riva_nlp_pb2.TokenClassResponse, grpc._channel._MultiThreadedRendezvous]`: a
+            model response. You may find :class:`TokenClassResponse` fields description `here
+            <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-nlp-proto>`_.
+            If :param:`future` is :obj:`True`, then a future object is returned. You may retrieve a response from a
+            future object by calling ``result()`` method.
         """
         request = rnlp.AnalyzeEntitiesRequest(query=input_string)
         request.options.lang = language_code
-        return self.stub.AnalyzeEntities(request, metadata=self.auth.get_auth_metadata())
+        func = self.stub.AnalyzeEntities.future if future else self.stub.AnalyzeEntities
+        return func(request, metadata=self.auth.get_auth_metadata())
 
-    def analyze_intent(self, input_string: str, options: rnlp.AnalyzeIntentOptions) -> rnlp.AnalyzeIntentResponse:
+    def analyze_intent(
+        self, input_string: str, options: Optional[rnlp.AnalyzeIntentOptions] = None, future: bool = False
+    ) -> Union[rnlp.AnalyzeIntentResponse, _MultiThreadedRendezvous]:
         """
         Accepts an input string and returns the most likely intent as well as slots relevant to that intent.
 
@@ -209,21 +233,33 @@ class NLPService:
 
         Args:
             input_string (:obj:`str`): a string which will be classified.
-            options (:obj:`riva_api.proto.riva_nlp_pb2.AnalyzeIntentOptions`): an intent options. You may find
-                 fields description
-                `here <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-nlp-proto>`_.
-
+            options (:obj:`riva_api.proto.riva_nlp_pb2.AnalyzeIntentOptions`, `optional`,
+                defaults to :obj:`riva_api.proto.riva_nlp_pb2.AnalyzeIntentOptions()`):
+                an intent options. You may find fields description `here
+                <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-nlp-proto>`_.
+                Defaults to an instance of :obj:`AnalyzeIntentOptions` created without parameters.
+            future (:obj:`bool`, defaults to :obj:`False`): whether to return an async result instead of usual
+                response. You can get a response by calling ``result()`` method of the future object.
         Returns:
-            :obj:`riva_api.proto.riva_nlp_pb2.AnalyzeIntentResponse`: a response with results. You may find fields
-            description
-            `here <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-nlp-proto>`_.
+            :obj:`Union[riva_api.proto.riva_nlp_pb2.AnalyzeIntentResponse, grpc._channel._MultiThreadedRendezvous]`: a
+            response with results. You may find fields description `here
+            <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-nlp-proto>`_.
+            If :param:`future` is :obj:`True`, then a future object is returned. You may retrieve a response from a
+            future object by calling ``result()`` method.
         """
+        if options is None:
+            options = rnlp.AnalyzeIntentOptions()
         request = rnlp.AnalyzeIntentRequest(query=input_string, options=options)
-        return self.stub.AnalyzeIntent(request, metadata=self.auth.get_auth_metadata())
+        func = self.stub.AnalyzeIntent.future if future else self.stub.AnalyzeIntent
+        return func(request, metadata=self.auth.get_auth_metadata())
 
     def punctuate_text(
-        self, input_strings: Union[List[str], str], model_name: str, language_code: str = 'en-US',
-    ) -> rnlp.TextTransformResponse:
+        self,
+        input_strings: Union[List[str], str],
+        model_name: Optional[str] = None,
+        language_code: str = 'en-US',
+        future: bool = False,
+    ) -> Union[rnlp.TextTransformResponse, _MultiThreadedRendezvous]:
         """
         Takes text with no- or limited- punctuation and returns the same text with corrected punctuation and
         capitalization.
@@ -231,18 +267,24 @@ class NLPService:
         Args:
             input_strings (:obj:`Union[List[str], str]`): a string or a list of strings which will be
                 processed.
-            model_name (:obj:`str`): a name of a model.
+            model_name (:obj:`str`, `optional`): a name of a model.
             language_code (:obj:`str`): a string containing a language code for the model.
-
+            future (:obj:`bool`, defaults to :obj:`False`): whether to return an async result instead of usual
+                response. You can get a response by calling ``result()`` method of the future object.
         Returns:
-            :obj:`riva_api.proto.riva_nlp_pb2.TextTransformResponse`: a response with results. You may find fields
-            description
-            `here <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-nlp-proto>`_.
+            :obj:`Union[riva_api.proto.riva_nlp_pb2.TextTransformResponse, grpc._channel._MultiThreadedRendezvous]`: a
+            response with results. You may find fields description `here
+            <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-nlp-proto>`_.
+            If :param:`future` is :obj:`True`, then a future object is returned. You may retrieve a response from a
+            future object by calling ``result()`` method.
         """
         request = prepare_transform_text_request(input_strings, model_name, language_code)
-        return self.stub.PunctuateText(request, metadata=self.auth.get_auth_metadata())
+        func = self.stub.PunctuateText.future if future else self.stub.PunctuateText
+        return func(request, metadata=self.auth.get_auth_metadata())
 
-    def natural_query(self, query: str, context: str, top_n: int = 1) -> rnlp.NaturalQueryResponse:
+    def natural_query(
+        self, query: str, context: str, top_n: int = 1, future: bool = False
+    ) -> Union[rnlp.NaturalQueryResponse, _MultiThreadedRendezvous]:
         """
         A search function that enables querying one or more documents or contexts with a query that is written in
         natural language.
@@ -251,14 +293,18 @@ class NLPService:
             query (:obj:`str): a natural language query.
             context (:obj:`str): a context to search with the above query.
             top_n (:obj:`int`): a maximum number of answers to return for the query.
-
+            future (:obj:`bool`, defaults to :obj:`False`): whether to return an async result instead of usual
+                response. You can get a response by calling ``result()`` method of the future object.
         Returns:
-            :obj:`riva_api.proto.riva_nlp_pb2.NaturalQueryResult`: a response with a result. You may find fields
-            description
-            `here <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-nlp-proto>`_.
+            :obj:`Union[riva_api.proto.riva_nlp_pb2.NaturalQueryResult, grpc._channel._MultiThreadedRendezvous]`: a
+            response with a result. You may find fields description `here
+            <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-nlp-proto>`_.
+            If :param:`future` is :obj:`True`, then a future object is returned. You may retrieve a response from a
+            future object by calling ``result()`` method.
         """
         request = rnlp.NaturalQueryRequest(query=query, context=context, top_n=top_n)
-        return self.stub.NaturalQuery(request, metadata=self.auth.get_auth_metadata())
+        func = self.stub.NaturalQuery.future if future else self.stub.NaturalQuery
+        return func(request, metadata=self.auth.get_auth_metadata())
 
 
 def batch_generator(examples: List[Any], batch_size: int) -> Generator[List[Any], None, None]:
@@ -266,25 +312,87 @@ def batch_generator(examples: List[Any], batch_size: int) -> Generator[List[Any]
         yield examples[i : i + batch_size]
 
 
-def classify_text_batch(
-    nlp_service: NLPService, input_strings: List[str], model_name: str, batch_size: int, language_code: str = 'en-US'
-) -> Tuple[List[str], List[float]]:
-    classes, confidences = [], []
-    for batch in batch_generator(input_strings, batch_size):
-        b_classes, b_confidences = extract_most_probable_text_class_and_confidence(
-            nlp_service.classify_text(input_strings=batch, model_name=model_name, language_code=language_code)
+def process_batches_async(
+    b_gen: Generator[List[Any], None, None],
+    process_func: Callable[..., _MultiThreadedRendezvous],
+    kwargs_except_future_and_input: Dict[str, Any],
+    max_async_requests_to_queue: int,
+) -> List[Message]:
+    responses = []
+    n_req = max_async_requests_to_queue
+    while n_req == max_async_requests_to_queue:
+        n_req = 0
+        futures = []
+        for batch in b_gen:
+            futures.append(process_func(input_strings=batch, **kwargs_except_future_and_input, future=True))
+            n_req += 1
+            if n_req == max_async_requests_to_queue:
+                break
+        for f in futures:
+            responses.append(f.result())
+    return responses
+
+
+def check_max_async_requests_to_queue(max_async_requests_to_queue: int) -> None:
+    if not isinstance(max_async_requests_to_queue, int) or max_async_requests_to_queue < 0:
+        raise ValueError(
+            f"Parameter `max_async_requests_to_queue` has to be not negative integer whereas "
+            f"`max_async_requests_to_queue={max_async_requests_to_queue}` was given."
         )
+
+
+def classify_text_batch(
+    nlp_service: NLPService,
+    input_strings: List[str],
+    model_name: str,
+    batch_size: int,
+    language_code: str = 'en-US',
+    max_async_requests_to_queue: int = 0,
+) -> Tuple[List[str], List[float]]:
+    check_max_async_requests_to_queue(max_async_requests_to_queue)
+    if max_async_requests_to_queue == 0:
+        responses = []
+        for batch in batch_generator(input_strings, batch_size):
+            responses.append(nlp_service.classify_text(batch, model_name, language_code))
+    else:
+        responses = process_batches_async(
+            batch_generator(input_strings, batch_size),
+            nlp_service.classify_text,
+            {'model_name': model_name, 'language_code': language_code},
+            max_async_requests_to_queue,
+        )
+    classes, confidences = [], []
+    for response in responses:
+        b_classes, b_confidences = extract_most_probable_text_class_and_confidence(response)
         classes += b_classes
         confidences += b_confidences
     return classes, confidences
 
 
 def classify_tokens_batch(
-    nlp_service: NLPService, input_strings: List[str], model_name: str, batch_size: int, language_code: str = 'en-US'
+    nlp_service: NLPService,
+    input_strings: List[str],
+    model_name: str,
+    batch_size: int,
+    language_code: str = 'en-US',
+    max_async_requests_to_queue: int = 0,
 ) -> Tuple[List[List[str]], List[List[str]], List[List[float]], List[List[int]], List[List[int]]]:
+    check_max_async_requests_to_queue(max_async_requests_to_queue)
+    if max_async_requests_to_queue == 0:
+        responses = []
+        for batch in batch_generator(input_strings, batch_size):
+            responses.append(
+                nlp_service.classify_tokens(input_strings=batch, model_name=model_name, language_code=language_code)
+            )
+    else:
+        responses = process_batches_async(
+            batch_generator(input_strings, batch_size),
+            nlp_service.classify_tokens,
+            {'model_name': model_name, 'language_code': language_code},
+            max_async_requests_to_queue,
+        )
     tokens, token_classes, confidences, starts, ends = [], [], [], [], []
-    for batch in batch_generator(input_strings, batch_size):
-        response = nlp_service.classify_tokens(input_strings=batch, model_name=model_name, language_code=language_code)
+    for response in responses:
         b_t, b_tc, b_conf, b_s, b_e = extract_most_probable_token_classification_predictions(response)
         tokens += b_t
         token_classes += b_tc

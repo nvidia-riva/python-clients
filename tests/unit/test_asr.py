@@ -27,6 +27,7 @@ RECOGNITION_CONFIG = rasr.RecognitionConfig()
 RECOGNIZE_REQUEST = rasr.RecognizeRequest(config=RECOGNITION_CONFIG, audio=AUDIO_BYTES_1_SECOND)
 RECOGNIZE_RESPONSE = rasr.RecognizeResponse()
 RECOGNIZE_MOCK = Mock(return_value=RECOGNIZE_RESPONSE)
+RECOGNIZE_MOCK.future = Mock(return_value=RECOGNIZE_RESPONSE)
 
 
 STREAMING_RECOGNITION_CONFIG = rasr.StreamingRecognitionConfig()
@@ -62,6 +63,15 @@ class TestSpeechSynthesisService:
         resp = service.offline_recognize(AUDIO_BYTES_1_SECOND, config=RECOGNITION_CONFIG)
         assert isinstance(resp, rasr.RecognizeResponse)
         RECOGNIZE_MOCK.assert_called_with(RECOGNIZE_REQUEST, metadata=return_value_of_get_auth_metadata)
+
+    def test_offline_recognize_future(self) -> None:
+        auth, return_value_of_get_auth_metadata = set_auth_mock()
+        service = ASRService(auth)
+        RECOGNIZE_MOCK.reset_mock()
+        RECOGNIZE_MOCK.future.reset_mock()
+        resp = service.offline_recognize(AUDIO_BYTES_1_SECOND, config=RECOGNITION_CONFIG, future=True)
+        assert isinstance(resp, rasr.RecognizeResponse)
+        RECOGNIZE_MOCK.future.assert_called_with(RECOGNIZE_REQUEST, metadata=return_value_of_get_auth_metadata)
 
     def test_streaming_response_generator(self) -> None:
         auth, return_value_of_get_auth_metadata = set_auth_mock()
