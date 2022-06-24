@@ -84,16 +84,16 @@ def main() -> None:
     try:
         if args.play_audio or args.output_device is not None:
             wp = riva.client.get_wav_file_parameters(args.input_file)
-            sound_callback = riva_api.audio_io.SoundCallBack(
+            sound_callback = riva.client.audio_io.SoundCallBack(
                 args.output_device, wp['sampwidth'], wp['nchannels'], wp['framerate'],
             )
             delay_callback = sound_callback
         else:
-            delay_callback = riva_api.sleep_audio_length if args.simulate_realtime else None
-        with riva_api.AudioChunkFileIterator(
+            delay_callback = riva.client.sleep_audio_length if args.simulate_realtime else None
+        with riva.client.AudioChunkFileIterator(
             args.input_file, args.file_streaming_chunk, delay_callback,
         ) as audio_chunk_iterator:
-            riva_api.print_streaming(
+            riva.client.print_streaming(
                 responses=asr_service.streaming_response_generator(
                     audio_chunks=audio_chunk_iterator,
                     streaming_config=config,

@@ -8,6 +8,7 @@ source "$(dirname $0)/helpers.sh"
 echo "Testing notebook tutorials/TTS.ipynb"
 stdout_file="$(dirname $0)/tts/outputs/stdout_TTS_tutorial.txt"
 stderr_file="$(dirname $0)/tts/outputs/stderr_TTS_tutorial.txt"
+mkdir -p "$(dirname "${stdout_file}")"
 set +e
 jupyter nbconvert \
   --to notebook \

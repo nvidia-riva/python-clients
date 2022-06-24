@@ -296,7 +296,7 @@ class NLPService:
             future (:obj:`bool`, defaults to :obj:`False`): whether to return an async result instead of usual
                 response. You can get a response by calling ``result()`` method of the future object.
         Returns:
-            :obj:`Union[riva_api.proto.riva_nlp_pb2.NaturalQueryResult, grpc._channel._MultiThreadedRendezvous]`: a
+            :obj:`Union[riva.client.proto.riva_nlp_pb2.NaturalQueryResult, grpc._channel._MultiThreadedRendezvous]`: a
             response with a result. You may find fields description `here
             <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-nlp-proto>`_.
             If :param:`future` is :obj:`True`, then a future object is returned. You may retrieve a response from a

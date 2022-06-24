@@ -55,13 +55,13 @@ def main() -> None:
         ),
         interim_results=True,
     )
-    riva_api.add_word_boosting_to_config(config, args.boosted_lm_words, args.boosted_lm_score)
-    with riva_api.audio_io.MicrophoneStream(
+    riva.client.add_word_boosting_to_config(config, args.boosted_lm_words, args.boosted_lm_score)
+    with riva.client.audio_io.MicrophoneStream(
         args.sample_rate_hz,
         args.file_streaming_chunk,
         device=args.input_device,
     ) as audio_chunk_iterator:
-        riva_api.print_streaming(
+        riva.client.print_streaming(
             responses=asr_service.streaming_response_generator(
                 audio_chunks=audio_chunk_iterator,
                 streaming_config=config,

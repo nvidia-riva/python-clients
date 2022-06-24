@@ -45,15 +45,15 @@ def pretty_print_result(
 def main() -> None:
     args = parse_args()
     auth = riva.client.Auth(args.ssl_cert, args.use_ssl, args.server)
-    service = riva_api.NLPService(auth)
+    service = riva.client.NLPService(auth)
     if args.interactive:
         while True:
             query = input("Enter a query: ")
             start = time.time()
-            intents, intent_confidences = riva_api.extract_most_probable_text_class_and_confidence(
+            intents, intent_confidences = riva.client.extract_most_probable_text_class_and_confidence(
                 service.classify_text(input_strings=query, model_name=args.model)
             )
-            tokens, slots, slot_confidences, _, _ = riva_api.extract_most_probable_token_classification_predictions(
+            tokens, slots, slot_confidences, _, _ = riva.client.extract_most_probable_token_classification_predictions(
                 service.classify_tokens(input_strings=query, model_name=args.model)
             )
             end = time.time()
@@ -61,10 +61,10 @@ def main() -> None:
                 intents[0], intent_confidences[0], slots[0], tokens[0], slot_confidences[0], end - start
             )
     else:
-        intents, intent_confidences = riva_api.extract_most_probable_text_class_and_confidence(
+        intents, intent_confidences = riva.client.extract_most_probable_text_class_and_confidence(
             service.classify_text(input_strings=args.query, model_name=args.model)
         )
-        tokens, slots, slot_confidences, _, _ = riva_api.extract_most_probable_token_classification_predictions(
+        tokens, slots, slot_confidences, _, _ = riva.client.extract_most_probable_token_classification_predictions(
             service.classify_tokens(input_strings=args.query, model_name=args.model)
         )
         results = [
