@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 from riva_api.asr import (
+    AudioChunkBytesIterator,
     AudioChunkFileIterator,
     ASRService,
     add_audio_file_specs_to_config,

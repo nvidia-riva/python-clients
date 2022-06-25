@@ -16,6 +16,21 @@ import riva_api.proto.riva_asr_pb2_grpc as rasr_srv
 from riva_api.auth import Auth
 
 
+WAV_FILE_READ_CHUNK = 10 ** 5
+
+
+def read_wav_file(input_file: Union[str, os.PathLike]) -> bytes:
+    input_file = Path(input_file).expanduser()
+    audio = b""
+    with wave.open(str(input_file), 'rb') as wf:
+        while True:
+            chunk = wf.read(WAV_FILE_READ_CHUNK)
+            audio += chunk
+            if len(chunk) < WAV_FILE_READ_CHUNK:
+                break
+    return audio
+
+
 def get_wav_file_parameters(input_file: Union[str, os.PathLike]) -> Dict[str, Union[int, float]]:
     input_file = Path(input_file).expanduser()
     with wave.open(str(input_file), 'rb') as wf:
@@ -33,6 +48,49 @@ def get_wav_file_parameters(input_file: Union[str, os.PathLike]) -> Dict[str, Un
 
 def sleep_audio_length(audio_chunk: bytes, time_to_sleep: float) -> None:
     time.sleep(time_to_sleep)
+
+
+class AudioChunkBytesIterator:
+    def __init__(
+        self,
+        audio_bytes: bytes,
+        framerate: int,
+        sampwidth: int,
+        chunk_n_frames: int,
+        delay_callback: Optional[Callable[[bytes, float], None]] = None,
+        num_iterations: int = 1,
+    ) -> None:
+        self.audio_bytes = audio_bytes
+        self.framerate = framerate
+        self.sampwidth = sampwidth
+        self.chunk_n_frames = chunk_n_frames
+        self.delay_callback = delay_callback
+        self.num_iterations = num_iterations
+        self.iteration_idx = 0
+        self.current_pos = 0
+
+    def close(self) -> None:
+        pass
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type_, value, traceback) -> None:
+        pass
+
+    def __iter__(self):
+        return self
+
+    def __next__(self) -> bytes:
+        data = self.audio_bytes[self.current_pos : self.current_pos + self.chunk_n_frames]
+        self.current_pos = (self.current_pos + len(data)) % len(self.audio_bytes)
+        if self.current_pos == 0:
+            self.iteration_idx += 1
+        if self.iteration_idx >= self.num_iterations:
+            raise StopIteration
+        if self.delay_callback is not None:
+            self.delay_callback(data, len(data) / self.sampwidth / self.framerate)
+        return data
 
 
 class AudioChunkFileIterator:

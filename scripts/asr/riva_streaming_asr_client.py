@@ -10,7 +10,7 @@ from threading import Thread
 from typing import Union
 
 import riva_api
-from riva_api.asr import get_wav_file_parameters
+from riva_api.asr import get_wav_file_parameters, read_wav_file
 from riva_api.argparse_utils import add_asr_config_argparse_parameters, add_connection_argparse_parameters
 
 
@@ -65,22 +65,26 @@ def streaming_transcription_worker(
         )
         riva_api.add_audio_file_specs_to_config(config, args.input_file)
         riva_api.add_word_boosting_to_config(config, args.boosted_lm_words, args.boosted_lm_score)
-        for _ in range(args.num_iterations):
-            with riva_api.AudioChunkFileIterator(
-                args.input_file,
-                args.file_streaming_chunk,
-                delay_callback=riva_api.sleep_audio_length if args.simulate_realtime else None,
-            ) as audio_chunk_iterator:
-                riva_api.print_streaming(
-                    responses=asr_service.streaming_response_generator(
-                        audio_chunks=audio_chunk_iterator,
-                        streaming_config=config,
-                    ),
-                    output_file=output_file,
-                    additional_info='time',
-                    file_mode='a',
-                    word_time_offsets=args.word_time_offsets,
-                )
+        audio_bytes = read_wav_file(args.input_file)
+        wav_parameters = get_wav_file_parameters(args.input_file)
+        with riva_api.AudioChunkBytesIterator(
+            audio_bytes,
+            wav_parameters['framerate'],
+            wav_parameters['sampwidth'],
+            args.file_streaming_chunk,
+            delay_callback=riva_api.sleep_audio_length if args.simulate_realtime else None,
+            num_iterations=args.num_iterations,
+        ) as audio_chunk_iterator:
+            riva_api.print_streaming(
+                responses=asr_service.streaming_response_generator(
+                    audio_chunks=audio_chunk_iterator,
+                    streaming_config=config,
+                ),
+                output_file=output_file,
+                additional_info='time',
+                file_mode='a',
+                word_time_offsets=args.word_time_offsets,
+            )
     except BaseException as e:
         exception_queue.put((e, thread_i))
         raise
