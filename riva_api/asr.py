@@ -24,7 +24,7 @@ def read_wav_file(input_file: Union[str, os.PathLike]) -> bytes:
     audio = b""
     with wave.open(str(input_file), 'rb') as wf:
         while True:
-            chunk = wf.read(WAV_FILE_READ_CHUNK)
+            chunk = wf.readframes(WAV_FILE_READ_CHUNK)
             audio += chunk
             if len(chunk) < WAV_FILE_READ_CHUNK:
                 break
