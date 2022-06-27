@@ -4,8 +4,8 @@
 import argparse
 import time
 
-import riva_api
-from riva_api.argparse_utils import add_connection_argparse_parameters
+import riva.client
+from riva.client.argparse_utils import add_connection_argparse_parameters
 
 
 def parse_args() -> argparse.Namespace:
@@ -13,7 +13,11 @@ def parse_args() -> argparse.Namespace:
         description="Client app to restore Punctuation and Capitalization with Riva",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
-    parser.add_argument("--model", default="riva-punctuation-en-US", help="Model on Riva Server to execute.")
+    parser.add_argument(
+        "--model",
+        help="Model on Riva Server to execute. If this parameter is missing, then the server will try to select a "
+        "first available Punctuation & Capitalization model.",
+    )
     parser.add_argument("--query", default="can you prove that you are self aware", help="Input Query")
     parser.add_argument(
         "--run_tests",
@@ -32,13 +36,13 @@ def parse_args() -> argparse.Namespace:
 
 
 def run_punct_capit(args: argparse.Namespace) -> None:
-    auth = riva_api.Auth(args.ssl_cert, args.use_ssl, args.server)
-    nlp_service = riva_api.NLPService(auth)
+    auth = riva.client.Auth(args.ssl_cert, args.use_ssl, args.server)
+    nlp_service = riva.client.NLPService(auth)
     if args.interactive:
         while True:
             query = input("Enter a query: ")
             start = time.time()
-            result = riva_api.nlp.extract_most_probable_transformed_text(
+            result = riva.client.nlp.extract_most_probable_transformed_text(
                 nlp_service.punctuate_text(input_strings=query, model_name=args.model)
             )
             end = time.time()
@@ -46,7 +50,7 @@ def run_punct_capit(args: argparse.Namespace) -> None:
             print(result, end='\n' * 2)
     else:
         print(
-            riva_api.nlp.extract_most_probable_transformed_text(
+            riva.client.nlp.extract_most_probable_transformed_text(
                 nlp_service.punctuate_text(input_strings=args.query, model_name=args.model)
             )
         )
@@ -68,12 +72,12 @@ def run_tests(args: argparse.Namespace) -> int:
         "Loona (stylized as LOOΠΔ, Korean: 이달의 소녀; Hanja: Idarui Sonyeo; lit. ''Girl of the Month'') is a South Korean girl group formed by Blockberry Creative.",
     ]
 
-    auth = riva_api.Auth(args.ssl_cert, args.use_ssl, args.server)
-    nlp_service = riva_api.NLPService(auth)
+    auth = riva.client.Auth(args.ssl_cert, args.use_ssl, args.server)
+    nlp_service = riva.client.NLPService(auth)
 
     fail_count = 0
     for input, output_ref in zip(test_inputs, test_output_ref):
-        pred = riva_api.nlp.extract_most_probable_transformed_text(
+        pred = riva.client.nlp.extract_most_probable_transformed_text(
             nlp_service.punctuate_text(
                 input_strings=input,
                 model_name=args.model,

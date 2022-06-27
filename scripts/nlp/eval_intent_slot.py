@@ -13,8 +13,8 @@ from sklearn.metrics import classification_report
 from sklearn.preprocessing import LabelEncoder
 from transformers import BertTokenizer, PreTrainedTokenizerBase
 
-import riva_api
-from riva_api.argparse_utils import add_connection_argparse_parameters
+import riva.client
+from riva.client.argparse_utils import add_connection_argparse_parameters
 
 
 def combine_subwords(tokens: List[str]) -> List[str]:
@@ -265,21 +265,24 @@ def slots_classification_report(
 
 def intent_slots_classification_report(
     input_file: Path,
-    nlp_service: riva_api.NLPService,
+    nlp_service: riva.client.NLPService,
     model: str,
     batch_size: int,
     language_code: str,
     output_dict: bool,
+    max_async_requests_to_queue: int,
 ) -> Union[
     Tuple[str, str],
     Tuple[Dict[str, Dict[str, Union[int, float]]]], Dict[str, Dict[str, Union[int, float]]]
 ]:
     test_data = read_tsv_file(input_file)
     queries = [elem['query'] for elem in test_data]
-    tokens, slots, _, token_starts, token_ends = riva_api.nlp.classify_tokens_batch(
-        nlp_service, queries, model, batch_size, language_code
+    tokens, slots, _, token_starts, token_ends = riva.client.nlp.classify_tokens_batch(
+        nlp_service, queries, model, batch_size, language_code, max_async_requests_to_queue
     )
-    intents, _ = riva_api.nlp.classify_text_batch(nlp_service, queries, model, batch_size, language_code)
+    intents, _ = riva.client.nlp.classify_text_batch(
+        nlp_service, queries, model, batch_size, language_code, max_async_requests_to_queue
+    )
     intent_report = classification_report([elem['intent'] for elem in test_data], intents, output_dict=output_dict)
     ground_truth_bio = slots_to_bio(queries, [elem['slots'] for elem in test_data])
     predicted_bio = slots_to_bio(
@@ -314,8 +317,21 @@ def parse_args() -> argparse.Namespace:
         default=1,
         help="How many examples are sent to server in one request. Currently only `1` is supported.",
     )
+    parser.add_argument(
+        "--max-async-requests-to-queue",
+        type=int,
+        default=500,
+        help="If greater than 0, then data is processed in async manner. Up to`--max-async-requests-to-queue` "
+        "requests are asynchronous requests are sent and then the program will wait for results. When results are "
+        "returned, new `--max-async-requests-to-queue` are sent.",
+    )
     parser = add_connection_argparse_parameters(parser)
     args = parser.parse_args()
+    if args.max_async_requests_to_queue < 0:
+        parser.error(
+            f"Parameter `--max-async-requests-to-queue` has not negative, whereas {args.max_async_requests_to_queue} "
+            f"was given."
+        )
     if args.batch_size > 1:
         warnings.warn("Batch size > 1 is not supported because spans may be calculated incorrectly.")
     args.input_file = args.input_file.expanduser()
@@ -324,10 +340,16 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    auth = riva_api.Auth(args.ssl_cert, args.use_ssl, args.server)
-    service = riva_api.NLPService(auth)
+    auth = riva.client.Auth(args.ssl_cert, args.use_ssl, args.server)
+    service = riva.client.NLPService(auth)
     intent_report, slot_report = intent_slots_classification_report(
-        args.input_file, service, args.model, args.batch_size, args.language_code, False
+        args.input_file,
+        service,
+        args.model,
+        args.batch_size,
+        args.language_code,
+        output_dict=False,
+        max_async_requests_to_queue=args.max_async_requests_to_queue
     )
     print(intent_report)
     print(slot_report)

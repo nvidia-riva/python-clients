@@ -5,9 +5,9 @@ from math import ceil
 from typing import Any, Generator
 from unittest.mock import patch, Mock
 
-import riva_api.proto.riva_tts_pb2 as rtts
-from riva_api import AudioEncoding
-from riva_api.tts import SpeechSynthesisService
+import riva.client.proto.riva_tts_pb2 as rtts
+from riva.client import AudioEncoding
+from riva.client.tts import SpeechSynthesisService
 
 from .helpers import set_auth_mock
 
@@ -31,6 +31,9 @@ def response_generator(chunk_size: int = STREAMING_CHUNK_SIZE) -> Generator[rtts
 SYNTHESIZE_MOCK = Mock(
     return_value=rtts.SynthesizeSpeechResponse(audio=AUDIO_BYTES_1_SECOND)
 )
+SYNTHESIZE_MOCK.future = Mock(
+    return_value=rtts.SynthesizeSpeechResponse(audio=AUDIO_BYTES_1_SECOND)
+)
 SYNTHESIZE_ONLINE_MOCK = Mock(return_value=response_generator())
 
 
@@ -47,7 +50,7 @@ def is_iterable(obj: Any) -> bool:
     return True
 
 
-@patch("riva_api.proto.riva_tts_pb2_grpc.RivaSpeechSynthesisStub.__init__", riva_tts_stub_init_patch)
+@patch("riva.client.proto.riva_tts_pb2_grpc.RivaSpeechSynthesisStub.__init__", riva_tts_stub_init_patch)
 class TestSpeechSynthesisService:
     def test_synthesize(self) -> None:
         auth, return_value_of_get_auth_metadata = set_auth_mock()
@@ -56,6 +59,24 @@ class TestSpeechSynthesisService:
         resp = service.synthesize(TEXT, VOICE_NAME, LANGUAGE_CODE, ENCODING, SAMPLE_RATE_HZ)
         assert isinstance(resp, rtts.SynthesizeSpeechResponse)
         SYNTHESIZE_MOCK.assert_called_with(
+            rtts.SynthesizeSpeechRequest(
+                text=TEXT,
+                voice_name=VOICE_NAME,
+                language_code=LANGUAGE_CODE,
+                encoding=ENCODING,
+                sample_rate_hz=SAMPLE_RATE_HZ,
+            ),
+            metadata=return_value_of_get_auth_metadata,
+        )
+
+    def test_synthesize_future(self) -> None:
+        auth, return_value_of_get_auth_metadata = set_auth_mock()
+        SYNTHESIZE_MOCK.reset_mock()
+        SYNTHESIZE_MOCK.future.reset_mock()
+        service = SpeechSynthesisService(auth)
+        resp = service.synthesize(TEXT, VOICE_NAME, LANGUAGE_CODE, ENCODING, SAMPLE_RATE_HZ, future=True)
+        assert isinstance(resp, rtts.SynthesizeSpeechResponse)
+        SYNTHESIZE_MOCK.future.assert_called_with(
             rtts.SynthesizeSpeechRequest(
                 text=TEXT,
                 voice_name=VOICE_NAME,

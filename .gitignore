@@ -62,12 +62,8 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-# C extensions
-*.so
-
 # Distribution / packaging
 .Python
-riva/
 build/
 develop-eggs/
 dist/
@@ -186,4 +182,7 @@ dmypy.json
 tests/integration/asr/outputs
 tests/integration/nlp/outputs
 tests/integration/tts/outputs
+
+riva/client/proto/*_pb2.py
+riva/client/proto/*_pb2_grpc.py
 

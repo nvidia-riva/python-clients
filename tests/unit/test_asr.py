@@ -5,9 +5,9 @@ from math import ceil
 from typing import Any, Generator, List, Union
 from unittest.mock import patch, Mock
 
-import riva_api.proto.riva_asr_pb2 as rasr
-from riva_api import ASRService
-from riva_api.asr import streaming_request_generator
+import riva.client.proto.riva_asr_pb2 as rasr
+from riva.client import ASRService
+from riva.client.asr import streaming_request_generator
 
 from .helpers import set_auth_mock
 
@@ -27,6 +27,7 @@ RECOGNITION_CONFIG = rasr.RecognitionConfig()
 RECOGNIZE_REQUEST = rasr.RecognizeRequest(config=RECOGNITION_CONFIG, audio=AUDIO_BYTES_1_SECOND)
 RECOGNIZE_RESPONSE = rasr.RecognizeResponse()
 RECOGNIZE_MOCK = Mock(return_value=RECOGNIZE_RESPONSE)
+RECOGNIZE_MOCK.future = Mock(return_value=RECOGNIZE_RESPONSE)
 
 
 STREAMING_RECOGNITION_CONFIG = rasr.StreamingRecognitionConfig()
@@ -53,7 +54,7 @@ def is_iterable(obj: Any) -> bool:
     return True
 
 
-@patch("riva_api.proto.riva_asr_pb2_grpc.RivaSpeechRecognitionStub.__init__", riva_asr_stub_init_patch)
+@patch("riva.client.proto.riva_asr_pb2_grpc.RivaSpeechRecognitionStub.__init__", riva_asr_stub_init_patch)
 class TestSpeechSynthesisService:
     def test_offline_recognize(self) -> None:
         auth, return_value_of_get_auth_metadata = set_auth_mock()
@@ -62,6 +63,15 @@ class TestSpeechSynthesisService:
         resp = service.offline_recognize(AUDIO_BYTES_1_SECOND, config=RECOGNITION_CONFIG)
         assert isinstance(resp, rasr.RecognizeResponse)
         RECOGNIZE_MOCK.assert_called_with(RECOGNIZE_REQUEST, metadata=return_value_of_get_auth_metadata)
+
+    def test_offline_recognize_future(self) -> None:
+        auth, return_value_of_get_auth_metadata = set_auth_mock()
+        service = ASRService(auth)
+        RECOGNIZE_MOCK.reset_mock()
+        RECOGNIZE_MOCK.future.reset_mock()
+        resp = service.offline_recognize(AUDIO_BYTES_1_SECOND, config=RECOGNITION_CONFIG, future=True)
+        assert isinstance(resp, rasr.RecognizeResponse)
+        RECOGNIZE_MOCK.future.assert_called_with(RECOGNIZE_REQUEST, metadata=return_value_of_get_auth_metadata)
 
     def test_streaming_response_generator(self) -> None:
         auth, return_value_of_get_auth_metadata = set_auth_mock()
