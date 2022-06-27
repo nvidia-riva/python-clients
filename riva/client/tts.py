@@ -5,10 +5,10 @@ from typing import Generator, Optional, Union
 
 from grpc._channel import _MultiThreadedRendezvous
 
-import riva_api.proto.riva_tts_pb2 as rtts
-import riva_api.proto.riva_tts_pb2_grpc as rtts_srv
-from riva_api import Auth
-from riva_api.proto.riva_audio_pb2 import AudioEncoding
+import riva.client.proto.riva_tts_pb2 as rtts
+import riva.client.proto.riva_tts_pb2_grpc as rtts_srv
+from riva.client import Auth
+from riva.client.proto.riva_audio_pb2 import AudioEncoding
 
 
 class SpeechSynthesisService:
@@ -21,7 +21,7 @@ class SpeechSynthesisService:
         Initializes an instance of the class.
 
         Args:
-            auth (:obj:`Auth`): an instance of :class:`riva_api.auth.Auth` which is used for authentication metadata
+            auth (:obj:`Auth`): an instance of :class:`riva.client.auth.Auth` which is used for authentication metadata
                 generation.
         """
         self.auth = auth
@@ -51,8 +51,8 @@ class SpeechSynthesisService:
                 response. You can get a response by calling ``result()`` method of the future object.
 
         Returns:
-            :obj:`Union[riva_api.proto.riva_tts_pb2.SynthesizeSpeechResponse, grpc._channel._MultiThreadedRendezvous]`:
-            a response with output. You may find :class:`riva_api.proto.riva_tts_pb2.SynthesizeSpeechResponse` fields
+            :obj:`Union[riva.client.proto.riva_tts_pb2.SynthesizeSpeechResponse, grpc._channel._MultiThreadedRendezvous]`:
+            a response with output. You may find :class:`riva.client.proto.riva_tts_pb2.SynthesizeSpeechResponse` fields
             description `here
             <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-tts-proto>`_.
         """
@@ -89,8 +89,8 @@ class SpeechSynthesisService:
             sample_rate_hz (:obj:`int`): number of frames per second in output audio.
 
         Yields:
-            :obj:`riva_api.proto.riva_tts_pb2.SynthesizeSpeechResponse`: a response with output. You may find
-            :class:`riva_api.proto.riva_tts_pb2.SynthesizeSpeechResponse` fields description `here
+            :obj:`riva.client.proto.riva_tts_pb2.SynthesizeSpeechResponse`: a response with output. You may find
+            :class:`riva.client.proto.riva_tts_pb2.SynthesizeSpeechResponse` fields description `here
             <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-tts-proto>`_.
             If :param:`future` is :obj:`True`, then a future object is returned. You may retrieve a response from a
             future object by calling ``result()`` method.

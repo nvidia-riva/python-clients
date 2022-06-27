@@ -6,8 +6,8 @@ import time
 import wave
 from pathlib import Path
 
-import riva_api
-from riva_api.argparse_utils import add_connection_argparse_parameters
+import riva.client
+from riva.client.argparse_utils import add_connection_argparse_parameters
 
 
 def parse_args() -> argparse.Namespace:
@@ -50,23 +50,23 @@ def parse_args() -> argparse.Namespace:
     if args.output is not None:
         args.output = args.output.expanduser()
     if args.list_devices or args.output_device or args.play_audio:
-        import riva_api.audio_io
+        import riva.client.audio_io
     return args
 
 
 def main() -> None:
     args = parse_args()
     if args.list_devices:
-        riva_api.audio_io.list_output_devices()
+        riva.client.audio_io.list_output_devices()
         return
-    auth = riva_api.Auth(args.ssl_cert, args.use_ssl, args.server)
-    service = riva_api.SpeechSynthesisService(auth)
+    auth = riva.client.Auth(args.ssl_cert, args.use_ssl, args.server)
+    service = riva.client.SpeechSynthesisService(auth)
     nchannels = 1
     sampwidth = 2
     sound_stream, out_f = None, None
     try:
         if args.output_device is not None or args.play_audio:
-            sound_stream = riva_api.audio_io.SoundCallBack(
+            sound_stream = riva.client.audio_io.SoundCallBack(
                 args.output_device, nchannels=nchannels, sampwidth=sampwidth, framerate=args.sample_rate_hz
             )
         if args.output is not None:

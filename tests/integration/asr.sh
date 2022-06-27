@@ -8,6 +8,7 @@ source "$(dirname $0)/helpers.sh"
 echo "Testing notebook tutorials/ASR.ipynb"
 stdout_file="$(dirname $0)/asr/outputs/stdout_ASR_tutorial.txt"
 stderr_file="$(dirname $0)/asr/outputs/stderr_ASR_tutorial.txt"
+mkdir -p "$(dirname "${stdout_file}")"
 set +e
 jupyter nbconvert \
   --to notebook \

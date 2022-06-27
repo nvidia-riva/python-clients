@@ -8,6 +8,7 @@ source "$(dirname $0)/helpers.sh"
 echo "Testing notebook tutorials/NLP.ipynb"
 stdout_file="$(dirname $0)/nlp/outputs/stdout_NLP_tutorial.txt"
 stderr_file="$(dirname $0)/nlp/outputs/stderr_NLP_tutorial.txt"
+mkdir -p "$(dirname "${stdout_file}")"
 set +e
 jupyter nbconvert \
   --to notebook \
