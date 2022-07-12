@@ -14,5 +14,5 @@ __version__ = '.'.join(map(str, VERSION[:3])) + ''.join(VERSION[3:])
 
 __package_name__ = "riva-api"
 
-__description__ = "Python implementation of the Riva Client API"
+__description__ = "Deprecated Python implementation of the Riva Client API"
 __keywords__ = 'deep learning, machine learning, gpu, NLP, ASR, TTS, nvidia, speech, language, Riva, client'

@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: MIT
 
 import importlib
-import pathlib
 
 import setuptools
 
@@ -18,23 +17,6 @@ __package_name__ = package_info.__package_name__
 __version__ = package_info.__version__
 
 
-setup_py_dir = pathlib.Path(__file__).parent.absolute()
-
-with open("README.md", "r", encoding='utf-8') as fh:
-    long_description = fh.read()
-long_description_content_type = "text/markdown"
-
-
-def get_version():
-    version_file = setup_py_dir / "VERSION"
-    versions = open(version_file, "r").readlines()
-    version = "devel"
-    for v in versions:
-        if v.startswith("RIVA_VERSION: "):
-            version = v[len("RIVA_VERSION: ") :].strip()
-    return version
-
-
 setuptools.setup(
     name=__package_name__,
     license='UNKNOWN',
@@ -43,7 +25,6 @@ setuptools.setup(
     author_email='UNKNOWN',
     description=__description__,
     long_description='''Use `nvidia-riva-client <https://pypi.org/project/nvidia-riva-client/>`_ instead.''',
-    long_description_content_type=long_description_content_type,
     url='UNKNOWN',
     maintainer='UNKNOWN',
     maintainer_email='UNKNOWN',
