@@ -57,30 +57,72 @@ def run_punct_capit(args: argparse.Namespace) -> None:
 
 
 def run_tests(args: argparse.Namespace) -> int:
-    test_inputs = [
-        "can you prove that you are self aware",
-        "will you have $103 and ₩111 at 12:45 pm",
-        # "Hi My name is markus stoinis How are you ?", # This fails for onnx model
-        "the train leaves station by 09:45 A.M. and reaches destination in 3 hours",
-        "Loona (stylized as LOOΠΔ, Korean: 이달의 소녀; Hanja: Idarui Sonyeo; lit. ''Girl of the Month'') is a South Korean girl group formed by Blockberry Creative",
-    ]
-    test_output_ref = [
-        "Can you prove that you are self aware?",
-        "Will you have $103 and ₩111 at 12:45 pm?",
-        # "Hi, My name is Markus Stoinis. How are you ?",
-        "The train leaves station by 09:45 A.M. and reaches destination in 3 hours.",
-        "Loona (stylized as LOOΠΔ, Korean: 이달의 소녀; Hanja: Idarui Sonyeo; lit. ''Girl of the Month'') is a South Korean girl group formed by Blockberry Creative.",
-    ]
+    test_inputs = {
+        "en-US": [
+            "can you prove that you are self aware",
+            "will you have $103 and ₩111 at 12:45 pm",
+            # "Hi My name is markus stoinis How are you ?", # This fails for onnx model
+            "the train leaves station by 09:45 A.M. and reaches destination in 3 hours",
+            "Loona (stylized as LOOΠΔ, Korean: 이달의 소녀; Hanja: Idarui Sonyeo; lit. ''Girl of the Month'') is "
+            "a South Korean girl group formed by Blockberry Creative",
+            "i just want to start with a little bit of a word of warning and that is my job here tonight is to "
+            "be a little bit of a doctor bring me down so bear with me for a few minutes and know that after "
+            "this things will get lighter and brighter so let's start i know that many of you have heard the "
+            "traveler's adage take nothing but pictures leave nothing but footprints well i'm going to say "
+            "i don't think that's either as benign nor as simple as it sounds particularly for those of us in "
+            "industries who are portraying people in poor countries in developing countries and portraying the "
+            "poor and those of us in those industries are reporters researchers and people working for ngos i "
+            "suspect there are a lot of us in those industries in the audience",
+        ],
+        "es-US": ["bien y qué regalo vas a abrir primero", "ya hemos hablado de eso no"],
+        "de-DE": ["aber weißt du wer den stein wirklich ins rollen gebracht hat", "anna weißt du wo charlotte ist"],
+        "zh-CN": [
+            "关于经济纠纷的说法村民们偏向于两种说法",
+            "这样得来的学习成绩除了字面意义上的阿拉伯数字之外大约也没有多少积极意义",
+            "this is a text关于经济纠纷的说法村民们偏向于两种说法another text",
+            "人工智能（AI）正在蓬勃发展",
+        ],
+    }
+    test_output_ref = {
+        "en-US": [
+            "Can you prove that you are self aware?",
+            "Will you have $103 and ₩111 at 12:45 pm?",
+            # "Hi, My name is Markus Stoinis. How are you ?",
+            "The train leaves station by 09:45 A.M. and reaches destination in 3 hours.",
+            "Loona (stylized as LOOΠΔ, Korean: 이달의 소녀; Hanja: Idarui Sonyeo; lit. ''Girl of the Month'') is "
+            "a South Korean girl group formed by Blockberry Creative.",
+            "I just want to start with a little bit of a word of warning, and that is my job here tonight is "
+            "to be a little bit of a doctor. Bring me down, so bear with me for a few minutes and know that "
+            "after this things will get lighter and brighter. So let's start. I know that many of you have "
+            "heard the traveler's adage Take nothing but pictures, leave nothing but footprints. Well, I'm "
+            "going to say, I don't think that's either as benign nor as simple as it sounds, particularly for "
+            "those of us in industries who are portraying people in poor countries in developing countries and "
+            "portraying the poor and those of us in those industries are reporters, researchers and people "
+            "working for ngos. I suspect there are a lot of us in those industries in the audience.",
+        ],
+        "es-US": ["Bien. ¿y qué regalo vas a abrir primero?", "ya hemos hablado de eso, no?"],
+        "de-DE": [
+            "aber. Weißt du, wer den Stein wirklich ins Rollen gebracht hat,",
+            "Anna, weißt du wo Charlotte ist?",
+        ],
+        "zh-CN": [
+            "关于经济纠纷的说法，村民们偏向于两种说法。",
+            "这样得来的学习成绩，除了字面意义上的阿拉伯数字之外，大约也没有多少积极意义。",
+            "this is a text。关于经济纠纷的说法，村民们偏向于两种说法。another text",
+            "人工智能（AI）正在蓬勃发展。",
+        ],
+    }
 
     auth = riva.client.Auth(args.ssl_cert, args.use_ssl, args.server)
     nlp_service = riva.client.NLPService(auth)
 
     fail_count = 0
-    for input, output_ref in zip(test_inputs, test_output_ref):
+    for input_, output_ref in zip(test_inputs[args.language_code], test_output_ref[args.language_code]):
         pred = riva.client.nlp.extract_most_probable_transformed_text(
             nlp_service.punctuate_text(
-                input_strings=input,
+                input_strings=input_,
                 model_name=args.model,
+                language_code=args.language_code,
             )
         )
         print(f"Input: {input}")
