@@ -31,6 +31,9 @@ def parse_args() -> argparse.Namespace:
         help="If this option is set, then `--query` argument is ignored and the script suggests user to enter "
         "queries to standard input.",
     )
+    parser.add_argument(
+        "--language-code", default="en-US", help="Language code of the model to be used.",
+    )
     parser = add_connection_argparse_parameters(parser)
     return parser.parse_args()
 
@@ -43,7 +46,9 @@ def run_punct_capit(args: argparse.Namespace) -> None:
             query = input("Enter a query: ")
             start = time.time()
             result = riva.client.nlp.extract_most_probable_transformed_text(
-                nlp_service.punctuate_text(input_strings=query, model_name=args.model)
+                nlp_service.punctuate_text(
+                    input_strings=query, model_name=args.model, language_code=args.language_code
+                )
             )
             end = time.time()
             print(f"Inference complete in {(end - start) * 1000:.4f} ms")
@@ -51,7 +56,9 @@ def run_punct_capit(args: argparse.Namespace) -> None:
     else:
         print(
             riva.client.nlp.extract_most_probable_transformed_text(
-                nlp_service.punctuate_text(input_strings=args.query, model_name=args.model)
+                nlp_service.punctuate_text(
+                    input_strings=args.query, model_name=args.model, language_code=args.language_code
+                )
             )
         )
 
