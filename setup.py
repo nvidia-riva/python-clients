@@ -105,16 +105,6 @@ class BuildPyCommand(build_py):
             super(BuildPyCommand, self).run()
 
 
-def get_version():
-    version_file = setup_py_dir / "VERSION"
-    versions = open(version_file, "r").readlines()
-    version = "devel"
-    for v in versions:
-        if v.startswith("RIVA_VERSION: "):
-            version = v[len("RIVA_VERSION: ") :].strip()
-    return version
-
-
 setuptools.setup(
     name=__package_name__,
     license=__license__,
@@ -136,7 +126,7 @@ setuptools.setup(
         "Intended Audience :: Developers",
         "Programming Language :: Python :: 3",
     ],
-    python_requires='>=3.6',
+    python_requires='>=3.7',
     install_requires=['grpcio-tools'],
     setup_requires=['grpcio-tools'],
 )
