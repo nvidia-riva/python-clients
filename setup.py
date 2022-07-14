@@ -78,8 +78,17 @@ class BuildPyCommand(build_py):
             #     )
 
             os.chdir(cwd)
-            print("glob dir: ", str(setup_py_dir / 'common/riva/proto/*.proto'))
-            for proto in glob(str(setup_py_dir / 'common/riva/proto/*.proto')):
+            glob_dir = str(setup_py_dir / 'common/riva/proto/*.proto')
+            print("glob dir: ", glob_dir)
+            protos = glob(glob_dir)
+            if not protos:
+                raise ValueError(
+                    f"No proto files matching glob {glob_dir} were found. If {setup_py_dir / 'common'} directory is "
+                    f"empty, you may try to fix it by calling `git submodule update --init`. If you unintentionally "
+                    f"removed {setup_py_dir / 'common'} content, then you may try `cd {setup_py_dir / 'common'} && "
+                    f"git stash && cd -`."
+                )
+            for proto in glob(glob_dir):
                 print(proto)
                 grpc_tools.protoc.main(
                     [
