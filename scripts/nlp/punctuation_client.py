@@ -20,7 +20,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--query", default="can you prove that you are self aware", help="Input Query")
     parser.add_argument(
-        "--run_tests",
+        "--run-tests",
         action='store_true',
         help="Flag to run sanity tests. If this option is chosen, then options `--query` and `--interactive` are "
         "ignored and a model is run on several hardcoded examples and numbers of passed and failed tests are shown.",

@@ -13,8 +13,8 @@ def parse_args() -> argparse.Namespace:
         "'BOS <intent> <text> EOS'. This script keeps only <text> in <query> and removes auxiliary "
         "<intent> field and BOS and EOS."
     )
-    parser.add_argument("--input_file", type=Path, help="A path to an input .tsv file.", required=True)
-    parser.add_argument("--output_file", type=Path, help="A path to an output .tsv file.", required=True)
+    parser.add_argument("--input-file", type=Path, help="A path to an input .tsv file.", required=True)
+    parser.add_argument("--output-file", type=Path, help="A path to an output .tsv file.", required=True)
     args = parser.parse_args()
     args.input_file = args.input_file.expanduser()
     args.output_file = args.output_file.expanduser()
