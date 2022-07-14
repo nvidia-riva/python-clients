@@ -132,7 +132,7 @@ def run_tests(args: argparse.Namespace) -> int:
                 language_code=args.language_code,
             )
         )
-        print(f"Input: {input}")
+        print(f"Input: {input_}")
         print(f"Output: {pred}")
         if pred != output_ref:
             print(f"Output mismatched!")
