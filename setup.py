@@ -78,8 +78,17 @@ class BuildPyCommand(build_py):
             #     )
 
             os.chdir(cwd)
-            print("glob dir: ", str(setup_py_dir / 'common/riva/proto/*.proto'))
-            for proto in glob(str(setup_py_dir / 'common/riva/proto/*.proto')):
+            glob_dir = str(setup_py_dir / 'common/riva/proto/*.proto')
+            print("glob dir: ", glob_dir)
+            protos = glob(glob_dir)
+            if not protos:
+                raise ValueError(
+                    f"No proto files matching glob {glob_dir} were found. If {setup_py_dir / 'common'} directory is "
+                    f"empty, you may try to fix it by calling `git submodule update --init`. If you unintentionally "
+                    f"removed {setup_py_dir / 'common'} content, then you may try `cd {setup_py_dir / 'common'} && "
+                    f"git stash && cd -`."
+                )
+            for proto in glob(glob_dir):
                 print(proto)
                 grpc_tools.protoc.main(
                     [
@@ -105,16 +114,6 @@ class BuildPyCommand(build_py):
             super(BuildPyCommand, self).run()
 
 
-def get_version():
-    version_file = setup_py_dir / "VERSION"
-    versions = open(version_file, "r").readlines()
-    version = "devel"
-    for v in versions:
-        if v.startswith("RIVA_VERSION: "):
-            version = v[len("RIVA_VERSION: ") :].strip()
-    return version
-
-
 setuptools.setup(
     name=__package_name__,
     license=__license__,
@@ -136,7 +135,7 @@ setuptools.setup(
         "Intended Audience :: Developers",
         "Programming Language :: Python :: 3",
     ],
-    python_requires='>=3.6',
+    python_requires='>=3.7',
     install_requires=['grpcio-tools'],
     setup_requires=['grpcio-tools'],
 )
