@@ -83,6 +83,12 @@ def run_tests(args: argparse.Namespace) -> int:
         ],
         "es-US": ["bien y qué regalo vas a abrir primero", "ya hemos hablado de eso no"],
         "de-DE": ["aber weißt du wer den stein wirklich ins rollen gebracht hat", "anna weißt du wo charlotte ist"],
+        "fr-FR": [
+            "à l'adresse suivante quarante quatre rue de saint genès",
+            "qui a écrit le script de infirmière en chef",
+            "en ce moment avec la guerre en ukraine il faut être très prudent dans les investissements en bourse",
+        ],
+        "hi-IN": ["नया क्या है", "मेरे परिवार को Tom पसंद था", "इलाहाबाद मार्केट में लगी आग महिला की मौत"],
         "zh-CN": [
             "关于经济纠纷的说法村民们偏向于两种说法",
             "这样得来的学习成绩除了字面意义上的阿拉伯数字之外大约也没有多少积极意义",
@@ -112,6 +118,12 @@ def run_tests(args: argparse.Namespace) -> int:
             "aber. Weißt du, wer den Stein wirklich ins Rollen gebracht hat,",
             "Anna, weißt du wo Charlotte ist?",
         ],
+        "fr-FR": [
+            "à l'adresse suivante quarante quatre rue de Saint-Genès",
+            "Qui a écrit le script de infirmière en chef?",
+            "En ce moment avec la guerre en Ukraine, il faut être très prudent dans les investissements en bourse.",
+        ],
+        "hi-IN": ["नया क्या है?", "मेरे परिवार को Tom पसंद था।", "इलाहाबाद मार्केट में लगी आग, महिला की मौत"],
         "zh-CN": [
             "关于经济纠纷的说法，村民们偏向于两种说法。",
             "这样得来的学习成绩，除了字面意义上的阿拉伯数字之外，大约也没有多少积极意义。",
