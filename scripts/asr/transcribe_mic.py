@@ -18,7 +18,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--input-device", type=int, default=default_device_index, help="An input audio device to use.")
     parser.add_argument("--list-devices", action="store_true", help="List input audio device indices.")
-    parser = add_asr_config_argparse_parameters(parser)
+    parser = add_asr_config_argparse_parameters(parser, profanity_filter=True)
     parser = add_connection_argparse_parameters(parser)
     parser.add_argument(
         "--sample-rate-hz",

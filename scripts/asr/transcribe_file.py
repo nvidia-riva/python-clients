@@ -49,7 +49,7 @@ def parse_args() -> argparse.Namespace:
         "--print-confidence", action="store_true", help="Whether to print stability and confidence of transcript."
     )
     parser = add_connection_argparse_parameters(parser)
-    parser = add_asr_config_argparse_parameters(parser)
+    parser = add_asr_config_argparse_parameters(parser, profanity_filter=True)
     args = parser.parse_args()
     if not args.list_devices and args.input_file is None:
         parser.error(
