@@ -49,7 +49,7 @@ def parse_args() -> argparse.Namespace:
         "--print-confidence", action="store_true", help="Whether to print stability and confidence of transcript."
     )
     parser = add_connection_argparse_parameters(parser)
-    parser = add_asr_config_argparse_parameters(parser)
+    parser = add_asr_config_argparse_parameters(parser, profanity_filter=True)
     args = parser.parse_args()
     if not args.list_devices and args.input_file is None:
         parser.error(
@@ -73,6 +73,7 @@ def main() -> None:
             encoding=riva.client.AudioEncoding.LINEAR_PCM,
             language_code=args.language_code,
             max_alternatives=1,
+            profanity_filter=args.profanity_filter,
             enable_automatic_punctuation=args.automatic_punctuation,
             verbatim_transcripts=not args.no_verbatim_transcripts,
         ),
