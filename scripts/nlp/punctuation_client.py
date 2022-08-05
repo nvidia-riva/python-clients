@@ -80,6 +80,7 @@ def run_tests(args: argparse.Namespace) -> int:
             "industries who are portraying people in poor countries in developing countries and portraying the "
             "poor and those of us in those industries are reporters researchers and people working for ngos i "
             "suspect there are a lot of us in those industries in the audience",
+            "if water is held at 100 °C [212 °F] for one minute most micro-organisms and viruses are inactivated",
         ],
         "es-US": ["bien y qué regalo vas a abrir primero", "ya hemos hablado de eso no"],
         "de-DE": ["aber weißt du wer den stein wirklich ins rollen gebracht hat", "anna weißt du wo charlotte ist"],
@@ -112,6 +113,7 @@ def run_tests(args: argparse.Namespace) -> int:
             "those of us in industries who are portraying people in poor countries in developing countries and "
             "portraying the poor and those of us in those industries are reporters, researchers and people "
             "working for ngos. I suspect there are a lot of us in those industries in the audience.",
+            "If water is held at 100 °C [212 °F] for one minute, most micro-organisms and viruses are inactivated.",
         ],
         "es-US": ["Bien. ¿y qué regalo vas a abrir primero?", "ya hemos hablado de eso, no?"],
         "de-DE": [
