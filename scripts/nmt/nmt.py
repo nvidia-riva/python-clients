@@ -31,8 +31,8 @@ import os
 import sys
 
 import grpc
-import riva_api.riva_nmt_pb2 as riva_nmt
-import riva_api.riva_nmt_pb2_grpc as riva_nmt_srv
+import riva.client.proto.riva_nmt_pb2 as riva_nmt
+import riva.client.proto.riva_nmt_pb2_grpc as riva_nmt_srv
 
 
 def get_args():
