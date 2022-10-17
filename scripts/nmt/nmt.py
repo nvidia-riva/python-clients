@@ -34,41 +34,34 @@ import grpc
 import riva.client.proto.riva_nmt_pb2 as riva_nmt
 import riva.client.proto.riva_nmt_pb2_grpc as riva_nmt_srv
 
+import riva.client
+from riva.client.argparse_utils import add_connection_argparse_parameters
 
-def get_args():
+
+def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Streaming transcription via Riva AI Services")
-    parser.add_argument("--riva_uri", default="localhost:50051", type=str, help="URI to GRPC server endpoint")
     parser.add_argument(
         "--text", default="mir Das ist mir Wurs, bien ich ein berliner", type=str, help="Text to translate"
     )
-    parser.add_argument("--model_name", default="riva-nmt", type=str, help="model to use to translate")
+    parser.add_argument("--model-name", default="riva-nmt", type=str, help="model to use to translate")
     parser.add_argument(
-        "--src_language", default="en", type=str, help="Source language (according to BCP-47 standard)"
+        "--src-language", type=str, help="Source language (according to BCP-47 standard)"
     )
     parser.add_argument(
-        "--tgt_language", default="de", type=str, help="Target language (according to BCP-47 standard)"
+        "--tgt-language", type=str, help="Target language (according to BCP-47 standard)"
     )
-    parser.add_argument("--ssl_cert", type=str, default="", help="Path to SSL client certificatates file")
-    parser.add_argument("--text_file", type=str, help="Path to file for translation")
-    parser.add_argument("--batch_size", type=int, default=8, help="Batch size to use for file translation")
-    parser.add_argument("--list_models", default=False, action='store_true', help="List available models")
-    parser.add_argument(
-        "--use_ssl", default=False, action='store_true', help="Boolean to control if SSL/TLS encryption should be used"
-    )
+    parser.add_argument("--text-file", type=str, help="Path to file for translation")
+    parser.add_argument("--batch-size", type=int, default=8, help="Batch size to use for file translation")
+    parser.add_argument("--list-models", default=False, action='store_true', help="List available models")
+    parser = add_connection_argparse_parameters(parser)
 
     return parser.parse_args()
 
 
-def main():
-    def request(inputs):
-        nmt_client = riva_nmt_srv.RivaTranslationStub(channel)
-        nmt_request = riva_nmt.TranslateTextRequest()
-        nmt_request.texts.extend(inputs)
-        nmt_request.model = args.model_name
-        nmt_request.source_language = args.src_language
-        nmt_request.target_language = args.tgt_language
+def main() -> None:
+    def request(inputs,args):
         try:
-            response = nmt_client.TranslateText(nmt_request)
+            response = nmt_client.translate(inputs, args.model_name, args.src_language, args.tgt_language)
             for translation in response.translations:
                 print(translation.text)
         except grpc.RpcError as e:
@@ -80,26 +73,14 @@ def main():
                 result = {'msg': 'server unavailable check network'}
             print(f"{result['msg']} : {e.details()}")
 
-    args = get_args()
+    args = parse_args()
 
-    if args.ssl_cert != "" or args.use_ssl:
-        root_certificates = None
-        if args.ssl_cert != "" and os.path.exists(args.ssl_cert):
-            with open(args.ssl_cert, 'rb') as f:
-                root_certificates = f.read()
-        creds = grpc.ssl_channel_credentials(root_certificates)
-        channel = grpc.secure_channel(args.riva_uri, creds)
-    else:
-        riva_uri = os.getenv("RIVA_URI")
-        if riva_uri:
-            print(f"Using ENV variable:{riva_uri}")
-            channel = grpc.insecure_channel(riva_uri)
-        else:
-            channel = grpc.insecure_channel(args.riva_uri)
+    auth = riva.client.Auth(args.ssl_cert, args.use_ssl, args.server)
+    nmt_client = riva.client.NeuralMachineTranslationClient(auth)
 
-    if args.list_models == True:
-        nmt_client = riva_nmt_srv.RivaTranslationStub(channel)
-        response = nmt_client.ListSupportedLanguagePairs(riva_nmt.AvailableLanguageRequest())
+    if args.list_models:
+
+        response = nmt_client.get_config(args.model_name)
         print(response)
         return
 
@@ -111,14 +92,14 @@ def main():
                 if line != "":
                     batch.append(line)
                 if len(batch) == args.batch_size:
-                    request(batch)
+                    request(batch, args)
                     batch = []
             if len(batch) > 0:
-                request(batch)
+                request(batch, args)
         return
 
     if args.text != "":
-        request([args.text])
+        request([args.text], args)
 
 
 if __name__ == '__main__':
