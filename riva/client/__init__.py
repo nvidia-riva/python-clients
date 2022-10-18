@@ -36,3 +36,4 @@ from riva.client.proto.riva_asr_pb2 import RecognitionConfig, StreamingRecogniti
 from riva.client.proto.riva_audio_pb2 import AudioEncoding
 from riva.client.proto.riva_nlp_pb2 import AnalyzeIntentOptions
 from riva.client.tts import SpeechSynthesisService
+from riva.client.nmt import NeuralMachineTranslationClient
