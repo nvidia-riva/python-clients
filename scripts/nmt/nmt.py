@@ -43,9 +43,11 @@ def parse_args() -> argparse.Namespace:
         description="Neural machine translation by Riva AI Services",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
-    parser.add_argument(
+    inputs = parser.add_mutually_exclusive_group()
+    inputs.add_argument(
         "--text", default="mir Das ist mir Wurs, bien ich ein berliner", type=str, help="Text to translate"
     )
+    inputs.add_argument("--text-file", type=str, help="Path to file for translation")
     parser.add_argument("--model-name", default="riva-nmt", type=str, help="model to use to translate")
     parser.add_argument(
         "--src-language", type=str, help="Source language (according to BCP-47 standard)"
