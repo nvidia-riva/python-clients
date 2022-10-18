@@ -34,7 +34,7 @@ class NeuralMachineTranslationClient:
         future: bool = False,
     ) -> Union[riva_nmt.TranslateTextResponse, _MultiThreadedRendezvous]:
         """
-        Translate input list of input text :param:`text` using model :param:`model` from :param:`source_lanague` into :param:`target_language`
+        Translate input list of input text :param:`text` using model :param:`model` from :param:`source_language` into :param:`target_language`
 
         Args:
             text (:obj:`list[str]`): input text.
