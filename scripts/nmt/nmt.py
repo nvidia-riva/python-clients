@@ -39,7 +39,10 @@ from riva.client.argparse_utils import add_connection_argparse_parameters
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Streaming transcription via Riva AI Services")
+    parser = argparse.ArgumentParser(
+        description="Neural machine translation by Riva AI Services",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
     parser.add_argument(
         "--text", default="mir Das ist mir Wurs, bien ich ein berliner", type=str, help="Text to translate"
     )
