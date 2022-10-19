@@ -1,1 +1,2 @@
+setuptools>=65
 grpcio-tools
