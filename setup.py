@@ -114,6 +114,17 @@ class BuildPyCommand(build_py):
             super(BuildPyCommand, self).run()
 
 
+def req_file(filename):
+    with open(filename, encoding='utf-8') as f:
+        content = f.readlines()
+    # you may also want to remove whitespace characters
+    # Example: `\n` at the end of each line
+    return [x.strip() for x in content]
+
+
+install_requires = req_file("requirements.txt")
+
+
 setuptools.setup(
     name=__package_name__,
     license=__license__,
@@ -136,6 +147,6 @@ setuptools.setup(
         "Programming Language :: Python :: 3",
     ],
     python_requires='>=3.7',
-    install_requires=['grpcio-tools'],
+    install_requires=install_requires,
     setup_requires=['grpcio-tools'],
 )
