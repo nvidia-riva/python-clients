@@ -55,7 +55,6 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--tgt-language", type=str, help="Target language (according to BCP-47 standard)"
     )
-    parser.add_argument("--text-file", type=str, help="Path to file for translation")
     parser.add_argument("--batch-size", type=int, default=8, help="Batch size to use for file translation")
     parser.add_argument("--list-models", default=False, action='store_true', help="List available models")
     parser = add_connection_argparse_parameters(parser)
