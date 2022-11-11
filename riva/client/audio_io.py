@@ -6,6 +6,29 @@ from typing import Dict, Union, Optional
 
 import pyaudio
 
+import os, sys
+
+from contextlib import contextmanager
+
+@contextmanager
+def ignore_stderr(enable=True):
+    if enable:
+        devnull = None
+        try:
+            devnull = os.open(os.devnull, os.O_WRONLY)
+            stderr = os.dup(2)
+            sys.stderr.flush()
+            os.dup2(devnull, 2)
+            try:
+                yield
+            finally:
+                os.dup2(stderr, 2)
+                os.close(stderr)
+        finally:
+            if devnull is not None:
+                os.close(devnull)
+    else:
+        yield
 
 class MicrophoneStream:
     """Opens a recording stream as responses yielding the audio chunks."""
@@ -20,7 +43,8 @@ class MicrophoneStream:
         self.closed = True
 
     def __enter__(self):
-        self._audio_interface = pyaudio.PyAudio()
+        with ignore_stderr(True):
+            self._audio_interface = pyaudio.PyAudio()
         self._audio_stream = self._audio_interface.open(
             format=pyaudio.paInt16,
             input_device_index=self._device,
@@ -76,14 +100,16 @@ class MicrophoneStream:
 
 
 def get_audio_device_info(device_id: int) -> Dict[str, Union[int, float, str]]:
-    p = pyaudio.PyAudio()
+    with ignore_stderr(True):
+        p = pyaudio.PyAudio()
     info = p.get_device_info_by_index(device_id)
     p.terminate()
     return info
 
 
 def get_default_input_device_info() -> Optional[Dict[str, Union[int, float, str]]]:
-    p = pyaudio.PyAudio()
+    with ignore_stderr(True):
+        p = pyaudio.PyAudio()
     try:
         info = p.get_default_input_device_info()
     except OSError:
@@ -93,7 +119,8 @@ def get_default_input_device_info() -> Optional[Dict[str, Union[int, float, str]
 
 
 def list_output_devices() -> None:
-    p = pyaudio.PyAudio()
+    with ignore_stderr(True):
+        p = pyaudio.PyAudio()
     print("Output audio devices:")
     for i in range(p.get_device_count()):
         info = p.get_device_info_by_index(i)
@@ -104,7 +131,8 @@ def list_output_devices() -> None:
 
 
 def list_input_devices() -> None:
-    p = pyaudio.PyAudio()
+    with ignore_stderr(True):
+        p = pyaudio.PyAudio()
     print("Input audio devices:")
     for i in range(p.get_device_count()):
         info = p.get_device_info_by_index(i)
@@ -118,7 +146,8 @@ class SoundCallBack:
     def __init__(
         self, output_device_index: Optional[int], sampwidth: int, nchannels: int, framerate: int,
     ) -> None:
-        self.pa = pyaudio.PyAudio()
+        with ignore_stderr(True):
+            self.pa = pyaudio.PyAudio()
         self.stream = self.pa.open(
             output_device_index=output_device_index,
             format=self.pa.get_format_from_width(sampwidth),
