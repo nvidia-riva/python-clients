@@ -6,6 +6,7 @@ from riva.client.asr import (
     ASRService,
     add_audio_file_specs_to_config,
     add_word_boosting_to_config,
+    add_speaker_diarization_to_config,
     get_wav_file_parameters,
     print_offline,
     print_streaming,

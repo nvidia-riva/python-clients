@@ -18,7 +18,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--input-file", required=True, type=Path, help="A path to a local file to transcribe.")
     parser = add_connection_argparse_parameters(parser)
-    parser = add_asr_config_argparse_parameters(parser, profanity_filter=True)
+    parser = add_asr_config_argparse_parameters(parser, profanity_filter=True, word_time_offsets=True)
     args = parser.parse_args()
     args.input_file = args.input_file.expanduser()
     return args
@@ -35,9 +35,12 @@ def main() -> None:
         profanity_filter=args.profanity_filter,
         enable_automatic_punctuation=args.automatic_punctuation,
         verbatim_transcripts=not args.no_verbatim_transcripts,
+        enable_word_time_offsets=args.word_time_offsets or args.speaker_diarization,
     )
     riva.client.add_audio_file_specs_to_config(config, args.input_file)
     riva.client.add_word_boosting_to_config(config, args.boosted_lm_words, args.boosted_lm_score)
+    riva.client.add_speaker_diarization_to_config(config, args.speaker_diarization)
+
     with args.input_file.open('rb') as fh:
         data = fh.read()
     try:

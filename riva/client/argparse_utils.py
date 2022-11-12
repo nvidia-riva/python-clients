@@ -42,6 +42,12 @@ def add_asr_config_argparse_parameters(
     parser.add_argument(
         "--boosted-lm-score", type=float, default=4.0, help="Value by which to boost words when decoding."
     )
+    parser.add_argument(
+        "--speaker-diarization",
+        default=False,
+        action='store_true',
+        help="Flag that controls if speaker diarization should be performed",
+    )
     return parser
 
 
