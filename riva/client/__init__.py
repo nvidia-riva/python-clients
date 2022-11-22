@@ -11,7 +11,7 @@ from riva.client.asr import (
     print_streaming,
     sleep_audio_length,
 )
-from riva.client.auth import Auth
+from riva.client.auth import Auth, AioAuth
 from riva.client.nlp import (
     NLPService,
     extract_all_text_classes_and_confidences,

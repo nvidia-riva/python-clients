@@ -24,6 +24,7 @@ class SpeechSynthesisService:
             auth (:obj:`Auth`): an instance of :class:`riva.client.auth.Auth` which is used for authentication metadata
                 generation.
         """
+        auth.channel_async_check(type(self), False)
         self.auth = auth
         self.stub = rtts_srv.RivaSpeechSynthesisStub(self.auth.channel)
 

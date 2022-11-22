@@ -22,6 +22,7 @@ class NeuralMachineTranslationClient:
             auth (:obj:`Auth`): an instance of :class:`riva.client.auth.Auth` which is used for authentication metadata
                 generation.
         """
+        auth.channel_async_check(type(self), False)
         self.auth = auth
         self.stub = riva_nmt_srv.RivaTranslationStub(self.auth.channel)
 
