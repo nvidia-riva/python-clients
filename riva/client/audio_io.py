@@ -1,22 +1,26 @@
 # SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: MIT
 
+import asyncio
 import queue
 from typing import Dict, Union, Optional
 
 import pyaudio
 
 
+AUDIO_QUEUE_MAXSIZE = 2 ** 20
+
+
 class MicrophoneStream:
     """Opens a recording stream as responses yielding the audio chunks."""
 
-    def __init__(self, rate: int, chunk: int, device: int = None) -> None:
+    def __init__(self, rate: int, chunk: int, device: int = None, async_: bool = False) -> None:
         self._rate = rate
         self._chunk = chunk
         self._device = device
-
+        self.async_ = async_
         # Create a thread-safe buffer of audio data
-        self._buff = queue.Queue()
+        self._buff = asyncio.Queue(AUDIO_QUEUE_MAXSIZE) if self.async_ else queue.Queue(AUDIO_QUEUE_MAXSIZE)
         self.closed = True
 
     def __enter__(self):
@@ -41,7 +45,7 @@ class MicrophoneStream:
         self.closed = True
         # Signal the responses to terminate so that the client's
         # streaming_recognize method will not block the process termination.
-        self._buff.put(None)
+        self._buff.put_nowait(None)
         self._audio_interface.terminate()
 
     def __exit__(self, type, value, traceback):
@@ -49,10 +53,15 @@ class MicrophoneStream:
 
     def _fill_buffer(self, in_data, frame_count, time_info, status_flags):
         """Continuously collect data from the audio stream into the buffer."""
-        self._buff.put(in_data)
+        self._buff.put_nowait(in_data)
         return None, pyaudio.paContinue
 
     def __next__(self) -> bytes:
+        if self.async_:
+            raise ValueError(
+                f"You cannot use an instance of the class as a synchronous iterator if the instance was initialized "
+                f"with `async_=True`."
+            )
         if self.closed:
             raise StopIteration
         chunk = self._buff.get()
@@ -72,6 +81,41 @@ class MicrophoneStream:
         return b''.join(data)
 
     def __iter__(self):
+        if self.async_:
+            raise ValueError(
+                f"You cannot use an instance of the class as a synchronous iterator if the instance was initialized "
+                f"with `async_=True`."
+            )
+        return self
+
+    async def __anext__(self) -> bytes:
+        if not self.async_:
+            raise ValueError(
+                f"You cannot use an instance of the class as an async iterator if the instance was initialized with "
+                f"`async_=False`."
+            )
+        if self.closed:
+            raise StopAsyncIteration
+        chunk = await self._buff.get()
+        if chunk is None:
+            raise StopAsyncIteration
+        data = [chunk]
+        while True:
+            try:
+                chunk = self._buff.get_nowait()
+                if chunk is None:
+                    assert not self.closed
+                data.append(chunk)
+            except asyncio.QueueEmpty:
+                break
+        return b''.join(data)
+
+    def __aiter__(self):
+        if not self.async_:
+            raise ValueError(
+                f"You cannot use an instance of the class as an async iterator if the instance was initialized with "
+                f"`async_=False`."
+            )
         return self
 
 
