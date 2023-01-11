@@ -20,6 +20,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--list-input-devices", action="store_true", help="List input audio device indices.")
     parser.add_argument("--list-output-devices", action="store_true", help="List input audio device indices.")
     parser.add_argument("--output-device", type=int, help="Output device to use.")
+    parser.add_argument("--target-language-code", default="en-US", help="Language code of the output language.")
     parser.add_argument(
         "--play-audio",
         action="store_true",
@@ -79,7 +80,7 @@ def main() -> None:
     auth = riva.client.Auth(args.ssl_cert, args.use_ssl, args.server)
     nmt_service = riva.client.NeuralMachineTranslationClient(auth)
     s2s_config = riva.client.StreamingTranslateSpeechToSpeechConfig(
-        asrConfig = riva.client.StreamingRecognitionConfig(
+        asr_config = riva.client.StreamingRecognitionConfig(
             config=riva.client.RecognitionConfig(
                 encoding=riva.client.AudioEncoding.LINEAR_PCM,
                 language_code=args.language_code,
@@ -91,6 +92,9 @@ def main() -> None:
                 audio_channel_count=1,
             ),
             interim_results=True,
+        ),
+        translation_config = riva.client.TranslationConfig(
+            target_language_code=args.target_language_code,
         )
     )
 
