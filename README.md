@@ -38,7 +38,7 @@ case and deliver real-time performance. This repo provides performant client exa
 git clone https://github.com/nvidia-riva/python-clients.git
 cd python-clients
 git submodule init
-git submodule update --remote
+git submodule update --remote --recursive
 pip install -r requirements.txt
 python3 setup.py bdist_wheel
 pip install --force-reinstall dist/*.whl
