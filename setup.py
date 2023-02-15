@@ -69,7 +69,7 @@ class BuildPyCommand(build_py):
             # # A code which may be improved in future to replace a commented block above.
             # # `git submodule` commands are preferable compared to `git clone`.
             #
-            # subprocess_args = ['git', 'submodule', 'update', '--init']
+            # subprocess_args = ['git', 'submodule', 'update', '--init', '--remote', '--recursive']
             # completed_git_submodule_process = sp.run(subprocess_args)
             # if completed_git_submodule_process.returncode > 0:
             #     raise RuntimeError(
@@ -84,9 +84,9 @@ class BuildPyCommand(build_py):
             if not protos:
                 raise ValueError(
                     f"No proto files matching glob {glob_dir} were found. If {setup_py_dir / 'common'} directory is "
-                    f"empty, you may try to fix it by calling `git submodule update --init`. If you unintentionally "
-                    f"removed {setup_py_dir / 'common'} content, then you may try `cd {setup_py_dir / 'common'} && "
-                    f"git stash && cd -`."
+                    f"empty, you may try to fix it by calling `git submodule update --remote --init --recursive`. "
+                    f"If you unintentionally removed {setup_py_dir / 'common'} content, then you may try "
+                    f"`cd {setup_py_dir / 'common'} && git stash && cd -`."
                 )
             for proto in glob(glob_dir):
                 print(proto)
