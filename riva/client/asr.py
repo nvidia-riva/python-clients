@@ -253,7 +253,10 @@ def print_streaming(
 def print_offline(response: rasr.RecognizeResponse) -> None:
     print(response)
     if len(response.results) > 0 and len(response.results[0].alternatives) > 0:
-        print("Final transcript:", response.results[0].alternatives[0].transcript)
+        final_transcript = ""
+        for res in response.results:
+            final_transcript += res.alternatives[0].transcript
+        print("Final transcript:", final_transcript)
 
 
 def streaming_request_generator(
