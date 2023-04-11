@@ -75,6 +75,8 @@ def main() -> None:
                 result = {'msg': 'already exists error'}
             elif e.code() == grpc.StatusCode.UNAVAILABLE:
                 result = {'msg': 'server unavailable check network'}
+            else:
+                result = {'msg': 'error code:{}'.format(e.code())}
             print(f"{result['msg']} : {e.details()}")
 
     args = parse_args()
