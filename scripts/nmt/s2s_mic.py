@@ -95,7 +95,13 @@ def main() -> None:
         ),
         translation_config = riva.client.TranslationConfig(
             target_language_code=args.target_language_code,
-        )
+        ),
+        tts_config = riva.client.SynthesizeSpeechConfig(
+            encoding=1,
+            sample_rate_hz=44100,
+            voice_name="English-US.Female-1",
+            language_code="en-US",
+        ),
     )
 
     #riva.client.add_word_boosting_to_config(config, args.boosted_lm_words, args.boosted_lm_score)
