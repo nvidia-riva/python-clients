@@ -17,7 +17,7 @@ from grpc._channel import _MultiThreadedRendezvous
 import riva.client.proto.riva_asr_pb2 as rasr
 import riva.client.proto.riva_asr_pb2_grpc as rasr_srv
 from riva.client.auth import Auth
-from riva.client import AudioEncoding
+from riva.client.proto.riva_audio_pb2 import AudioEncoding
 
 
 def get_encoding(input_file: Union[str, os.PathLike]) -> int:
@@ -106,6 +106,7 @@ class AudioChunkFileIterator:
     def close(self) -> None:
         # self.file_object.close()
         # self.file_object = None
+        return None
 
     def __enter__(self):
         return self
@@ -113,6 +114,7 @@ class AudioChunkFileIterator:
     def __exit__(self, type_, value, traceback) -> None:
         # if self.file_object is not None:
         #     self.file_object.close()
+        return None
 
     def __iter__(self):
         return self
