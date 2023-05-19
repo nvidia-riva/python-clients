@@ -21,6 +21,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--list-output-devices", action="store_true", help="List input audio device indices.")
     parser.add_argument("--output-device", type=int, help="Output device to use.")
     parser.add_argument("--target-language-code", default="en-US", help="Language code of the output language.")
+    parser.add_argument("--tts-voice-name", default="English-US.Female-1", help="Voice name of the TTS model")
     parser.add_argument(
         "--play-audio",
         action="store_true",
@@ -99,8 +100,8 @@ def main() -> None:
         tts_config = riva.client.SynthesizeSpeechConfig(
             encoding=1,
             sample_rate_hz=44100,
-            voice_name="English-US.Female-1",
-            language_code="en-US",
+            voice_name=args.tts_voice_name,
+            language_code=args.target_language_code,
         ),
     )
 
