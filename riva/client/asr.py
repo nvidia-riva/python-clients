@@ -1,12 +1,14 @@
 # SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: MIT
 
+import re
 import io
 import os
 import sys
 import time
 import warnings
 import wave
+import soundfile as sf
 from pathlib import Path
 from typing import Callable, Dict, Generator, Iterable, List, Optional, TextIO, Union
 
@@ -15,6 +17,58 @@ from grpc._channel import _MultiThreadedRendezvous
 import riva.client.proto.riva_asr_pb2 as rasr
 import riva.client.proto.riva_asr_pb2_grpc as rasr_srv
 from riva.client.auth import Auth
+from riva.client import AudioEncoding
+
+
+def get_encoding(input_file: Union[str, os.PathLike]) -> int:
+    input_file = Path(input_file).expanduser()
+    keys = ['format', 'subtype']
+    file_info = str(sf.info(input_file, verbose=True))
+    encoding_dict = {}
+    for key in keys:
+        s = str(re.escape(key + ': '))
+        e = str(re.escape('\n'))
+        encoding_dict[key] = re.findall(s + "(.*)" + e, file_info)[0]
+    if encoding_dict['format'] == 'WAV (Microsoft) [WAV]':
+        if encoding_dict['subtype'] == 'Signed 16 bit PCM [PCM_16]':
+            encoding = AudioEncoding.LINEAR_PCM
+        elif encoding_dict['subtype'] == 'A-Law [ALAW]':
+            encoding = AudioEncoding.ALAW
+        elif encoding_dict['subtype'] == 'U-Law [ULAW]':
+            encoding = AudioEncoding.MULAW
+    elif encoding_dict['format'] == 'FLAC (Free Lossless Audio Codec) [FLAC]':
+        encoding = AudioEncoding.FLAC
+    elif encoding_dict['format'] == 'OGG (OGG Container format) [OGG]':
+        encoding = AudioEncoding.OGGOPUS
+    else:
+        encoding = AudioEncoding.ENCODING_UNSPECIFIED
+    return encoding
+
+
+def get_audio_file_parameters(input_file: Union[str, os.PathLike]) -> Dict[str, Union[int, float]]:
+    parameters = {}
+    parameters['encoding'] = get_encoding(input_file)
+    keys = ['nframes', 'framerate', 'nchannels', 'sampwidth']
+    start_substrings = ['frames: ', 'samplerate: ', 'channels: ', 'Bit Width     : ']
+    if parameters['encoding'] == AudioEncoding.FLAC:
+        start_substrings[-1] = 'Bit width   : '
+    end_substrings = ['\n', ' Hz', '\n', '\n']
+    file_info = str(sf.info(input_file, verbose=True))
+    for key, start, end in zip(keys, start_substrings, end_substrings):
+        s = str(re.escape(start))
+        e = str(re.escape(end))
+        try: 
+            param = re.findall(s + "(.*)" + e, file_info)[0]
+            if '.' in param:
+                param = float(param)
+            else:
+                param = int(param)
+        except:
+            param = None
+        parameters[key] = param
+    if parameters['sampwidth'] is not None: parameters['sampwidth'] //= 8
+    parameters['duration'] = parameters['nframes'] / parameters['framerate']
+    return parameters
 
 
 def get_wav_file_parameters(input_file: Union[str, os.PathLike]) -> Dict[str, Union[int, float]]:
@@ -46,32 +100,34 @@ class AudioChunkFileIterator:
         self.input_file: Path = Path(input_file).expanduser()
         self.chunk_n_frames = chunk_n_frames
         self.delay_callback = delay_callback
-        self.file_parameters = get_wav_file_parameters(self.input_file)
-        self.file_object: Optional[wave.Wave_read] = wave.open(str(self.input_file), 'rb')
+        self.file_parameters = get_audio_file_parameters(self.input_file)
+        # self.file_object: Optional[wave.Wave_read] = wave.open(str(self.input_file), 'rb')
 
     def close(self) -> None:
-        self.file_object.close()
-        self.file_object = None
+        # self.file_object.close()
+        # self.file_object = None
 
     def __enter__(self):
         return self
 
     def __exit__(self, type_, value, traceback) -> None:
-        if self.file_object is not None:
-            self.file_object.close()
+        # if self.file_object is not None:
+        #     self.file_object.close()
 
     def __iter__(self):
         return self
 
     def __next__(self) -> bytes:
-        data = self.file_object.readframes(self.chunk_n_frames)
+        # data = self.file_object.readframes(self.chunk_n_frames)
+        data = sf.read(self.input_file, frames=self.chunk_n_frames)
         if not data:
-            self.close()
+            # self.close()
             raise StopIteration
         if self.delay_callback is not None:
             self.delay_callback(
                 data,
-                len(data) / self.file_parameters['sampwidth'] / self.file_parameters['framerate']
+                # len(data) / self.file_parameters['sampwidth'] / self.file_parameters['framerate']
+                len(data) / self.file_parameters['framerate']
             )
         return data
 
@@ -94,9 +150,10 @@ def add_audio_file_specs_to_config(
     audio_file: Union[str, os.PathLike],
 ) -> None:
     inner_config: rasr.RecognitionConfig = config if isinstance(config, rasr.RecognitionConfig) else config.config
-    wav_parameters = get_wav_file_parameters(audio_file)
-    inner_config.sample_rate_hertz = wav_parameters['framerate']
-    inner_config.audio_channel_count = wav_parameters['nchannels']
+    audio_file_parameters = get_audio_file_parameters(audio_file)
+    inner_config.encoding = audio_file_parameters['encoding']
+    inner_config.sample_rate_hertz = audio_file_parameters['framerate']
+    inner_config.audio_channel_count = audio_file_parameters['nchannels']
 
 
 def add_speaker_diarization_to_config(
