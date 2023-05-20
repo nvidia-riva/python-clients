@@ -70,7 +70,7 @@ def main() -> None:
     asr_service = riva.client.ASRService(auth)
     config = riva.client.StreamingRecognitionConfig(
         config=riva.client.RecognitionConfig(
-            encoding=riva.client.AudioEncoding.LINEAR_PCM,
+            encoding=riva.client.AudioEncoding.ENCODING_UNSPECIFIED,
             language_code=args.language_code,
             max_alternatives=1,
             profanity_filter=args.profanity_filter,
@@ -79,7 +79,6 @@ def main() -> None:
         ),
         interim_results=True,
     )
-    riva.client.add_audio_file_specs_to_config(config, args.input_file)
     riva.client.add_word_boosting_to_config(config, args.boosted_lm_words, args.boosted_lm_score)
     sound_callback = None
     try:

@@ -29,7 +29,7 @@ def main() -> None:
     auth = riva.client.Auth(args.ssl_cert, args.use_ssl, args.server)
     asr_service = riva.client.ASRService(auth)
     config = riva.client.RecognitionConfig(
-        encoding=riva.client.AudioEncoding.LINEAR_PCM,
+        encoding=riva.client.AudioEncoding.ENCODING_UNSPECIFIED,
         language_code=args.language_code,
         max_alternatives=args.max_alternatives,
         profanity_filter=args.profanity_filter,
@@ -37,7 +37,6 @@ def main() -> None:
         verbatim_transcripts=not args.no_verbatim_transcripts,
         enable_word_time_offsets=args.word_time_offsets or args.speaker_diarization,
     )
-    riva.client.add_audio_file_specs_to_config(config, args.input_file)
     riva.client.add_word_boosting_to_config(config, args.boosted_lm_words, args.boosted_lm_score)
     riva.client.add_speaker_diarization_to_config(config, args.speaker_diarization)
 
