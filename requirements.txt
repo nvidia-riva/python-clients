@@ -1,3 +1,2 @@
 setuptools>=65
 grpcio-tools
-ffmpeg-python

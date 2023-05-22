@@ -54,7 +54,6 @@ def streaming_transcription_worker(
         asr_service = riva.client.ASRService(auth)
         config = riva.client.StreamingRecognitionConfig(
             config=riva.client.RecognitionConfig(
-                encoding=riva.client.AudioEncoding.ENCODING_UNSPECIFIED,
                 language_code=args.language_code,
                 max_alternatives=args.max_alternatives,
                 profanity_filter=args.profanity_filter,

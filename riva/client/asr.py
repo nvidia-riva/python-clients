@@ -10,7 +10,6 @@ import wave
 from pathlib import Path
 from typing import Callable, Dict, Generator, Iterable, List, Optional, TextIO, Union
 
-import ffmpeg
 from grpc._channel import _MultiThreadedRendezvous
 
 import riva.client
@@ -19,34 +18,23 @@ import riva.client.proto.riva_asr_pb2_grpc as rasr_srv
 from riva.client.auth import Auth
 
 
-def get_file_encoding(input_file: Union[str, os.PathLike]) -> Dict[str, Union[int, float]]:
-    info = ffmpeg.probe(input_file)
-    if info.get("streams")[0]["codec_name"] == "pcm_s16le":
-        encoding = riva.client.AudioEncoding.LINEAR_PCM
-    elif info.get("streams")[0]["codec_name"] == "flac":
-        encoding = riva.client.AudioEncoding.FLAC
-    elif info.get("streams")[0]["codec_name"] == "pcm_alaw":
-        encoding = riva.client.AudioEncoding.ALAW
-    elif info.get("streams")[0]["codec_name"] == "pcm_mulaw":
-        encoding = riva.client.AudioEncoding.MULAW
-    elif info.get("streams")[0]["codec_name"] == "opus":
-        encoding = riva.client.AudioEncoding.OGGOPUS
-    else:
-        encoding = riva.client.AudioEncoding.ENCODING_UNSPECIFIED
-
-
 def get_wav_file_parameters(input_file: Union[str, os.PathLike]) -> Dict[str, Union[int, float]]:
-    input_file = Path(input_file).expanduser()
-    with wave.open(str(input_file), 'rb') as wf:
-        nframes = wf.getnframes()
-        rate = wf.getframerate()
-        parameters = {
-            'nframes': nframes,
-            'framerate': rate,
-            'duration': nframes / rate,
-            'nchannels': wf.getnchannels(),
-            'sampwidth': wf.getsampwidth(),
-        }
+    try:
+        input_file = Path(input_file).expanduser()
+        with wave.open(str(input_file), 'rb') as wf:
+            nframes = wf.getnframes()
+            rate = wf.getframerate()
+            parameters = {
+                'nframes': nframes,
+                'framerate': rate,
+                'duration': nframes / rate,
+                'nchannels': wf.getnchannels(),
+                'sampwidth': wf.getsampwidth(),
+                'data_offset': wf.getfp().size_read + wf.getfp().offset
+            }
+    except:
+        # Not a WAV file
+        return None
     return parameters
 
 
@@ -64,15 +52,12 @@ class AudioChunkFileIterator:
         self.input_file: Path = Path(input_file).expanduser()
         self.chunk_n_frames = chunk_n_frames
         self.delay_callback = delay_callback
-        self.encoding = get_file_encoding(self.input_file)
-        if self.encoding == riva.client.AudioEncoding.LINEAR_PCM:
-            self.file_parameters = get_wav_file_parameters(self.input_file)
-            self.file_object: Optional[wave.Wave_read] = wave.open(str(self.input_file), 'rb')
-        else:
-            self.file_object: Optional[wave.Wave_read] = open(str(self.input_file), 'rb')
-            if self.delay_callback:
-                warnings.warn(f"delay_callback not supported for encoding other than LINEAR_PCM")
-                self.delay_callback = None
+        self.file_parameters = get_wav_file_parameters(self.input_file)
+        self.file_object: Optional[typing.BinaryIO] = open(str(self.input_file), 'rb')
+        if self.delay_callback and self.file_parameters is None:
+            warnings.warn(f"delay_callback not supported for encoding other than LINEAR_PCM")
+            self.delay_callback = None
+        self.first_buffer = True
 
     def close(self) -> None:
         self.file_object.close()
@@ -89,17 +74,19 @@ class AudioChunkFileIterator:
         return self
 
     def __next__(self) -> bytes:
-        if self.encoding == riva.client.AudioEncoding.LINEAR_PCM:
-            data = self.file_object.readframes(self.chunk_n_frames)
+        if self.file_parameters:
+            data = self.file_object.read(self.chunk_n_frames * self.file_parameters['sampwidth'] * self.file_parameters['nchannels'])
         else:
             data = self.file_object.read(self.chunk_n_frames)
         if not data:
             self.close()
             raise StopIteration
         if self.delay_callback is not None:
+            offset = self.file_parameters['data_offset'] if self.first_buffer else 0
             self.delay_callback(
-                data, len(data) / self.file_parameters['sampwidth'] / self.file_parameters['framerate']
+                data[offset:], (len(data) - offset) / self.file_parameters['sampwidth'] / self.file_parameters['framerate']
             )
+            self.first_buffer = False
         return data
 
 
@@ -122,8 +109,9 @@ def add_audio_file_specs_to_config(
 ) -> None:
     inner_config: rasr.RecognitionConfig = config if isinstance(config, rasr.RecognitionConfig) else config.config
     wav_parameters = get_wav_file_parameters(audio_file)
-    inner_config.sample_rate_hertz = wav_parameters['framerate']
-    inner_config.audio_channel_count = wav_parameters['nchannels']
+    if wav_parameters is not None:
+        inner_config.sample_rate_hertz = wav_parameters['framerate']
+        inner_config.audio_channel_count = wav_parameters['nchannels']
 
 
 def add_speaker_diarization_to_config(

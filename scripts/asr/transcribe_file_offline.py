@@ -29,7 +29,6 @@ def main() -> None:
     auth = riva.client.Auth(args.ssl_cert, args.use_ssl, args.server)
     asr_service = riva.client.ASRService(auth)
     config = riva.client.RecognitionConfig(
-        encoding=riva.client.AudioEncoding.ENCODING_UNSPECIFIED,
         language_code=args.language_code,
         max_alternatives=args.max_alternatives,
         profanity_filter=args.profanity_filter,
