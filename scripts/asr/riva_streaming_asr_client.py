@@ -54,7 +54,6 @@ def streaming_transcription_worker(
         asr_service = riva.client.ASRService(auth)
         config = riva.client.StreamingRecognitionConfig(
             config=riva.client.RecognitionConfig(
-                encoding=riva.client.AudioEncoding.LINEAR_PCM,
                 language_code=args.language_code,
                 max_alternatives=args.max_alternatives,
                 profanity_filter=args.profanity_filter,
@@ -64,7 +63,6 @@ def streaming_transcription_worker(
             ),
             interim_results=True,
         )
-        riva.client.add_audio_file_specs_to_config(config, args.input_file)
         riva.client.add_word_boosting_to_config(config, args.boosted_lm_words, args.boosted_lm_score)
         for _ in range(args.num_iterations):
             with riva.client.AudioChunkFileIterator(
@@ -92,8 +90,6 @@ def main() -> None:
     print("Number of clients:", args.num_clients)
     print("Number of iteration:", args.num_iterations)
     print("Input file:", args.input_file)
-    wav_parameters = get_wav_file_parameters(args.input_file)
-    print(f"File duration: {wav_parameters['duration']:.2f}s")
     threads = []
     exception_queue = queue.Queue()
     for i in range(args.num_clients):
