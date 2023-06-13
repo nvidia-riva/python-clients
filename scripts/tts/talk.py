@@ -21,6 +21,7 @@ def parse_args() -> argparse.Namespace:
         help="A voice name to use. If this parameter is missing, then the server will try a first available model "
         "based on parameter `--language-code`.",
     )
+    parser.add_argument("--text", type=str, required=True, help="Text input to synthesize.")
     parser.add_argument("-o", "--output", type=Path, help="Output file .wav file to write synthesized audio.")
     parser.add_argument(
         "--play-audio",
@@ -32,7 +33,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output-device", type=int, help="Output device to use.")
     parser.add_argument("--language-code", default='en-US', help="A language of input text.")
     parser.add_argument(
-        "--sample-rate-hz", type=int, default=44100, help="Number of audio frames per second in synthesized audio.")
+        "--sample-rate-hz", type=int, default=44100, help="Number of audio frames per second in synthesized audio."
+    )
     parser.add_argument(
         "--stream",
         action="store_true",
@@ -74,33 +76,33 @@ def main() -> None:
             out_f.setnchannels(nchannels)
             out_f.setsampwidth(sampwidth)
             out_f.setframerate(args.sample_rate_hz)
-        while True:
-            text = input("Speak: ")
-            print("Generating audio for request...")
-            print(f"  > '{text}': ", end='')
-            start = time.time()
-            if args.stream:
-                responses = service.synthesize_online(
-                    text, args.voice, args.language_code, sample_rate_hz=args.sample_rate_hz
-                )
-                first = True
-                for resp in responses:
-                    stop = time.time()
-                    if first:
-                        print(f"Time to first audio: {(stop - start):.3f}s")
-                        first = False
-                    if sound_stream is not None:
-                        sound_stream(resp.audio)
-                    if out_f is not None:
-                        out_f.writeframesraw(resp.audio)
-            else:
-                resp = service.synthesize(text, args.voice, args.language_code, sample_rate_hz=args.sample_rate_hz)
+
+        print("Generating audio for request...")
+        start = time.time()
+        if args.stream:
+            responses = service.synthesize_online(
+                args.text, args.voice, args.language_code, sample_rate_hz=args.sample_rate_hz
+            )
+            first = True
+            for resp in responses:
                 stop = time.time()
-                print(f"Time spent: {(stop - start):.3f}s")
+                if first:
+                    print(f"Time to first audio: {(stop - start):.3f}s")
+                    first = False
                 if sound_stream is not None:
                     sound_stream(resp.audio)
                 if out_f is not None:
                     out_f.writeframesraw(resp.audio)
+        else:
+            resp = service.synthesize(
+                args.text, args.voice, args.language_code, sample_rate_hz=args.sample_rate_hz
+            )
+            stop = time.time()
+            print(f"Time spent: {(stop - start):.3f}s")
+            if sound_stream is not None:
+                sound_stream(resp.audio)
+            if out_f is not None:
+                out_f.writeframesraw(resp.audio)
     finally:
         if out_f is not None:
             out_f.close()
