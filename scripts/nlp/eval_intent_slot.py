@@ -340,7 +340,7 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    auth = riva.client.Auth(args.ssl_cert, args.use_ssl, args.server)
+    auth = riva.client.Auth(args.ssl_cert, args.use_ssl, args.server, args.metadata)
     service = riva.client.NLPService(auth)
     intent_report, slot_report = intent_slots_classification_report(
         args.input_file,

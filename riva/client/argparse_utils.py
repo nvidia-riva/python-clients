@@ -57,4 +57,5 @@ def add_connection_argparse_parameters(parser: argparse.ArgumentParser) -> argpa
     parser.add_argument(
         "--use-ssl", action='store_true', help="Boolean to control if SSL/TLS encryption should be used."
     )
+    parser.add_argument("--metadata", action='append', nargs='+', help="Send HTTP Header(s) to server")
     return parser

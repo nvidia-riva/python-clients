@@ -4,7 +4,6 @@
 import os
 from pathlib import Path
 from typing import List, Optional, Tuple, Union
-
 import grpc
 
 
@@ -30,6 +29,7 @@ class Auth:
         ssl_cert: Optional[Union[str, os.PathLike]] = None,
         use_ssl: bool = False,
         uri: str = "localhost:50051",
+        metadata_args: List[List[str]] = None,
     ) -> None:
         """
         A class responsible for establishing connection with a server and providing security metadata.
@@ -44,6 +44,12 @@ class Auth:
         self.ssl_cert: Optional[Path] = None if ssl_cert is None else Path(ssl_cert).expanduser()
         self.uri: str = uri
         self.use_ssl: bool = use_ssl
+        self.metadata = []
+        if metadata_args:
+            for meta in metadata_args:
+                if len(meta) != 2:
+                    raise ValueError(f"Metadata should have 2 parameters in \"key\" \"value\" pair. Receieved {len(meta)} parameters.")
+                self.metadata.append(tuple(meta))
         self.channel: grpc.Channel = create_channel(self.ssl_cert, self.use_ssl, self.uri)
 
     def get_auth_metadata(self) -> List[Tuple[str, str]]:
@@ -55,5 +61,5 @@ class Auth:
         Returns:
             :obj:`List[Tuple[str, str]]`: an empty list.
         """
-        metadata = []
+        metadata = self.metadata
         return metadata
