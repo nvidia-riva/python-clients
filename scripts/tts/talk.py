@@ -36,6 +36,9 @@ def parse_args() -> argparse.Namespace:
         "--sample-rate-hz", type=int, default=44100, help="Number of audio frames per second in synthesized audio."
     )
     parser.add_argument(
+        "--encoding", type=str, default="LINEAR_PCM", choices=['LINEAR_PCM', 'OGGOPUS'], help="Audio encoding format to be used."
+    )
+    parser.add_argument(
         "--stream",
         action="store_true",
         help="If this option is set, then streaming synthesis is applied. Streaming means that audio is yielded "
@@ -65,6 +68,7 @@ def main() -> None:
     service = riva.client.SpeechSynthesisService(auth)
     nchannels = 1
     sampwidth = 2
+    encoding = riva.client.AudioEncoding.OGGOPUS if args.encoding == "OGGOPUS" else riva.client.AudioEncoding.LINEAR_PCM
     sound_stream, out_f = None, None
     try:
         if args.output_device is not None or args.play_audio:
@@ -81,7 +85,7 @@ def main() -> None:
         start = time.time()
         if args.stream:
             responses = service.synthesize_online(
-                args.text, args.voice, args.language_code, sample_rate_hz=args.sample_rate_hz
+                args.text, args.voice, args.language_code, sample_rate_hz=args.sample_rate_hz, encoding=encoding
             )
             first = True
             for resp in responses:
@@ -95,7 +99,7 @@ def main() -> None:
                     out_f.writeframesraw(resp.audio)
         else:
             resp = service.synthesize(
-                args.text, args.voice, args.language_code, sample_rate_hz=args.sample_rate_hz
+                args.text, args.voice, args.language_code, sample_rate_hz=args.sample_rate_hz, encoding=encoding
             )
             stop = time.time()
             print(f"Time spent: {(stop - start):.3f}s")
