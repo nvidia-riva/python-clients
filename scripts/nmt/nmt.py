@@ -81,7 +81,7 @@ def main() -> None:
 
     args = parse_args()
 
-    auth = riva.client.Auth(args.ssl_cert, args.use_ssl, args.server)
+    auth = riva.client.Auth(args.ssl_cert, args.use_ssl, args.server, args.api_key)
     nmt_client = riva.client.NeuralMachineTranslationClient(auth)
 
     if args.list_models:

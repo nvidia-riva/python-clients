@@ -44,7 +44,7 @@ def pretty_print_result(
 
 def main() -> None:
     args = parse_args()
-    auth = riva.client.Auth(args.ssl_cert, args.use_ssl, args.server)
+    auth = riva.client.Auth(args.ssl_cert, args.use_ssl, args.server, args.api_key)
     service = riva.client.NLPService(auth)
     if args.interactive:
         while True:

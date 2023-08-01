@@ -57,4 +57,5 @@ def add_connection_argparse_parameters(parser: argparse.ArgumentParser) -> argpa
     parser.add_argument(
         "--use-ssl", action='store_true', help="Boolean to control if SSL/TLS encryption should be used."
     )
+    parser.add_argument("--api-key", type=str, default="", help="API key for authentication")
     return parser
