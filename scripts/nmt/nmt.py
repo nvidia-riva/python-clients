@@ -48,15 +48,15 @@ def parse_args() -> argparse.Namespace:
         "--text", default="mir Das ist mir Wurs, bien ich ein berliner", type=str, help="Text to translate"
     )
     inputs.add_argument("--text-file", type=str, help="Path to file for translation")
-    parser.add_argument("--model-name", default="riva-nmt", type=str, help="model to use to translate")
+    parser.add_argument("--model-name", default="", type=str, help="model to use to translate")
     parser.add_argument(
-        "--src-language", type=str, help="Source language (according to BCP-47 standard)"
+        "--source-language-code", type=str, default="en-US", help="Source language code (according to BCP-47 standard)"
     )
     parser.add_argument(
-        "--tgt-language", type=str, help="Target language (according to BCP-47 standard)"
+        "--target-language-code", type=str, default="en-US", help="Target language code (according to BCP-47 standard)"
     )
     parser.add_argument("--batch-size", type=int, default=8, help="Batch size to use for file translation")
-    parser.add_argument("--list-models", default=False, action='store_true', help="List available models")
+    parser.add_argument("--list-models", default=False, action='store_true', help="List available models on server")
     parser = add_connection_argparse_parameters(parser)
 
     return parser.parse_args()
@@ -65,7 +65,7 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     def request(inputs,args):
         try:
-            response = nmt_client.translate(inputs, args.model_name, args.src_language, args.tgt_language)
+            response = nmt_client.translate(inputs, args.model_name, args.source_language_code, args.target_language_code)
             for translation in response.translations:
                 print(translation.text)
         except grpc.RpcError as e:
