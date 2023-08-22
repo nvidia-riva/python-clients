@@ -8,6 +8,7 @@ from riva.client.asr import (
     add_word_boosting_to_config,
     add_speaker_diarization_to_config,
     get_wav_file_parameters,
+    get_profanity_setting,
     print_offline,
     print_streaming,
     sleep_audio_length,

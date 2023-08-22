@@ -5,7 +5,7 @@ import argparse
 
 
 def add_asr_config_argparse_parameters(
-    parser: argparse.ArgumentParser, max_alternatives: bool = False, profanity_filter: bool = False, word_time_offsets: bool = False
+        parser: argparse.ArgumentParser, max_alternatives: bool = False, profanity_filter: bool = False, remove_profane_words: bool = False, word_time_offsets: bool = False
 ) -> argparse.ArgumentParser:
     if word_time_offsets:
         parser.add_argument(
@@ -24,6 +24,13 @@ def add_asr_config_argparse_parameters(
         default=False,
         action='store_true',
         help="Flag that controls the profanity filtering in the generated transcripts",
+    )
+    if remove_profane_words:
+        parser.add_argument(
+        "--remove-profane-words",
+        default=False,
+        action='store_true',
+        help="Flag that removes profane words in the generated transcripts",
     )
     parser.add_argument(
         "--automatic-punctuation",
