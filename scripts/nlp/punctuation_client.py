@@ -134,7 +134,7 @@ def run_tests(args: argparse.Namespace) -> int:
         ],
     }
 
-    auth = riva.client.Auth(args.ssl_cert, args.use_ssl, args.server)
+    auth = riva.client.Auth(args.ssl_cert, args.use_ssl, args.server, args.metadata)
     nlp_service = riva.client.NLPService(auth)
 
     fail_count = 0
