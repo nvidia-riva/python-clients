@@ -50,7 +50,7 @@ def streaming_transcription_worker(
 ) -> None:
     output_file = Path(output_file).expanduser()
     try:
-        auth = riva.client.Auth(args.ssl_cert, args.use_ssl, args.server)
+        auth = riva.client.Auth(args.ssl_cert, args.use_ssl, args.server, args.metadata)
         asr_service = riva.client.ASRService(auth)
         config = riva.client.StreamingRecognitionConfig(
             config=riva.client.RecognitionConfig(

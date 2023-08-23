@@ -31,7 +31,7 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    auth = riva.client.Auth(args.ssl_cert, args.use_ssl, args.server)
+    auth = riva.client.Auth(args.ssl_cert, args.use_ssl, args.server, args.metadata)
     service = riva.client.NLPService(auth)
     tokens, slots, slot_confidences, starts, ends = riva.client.extract_most_probable_token_classification_predictions(
         service.classify_tokens(input_strings=args.query, model_name=args.model)
