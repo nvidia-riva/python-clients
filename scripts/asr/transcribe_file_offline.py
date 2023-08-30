@@ -18,7 +18,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--input-file", required=True, type=Path, help="A path to a local file to transcribe.")
     parser = add_connection_argparse_parameters(parser)
-    parser = add_asr_config_argparse_parameters(parser, max_alternatives=True, profanity_filter=True, word_time_offsets=True)
+    parser = add_asr_config_argparse_parameters(parser, max_alternatives=True, profanity_filter=True, remove_profane_words=True, word_time_offsets=True)
     args = parser.parse_args()
     args.input_file = args.input_file.expanduser()
     return args
@@ -31,7 +31,7 @@ def main() -> None:
     config = riva.client.RecognitionConfig(
         language_code=args.language_code,
         max_alternatives=args.max_alternatives,
-        profanity_filter=args.profanity_filter,
+        profanity_filter=riva.client.get_profanity_setting(args.profanity_filter,args.remove_profane_words),
         enable_automatic_punctuation=args.automatic_punctuation,
         verbatim_transcripts=not args.no_verbatim_transcripts,
         enable_word_time_offsets=args.word_time_offsets or args.speaker_diarization,

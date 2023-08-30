@@ -41,6 +41,13 @@ def get_wav_file_parameters(input_file: Union[str, os.PathLike]) -> Dict[str, Un
 def sleep_audio_length(audio_chunk: bytes, time_to_sleep: float) -> None:
     time.sleep(time_to_sleep)
 
+def get_profanity_setting(profanity_filter: bool, remove_profane_words: bool) -> rasr.ProfanitySettings :
+    profanity_filter_setting = rasr.ProfanitySettings.PROFANITY_OFF
+    if profanity_filter:
+       profanity_filter_setting = rasr.ProfanitySettings.PROFANITY_MASK
+    if remove_profane_words:
+       profanity_filter_setting = rasr.ProfanitySettings.PROFANITY_REMOVE
+    return profanity_filter_setting
 
 class AudioChunkFileIterator:
     def __init__(
