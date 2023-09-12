@@ -4,13 +4,16 @@
 import os
 from pathlib import Path
 from typing import List, Optional, Tuple, Union
-
 import grpc
 
 
 def create_channel(
-    ssl_cert: Optional[Union[str, os.PathLike]] = None, use_ssl: bool = False, uri: str = "localhost:50051",
+    ssl_cert: Optional[Union[str, os.PathLike]] = None, use_ssl: bool = False, uri: str = "localhost:50051", metadata: Optional[List[Tuple[str, str]]] = None,
 ) -> grpc.Channel:
+
+    def metadata_callback(context, callback):
+        callback(metadata, None)
+
     if ssl_cert is not None or use_ssl:
         root_certificates = None
         if ssl_cert is not None:
@@ -18,6 +21,9 @@ def create_channel(
             with open(ssl_cert, 'rb') as f:
                 root_certificates = f.read()
         creds = grpc.ssl_channel_credentials(root_certificates)
+        if metadata:
+            auth_creds = grpc.metadata_call_credentials(metadata_callback)
+            creds = grpc.composite_channel_credentials(creds, auth_creds)
         channel = grpc.secure_channel(uri, creds)
     else:
         channel = grpc.insecure_channel(uri)
@@ -30,6 +36,7 @@ class Auth:
         ssl_cert: Optional[Union[str, os.PathLike]] = None,
         use_ssl: bool = False,
         uri: str = "localhost:50051",
+        metadata_args: List[List[str]] = None,
     ) -> None:
         """
         A class responsible for establishing connection with a server and providing security metadata.
@@ -44,7 +51,13 @@ class Auth:
         self.ssl_cert: Optional[Path] = None if ssl_cert is None else Path(ssl_cert).expanduser()
         self.uri: str = uri
         self.use_ssl: bool = use_ssl
-        self.channel: grpc.Channel = create_channel(self.ssl_cert, self.use_ssl, self.uri)
+        self.metadata = []
+        if metadata_args:
+            for meta in metadata_args:
+                if len(meta) != 2:
+                    raise ValueError(f"Metadata should have 2 parameters in \"key\" \"value\" pair. Receieved {len(meta)} parameters.")
+                self.metadata.append(tuple(meta))
+        self.channel: grpc.Channel = create_channel(self.ssl_cert, self.use_ssl, self.uri, self.metadata)
 
     def get_auth_metadata(self) -> List[Tuple[str, str]]:
         """
