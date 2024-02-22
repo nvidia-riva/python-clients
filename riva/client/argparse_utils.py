@@ -5,7 +5,10 @@ import argparse
 
 
 def add_asr_config_argparse_parameters(
-    parser: argparse.ArgumentParser, max_alternatives: bool = False, profanity_filter: bool = False, word_time_offsets: bool = False
+    parser: argparse.ArgumentParser,
+    max_alternatives: bool = False,
+    profanity_filter: bool = False,
+    word_time_offsets: bool = False,
 ) -> argparse.ArgumentParser:
     if word_time_offsets:
         parser.add_argument(
@@ -20,11 +23,11 @@ def add_asr_config_argparse_parameters(
         )
     if profanity_filter:
         parser.add_argument(
-        "--profanity-filter",
-        default=False,
-        action='store_true',
-        help="Flag that controls the profanity filtering in the generated transcripts",
-    )
+            "--profanity-filter",
+            default=False,
+            action='store_true',
+            help="Flag that controls the profanity filtering in the generated transcripts",
+        )
     parser.add_argument(
         "--automatic-punctuation",
         default=False,
@@ -38,6 +41,7 @@ def add_asr_config_argparse_parameters(
         help="If specified, text inverse normalization will be applied",
     )
     parser.add_argument("--language-code", default="en-US", help="Language code of the model to be used.")
+    parser.add_argument("--model-name", default="", help="Name of the model to be used to be used.")
     parser.add_argument("--boosted-lm-words", action='append', help="Words to boost when decoding.")
     parser.add_argument(
         "--boosted-lm-score", type=float, default=4.0, help="Value by which to boost words when decoding."

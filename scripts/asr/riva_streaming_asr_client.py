@@ -10,8 +10,8 @@ from threading import Thread
 from typing import Union
 
 import riva.client
-from riva.client.asr import get_wav_file_parameters
 from riva.client.argparse_utils import add_asr_config_argparse_parameters, add_connection_argparse_parameters
+from riva.client.asr import get_wav_file_parameters
 
 
 def parse_args() -> argparse.Namespace:
@@ -23,7 +23,7 @@ def parse_args() -> argparse.Namespace:
         "which names follow a format `output_<thread_num>.txt`.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
-    parser.add_argument("--num-clients", default=1, type=int, help="Number of client threads.")
+    parser.add_argument("--num-parallel-requests", default=1, type=int, help="Number of client threads.")
     parser.add_argument("--num-iterations", default=1, type=int, help="Number of iterations over the file.")
     parser.add_argument(
         "--input-file", required=True, type=str, help="Name of the WAV file with LINEAR_PCM encoding to transcribe."
@@ -34,11 +34,14 @@ def parse_args() -> argparse.Namespace:
         help="Option to simulate realtime transcription. Audio fragments are sent to a server at a pace that mimics "
         "normal speech.",
     )
+    parser.add_argument("--chunk-duration-ms", type=int, default=100, help="Chunk duration in milliseconds.")
     parser.add_argument(
-        "--file-streaming-chunk", type=int, default=1600, help="Number of frames in one chunk sent to server."
+        "--interim-results", default=False, action='store_true', help="Print intermediate transcripts",
     )
     parser = add_connection_argparse_parameters(parser)
-    parser = add_asr_config_argparse_parameters(parser, max_alternatives=True, profanity_filter=True, word_time_offsets=True)
+    parser = add_asr_config_argparse_parameters(
+        parser, max_alternatives=True, profanity_filter=True, word_time_offsets=True
+    )
     args = parser.parse_args()
     if args.max_alternatives < 1:
         parser.error("`--max-alternatives` must be greater than or equal to 1")
@@ -60,24 +63,23 @@ def streaming_transcription_worker(
                 enable_automatic_punctuation=args.automatic_punctuation,
                 verbatim_transcripts=not args.no_verbatim_transcripts,
                 enable_word_time_offsets=args.word_time_offsets,
+                model=args.model_name,
             ),
-            interim_results=True,
+            interim_results=args.interim_results,
         )
         riva.client.add_word_boosting_to_config(config, args.boosted_lm_words, args.boosted_lm_score)
         for _ in range(args.num_iterations):
             with riva.client.AudioChunkFileIterator(
                 args.input_file,
-                args.file_streaming_chunk,
+                args.chunk_duration_ms,
                 delay_callback=riva.client.sleep_audio_length if args.simulate_realtime else None,
             ) as audio_chunk_iterator:
                 riva.client.print_streaming(
                     responses=asr_service.streaming_response_generator(
-                        audio_chunks=audio_chunk_iterator,
-                        streaming_config=config,
+                        audio_chunks=audio_chunk_iterator, streaming_config=config,
                     ),
+                    input_file=args.input_file,
                     output_file=output_file,
-                    additional_info='time',
-                    file_mode='a',
                     word_time_offsets=args.word_time_offsets,
                 )
     except BaseException as e:
@@ -87,12 +89,12 @@ def streaming_transcription_worker(
 
 def main() -> None:
     args = parse_args()
-    print("Number of clients:", args.num_clients)
+    print("Number of clients:", args.num_parallel_requests)
     print("Number of iteration:", args.num_iterations)
     print("Input file:", args.input_file)
     threads = []
     exception_queue = queue.Queue()
-    for i in range(args.num_clients):
+    for i in range(args.num_parallel_requests):
         t = Thread(target=streaming_transcription_worker, args=[args, f"output_{i:d}.txt", i, exception_queue])
         t.start()
         threads.append(t)
@@ -112,7 +114,8 @@ def main() -> None:
         if all_dead:
             break
         time.sleep(0.05)
-    print(str(args.num_clients), "threads done, output written to output_<thread_id>.txt")
+    for i in range(args.num_parallel_requests):
+        print(f"Thread {i} done, output written to output_{i}.txt")
 
 
 if __name__ == "__main__":
