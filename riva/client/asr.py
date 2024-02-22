@@ -97,14 +97,19 @@ class AudioChunkFileIterator:
 
 def add_word_boosting_to_config(
     config: Union[rasr.StreamingRecognitionConfig, rasr.RecognitionConfig],
-    boosted_lm_words: Optional[List[str]],
-    boosted_lm_score: float,
+    boosted_words_file: Union[str, os.PathLike],
+    boosted_words_score: float,
 ) -> None:
     inner_config: rasr.RecognitionConfig = config if isinstance(config, rasr.RecognitionConfig) else config.config
-    if boosted_lm_words is not None:
+    boosted_words = []
+    if boosted_words_file:
+        with open(boosted_words_file) as f:
+            boosted_words = f.read().splitlines()
+
+    if boosted_words is not None:
         speech_context = rasr.SpeechContext()
-        speech_context.phrases.extend(boosted_lm_words)
-        speech_context.boost = boosted_lm_score
+        speech_context.phrases.extend(boosted_words)
+        speech_context.boost = boosted_words_score
         inner_config.speech_contexts.append(speech_context)
 
 

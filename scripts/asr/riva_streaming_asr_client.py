@@ -26,7 +26,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--num-parallel-requests", default=1, type=int, help="Number of client threads.")
     parser.add_argument("--num-iterations", default=1, type=int, help="Number of iterations over the file.")
     parser.add_argument(
-        "--input-file", required=True, type=str, help="Name of the WAV file with LINEAR_PCM encoding to transcribe."
+        "--input-file", required=True, type=Path, help="Name of the WAV file with LINEAR_PCM encoding to transcribe."
     )
     parser.add_argument(
         "--simulate-realtime",
