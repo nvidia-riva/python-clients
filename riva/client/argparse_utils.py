@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 import argparse
+from pathlib import Path
 
 
 def add_asr_config_argparse_parameters(
@@ -35,16 +36,18 @@ def add_asr_config_argparse_parameters(
         help="Flag that controls if transcript should be automatically punctuated",
     )
     parser.add_argument(
-        "--no-verbatim-transcripts",
-        default=False,
-        action='store_true',
-        help="If specified, text inverse normalization will be applied",
+        "--verbatim-transcripts",
+        default=True,
+        action='store_false',
+        help="True returns text exactly as it was said. False applies Inverse text normalization",
     )
     parser.add_argument("--language-code", default="en-US", help="Language code of the model to be used.")
     parser.add_argument("--model-name", default="", help="Name of the model to be used to be used.")
-    parser.add_argument("--boosted-lm-words", action='append', help="Words to boost when decoding.")
     parser.add_argument(
-        "--boosted-lm-score", type=float, default=4.0, help="Value by which to boost words when decoding."
+        "--boosted-words-file", default=None, type=Path, help="File with a list of words to boost. One line per word."
+    )
+    parser.add_argument(
+        "--boosted-words-score", type=float, default=4.0, help="Score by which to boost the boosted words."
     )
     parser.add_argument(
         "--speaker-diarization",
