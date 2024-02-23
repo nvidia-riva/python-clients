@@ -37,9 +37,9 @@ def add_asr_config_argparse_parameters(
     )
     parser.add_argument(
         "--verbatim-transcripts",
-        default=True,
-        action='store_false',
-        help="True returns text exactly as it was said. False applies Inverse text normalization",
+        default=False,
+        action='store_true',
+        help="Flag to disable Inverse text normalization and return the text exactly as it was said",
     )
     parser.add_argument("--language-code", default="en-US", help="Language code of the model to be used.")
     parser.add_argument("--model-name", default="", help="Name of the model to be used to be used.")
