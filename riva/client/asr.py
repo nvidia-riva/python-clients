@@ -198,6 +198,8 @@ def print_streaming(
             if not response.results:
                 continue
             partial_transcript = ""
+            # For debug
+            print(response)
             for result in response.results:
                 if not result.alternatives:
                     continue
