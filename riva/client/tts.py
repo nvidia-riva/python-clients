@@ -74,7 +74,7 @@ class SpeechSynthesisService:
         if audio_prompt_file is not None:
             with wave.open(str(audio_prompt_file), 'rb') as wf:
                 rate = wf.getframerate()
-                req.zero_shot_data.sample_rate = rate
+                req.zero_shot_data.sample_rate_hz = rate
             with audio_prompt_file.open('rb') as wav_f:
                 audio_data = wav_f.read()
                 req.zero_shot_data.audio_prompt = audio_data
@@ -131,7 +131,7 @@ class SpeechSynthesisService:
         if audio_prompt_file is not None:
             with wave.open(str(audio_prompt_file), 'rb') as wf:
                 rate = wf.getframerate()
-                req.zero_shot_data.sample_rate = rate
+                req.zero_shot_data.sample_rate_hz = rate
             with audio_prompt_file.open('rb') as wav_f:
                 audio_data = wav_f.read()
                 req.zero_shot_data.audio_prompt = audio_data
