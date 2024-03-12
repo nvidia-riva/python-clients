@@ -22,7 +22,12 @@ def parse_args() -> argparse.Namespace:
         "based on parameter `--language-code`.",
     )
     parser.add_argument("--text", type=str, required=True, help="Text input to synthesize.")
+    parser.add_argument(
+        "--audio_prompt_file",
+        type=Path,
+        help="An input audio prompt (.wav) file for zero shot model. This is required to do zero shot inferencing.")
     parser.add_argument("-o", "--output", type=Path, help="Output file .wav file to write synthesized audio.")
+    parser.add_argument("--quality", type=int, help="Number of times decoder should be run on the output audio. A higher number improves quality of the produced output but introduces latencies.")
     parser.add_argument(
         "--play-audio",
         action="store_true",
@@ -81,7 +86,8 @@ def main() -> None:
         start = time.time()
         if args.stream:
             responses = service.synthesize_online(
-                args.text, args.voice, args.language_code, sample_rate_hz=args.sample_rate_hz
+                args.text, args.voice, args.language_code, sample_rate_hz=args.sample_rate_hz,
+                audio_prompt_file=args.audio_prompt_file, quality=20 if args.quality is None else args.quality
             )
             first = True
             for resp in responses:
@@ -95,7 +101,8 @@ def main() -> None:
                     out_f.writeframesraw(resp.audio)
         else:
             resp = service.synthesize(
-                args.text, args.voice, args.language_code, sample_rate_hz=args.sample_rate_hz
+                args.text, args.voice, args.language_code, sample_rate_hz=args.sample_rate_hz,
+                audio_prompt_file=args.audio_prompt_file, quality=20 if args.quality is None else args.quality
             )
             stop = time.time()
             print(f"Time spent: {(stop - start):.3f}s")
