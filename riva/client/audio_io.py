@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 import queue
-from typing import Dict, Union, Optional
+from typing import Dict, Optional, Union
 
 import pyaudio
 
@@ -10,9 +10,9 @@ import pyaudio
 class MicrophoneStream:
     """Opens a recording stream as responses yielding the audio chunks."""
 
-    def __init__(self, rate: int, chunk: int, device: int = None) -> None:
+    def __init__(self, rate: int, chunk_duration_ms: int, device: int = None) -> None:
         self._rate = rate
-        self._chunk = chunk
+        self._chunk = int(chunk_duration_ms * rate / 1000)
         self._device = device
 
         # Create a thread-safe buffer of audio data
@@ -115,9 +115,7 @@ def list_input_devices() -> None:
 
 
 class SoundCallBack:
-    def __init__(
-        self, output_device_index: Optional[int], sampwidth: int, nchannels: int, framerate: int,
-    ) -> None:
+    def __init__(self, output_device_index: Optional[int], sampwidth: int, nchannels: int, framerate: int,) -> None:
         self.pa = pyaudio.PyAudio()
         self.stream = self.pa.open(
             output_device_index=output_device_index,
