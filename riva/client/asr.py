@@ -237,7 +237,7 @@ def print_streaming(
                         for i, alternative in enumerate(result.alternatives):
                             for f in output_file:
                                 f.write(
-                                    f"Time {time.time() - start_time:.2f}s: Transcript {i}: {alternative.transcript}\n"
+                                    f"Time {time.time() - start_time:.2f}s: Final Transcript {i}: Audio Processed {result.audio_processed}: {alternative.transcript}\n"
                                 )
                         if word_time_offsets:
                             for f in output_file:
@@ -269,7 +269,7 @@ def print_streaming(
             elif additional_info == 'time':
                 for f in output_file:
                     if partial_transcript:
-                        f.write(f">>>Time {time.time():.2f}s: {partial_transcript}\n")
+                        f.write(f">>>Time {time.time() - start_time:.2f}s: {partial_transcript}\n")
             else:
                 for f in output_file:
                     f.write('----\n')
