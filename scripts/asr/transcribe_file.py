@@ -50,7 +50,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser = add_connection_argparse_parameters(parser)
     parser = add_asr_config_argparse_parameters(
-        parser, max_alternatives=True, profanity_filter=True, word_time_offsets=True
+        parser, max_alternatives=True, profanity_filter=True, word_time_offsets=True,
     )
     args = parser.parse_args()
     if not args.list_devices and args.input_file is None:
@@ -83,7 +83,7 @@ def main() -> None:
             model=args.model_name,
             verbatim_transcripts=args.verbatim_transcripts,
         ),
-        interim_results=True,
+        interim_results=args.show_intermediate,
     )
     riva.client.add_word_boosting_to_config(config, args.boosted_lm_words, args.boosted_lm_score)
     sound_callback = None
@@ -104,7 +104,8 @@ def main() -> None:
                     audio_chunks=audio_chunk_iterator, streaming_config=config,
                 ),
                 show_intermediate=args.show_intermediate,
-                additional_info="confidence" if args.print_confidence else "no",
+                additional_info="confidence" if args.print_confidence else "time" if args.word_time_offsets else "no",
+                word_time_offsets=args.word_time_offsets,
             )
     finally:
         if sound_callback is not None and sound_callback.opened:
