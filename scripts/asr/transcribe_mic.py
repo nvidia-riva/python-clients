@@ -4,9 +4,8 @@
 import argparse
 
 import riva.client
-from riva.client.argparse_utils import add_asr_config_argparse_parameters, add_connection_argparse_parameters
-
 import riva.client.audio_io
+from riva.client.argparse_utils import add_asr_config_argparse_parameters, add_connection_argparse_parameters
 
 
 def parse_args() -> argparse.Namespace:
@@ -26,12 +25,7 @@ def parse_args() -> argparse.Namespace:
         help="A number of frames per second in audio streamed from a microphone.",
         default=16000,
     )
-    parser.add_argument(
-        "--file-streaming-chunk",
-        type=int,
-        default=1600,
-        help="A maximum number of frames in a audio chunk sent to server.",
-    )
+    parser.add_argument("--chunk-duration-ms", type=int, default=100, help="Chunk duration in milliseconds.")
     args = parser.parse_args()
     return args
 
@@ -51,21 +45,17 @@ def main() -> None:
             profanity_filter=args.profanity_filter,
             enable_automatic_punctuation=args.automatic_punctuation,
             verbatim_transcripts=not args.no_verbatim_transcripts,
-            sample_rate_hertz=args.sample_rate_hz,
-            audio_channel_count=1,
+            model=args.model_name,
         ),
         interim_results=True,
     )
     riva.client.add_word_boosting_to_config(config, args.boosted_lm_words, args.boosted_lm_score)
     with riva.client.audio_io.MicrophoneStream(
-        args.sample_rate_hz,
-        args.file_streaming_chunk,
-        device=args.input_device,
+        args.sample_rate_hz, args.chunk_duration_ms, device=args.input_device,
     ) as audio_chunk_iterator:
         riva.client.print_streaming(
             responses=asr_service.streaming_response_generator(
-                audio_chunks=audio_chunk_iterator,
-                streaming_config=config,
+                audio_chunks=audio_chunk_iterator, streaming_config=config,
             ),
             show_intermediate=True,
         )

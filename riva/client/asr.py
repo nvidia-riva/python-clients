@@ -30,7 +30,7 @@ def get_wav_file_parameters(input_file: Union[str, os.PathLike]) -> Dict[str, Un
                 'duration': nframes / rate,
                 'nchannels': wf.getnchannels(),
                 'sampwidth': wf.getsampwidth(),
-                'data_offset': wf.getfp().size_read + wf.getfp().offset
+                'data_offset': wf.getfp().size_read + wf.getfp().offset,
             }
     except:
         # Not a WAV file
@@ -46,11 +46,11 @@ class AudioChunkFileIterator:
     def __init__(
         self,
         input_file: Union[str, os.PathLike],
-        chunk_n_frames: int,
+        chunk_duration_ms: int,
         delay_callback: Optional[Callable[[bytes, float], None]] = None,
     ) -> None:
         self.input_file: Path = Path(input_file).expanduser()
-        self.chunk_n_frames = chunk_n_frames
+        self.chunk_duration_ms = chunk_duration_ms
         self.delay_callback = delay_callback
         self.file_parameters = get_wav_file_parameters(self.input_file)
         self.file_object: Optional[typing.BinaryIO] = open(str(self.input_file), 'rb')
@@ -75,16 +75,21 @@ class AudioChunkFileIterator:
 
     def __next__(self) -> bytes:
         if self.file_parameters:
-            data = self.file_object.read(self.chunk_n_frames * self.file_parameters['sampwidth'] * self.file_parameters['nchannels'])
+            num_frames = int(self.chunk_duration_ms * self.file_parameters['framerate'] / 1000)
+            data = self.file_object.read(
+                num_frames * self.file_parameters['sampwidth'] * self.file_parameters['nchannels']
+            )
         else:
-            data = self.file_object.read(self.chunk_n_frames)
+            # Fixed chunk size when file_parameters is not available
+            data = self.file_object.read(8192)
         if not data:
             self.close()
             raise StopIteration
         if self.delay_callback is not None:
             offset = self.file_parameters['data_offset'] if self.first_buffer else 0
             self.delay_callback(
-                data[offset:], (len(data) - offset) / self.file_parameters['sampwidth'] / self.file_parameters['framerate']
+                data[offset:],
+                (len(data) - offset) / self.file_parameters['sampwidth'] / self.file_parameters['framerate'],
             )
             self.first_buffer = False
         return data
@@ -92,20 +97,24 @@ class AudioChunkFileIterator:
 
 def add_word_boosting_to_config(
     config: Union[rasr.StreamingRecognitionConfig, rasr.RecognitionConfig],
-    boosted_lm_words: Optional[List[str]],
-    boosted_lm_score: float,
+    boosted_words_file: Union[str, os.PathLike],
+    boosted_words_score: float,
 ) -> None:
     inner_config: rasr.RecognitionConfig = config if isinstance(config, rasr.RecognitionConfig) else config.config
-    if boosted_lm_words is not None:
+    boosted_words = []
+    if boosted_words_file:
+        with open(boosted_words_file) as f:
+            boosted_words = f.read().splitlines()
+
+    if boosted_words is not None:
         speech_context = rasr.SpeechContext()
-        speech_context.phrases.extend(boosted_lm_words)
-        speech_context.boost = boosted_lm_score
+        speech_context.phrases.extend(boosted_words)
+        speech_context.boost = boosted_words_score
         inner_config.speech_contexts.append(speech_context)
 
 
 def add_audio_file_specs_to_config(
-    config: Union[rasr.StreamingRecognitionConfig, rasr.RecognitionConfig],
-    audio_file: Union[str, os.PathLike],
+    config: Union[rasr.StreamingRecognitionConfig, rasr.RecognitionConfig], audio_file: Union[str, os.PathLike],
 ) -> None:
     inner_config: rasr.RecognitionConfig = config if isinstance(config, rasr.RecognitionConfig) else config.config
     wav_parameters = get_wav_file_parameters(audio_file)
@@ -114,10 +123,7 @@ def add_audio_file_specs_to_config(
         inner_config.audio_channel_count = wav_parameters['nchannels']
 
 
-def add_speaker_diarization_to_config(
-    config: Union[rasr.RecognitionConfig],
-    diarization_enable: bool,
-) -> None:
+def add_speaker_diarization_to_config(config: Union[rasr.RecognitionConfig], diarization_enable: bool,) -> None:
     inner_config: rasr.RecognitionConfig = config if isinstance(config, rasr.RecognitionConfig) else config.config
     if diarization_enable:
         diarization_config = rasr.SpeakerDiarizationConfig(enable_speaker_diarization=True)
@@ -129,6 +135,7 @@ PRINT_STREAMING_ADDITIONAL_INFO_MODES = ['no', 'time', 'confidence']
 
 def print_streaming(
     responses: Iterable[rasr.StreamingRecognizeResponse],
+    input_file: str = None,
     output_file: Optional[Union[Union[os.PathLike, str, TextIO], List[Union[os.PathLike, str, TextIO]]]] = None,
     additional_info: str = 'no',
     word_time_offsets: bool = False,
@@ -194,6 +201,10 @@ def print_streaming(
                 output_file[i] = Path(elem).expanduser().open(file_mode)
         start_time = time.time()  # used in 'time` additional_info
         num_chars_printed = 0  # used in 'no' additional_info
+        final_transcript = ""  # for printing best final transcript
+        if input_file:
+            for f in output_file:
+                f.write(f"File: {input_file}\n")
         for response in responses:
             if not response.results:
                 continue
@@ -204,6 +215,7 @@ def print_streaming(
                 transcript = result.alternatives[0].transcript
                 if additional_info == 'no':
                     if result.is_final:
+                        final_transcript += transcript
                         if show_intermediate:
                             overwrite_chars = ' ' * (num_chars_printed - len(transcript))
                             for i, f in enumerate(output_file):
@@ -221,10 +233,11 @@ def print_streaming(
                         partial_transcript += transcript
                 elif additional_info == 'time':
                     if result.is_final:
+                        final_transcript += transcript
                         for i, alternative in enumerate(result.alternatives):
                             for f in output_file:
                                 f.write(
-                                    f"Time {time.time() - start_time:.2f}s: Transcript {i}: {alternative.transcript}\n"
+                                    f"Time {time.time() - start_time:.2f}s: Final Transcript {i}: Audio Processed {result.audio_processed}: {alternative.transcript}\n"
                                 )
                         if word_time_offsets:
                             for f in output_file:
@@ -239,6 +252,7 @@ def print_streaming(
                         partial_transcript += transcript
                 else:  # additional_info == 'confidence'
                     if result.is_final:
+                        final_transcript += transcript
                         for f in output_file:
                             f.write(f'## {transcript}\n')
                             f.write(f'Confidence: {result.alternatives[0].confidence:9.4f}\n')
@@ -255,10 +269,13 @@ def print_streaming(
             elif additional_info == 'time':
                 for f in output_file:
                     if partial_transcript:
-                        f.write(f">>>Time {time.time():.2f}s: {partial_transcript}\n")
+                        f.write(f">>>Time {time.time() - start_time:.2f}s: {partial_transcript}\n")
             else:
                 for f in output_file:
                     f.write('----\n')
+        for f in output_file:
+            f.write(f"Final transcripts:\n")
+            f.write(f"0 : {final_transcript}\n")
     finally:
         for fo, elem in zip(file_opened, output_file):
             if fo:
@@ -284,6 +301,7 @@ def streaming_request_generator(
 
 class ASRService:
     """Provides streaming and offline recognition services. Calls gRPC stubs with authentication metadata."""
+
     def __init__(self, auth: Auth) -> None:
         """
         Initializes an instance of the class.
