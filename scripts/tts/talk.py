@@ -4,6 +4,7 @@
 import argparse
 import time
 import wave
+import json
 from pathlib import Path
 
 import riva.client
@@ -35,6 +36,7 @@ def parse_args() -> argparse.Namespace:
         "then the default output audio device will be used.",
     )
     parser.add_argument("--list-devices", action="store_true", help="List output audio devices indices.")
+    parser.add_argument("--list-voices", action="store_true", help="List available voices.")
     parser.add_argument("--output-device", type=int, help="Output device to use.")
     parser.add_argument("--language-code", default='en-US', help="A language of input text.")
     parser.add_argument(
@@ -49,15 +51,16 @@ def parse_args() -> argparse.Namespace:
     )
     parser = add_connection_argparse_parameters(parser)
     args = parser.parse_args()
-    if args.output is None and not args.play_audio and args.output_device is None and not args.list_devices:
-        parser.error(
-            f"You have to provide at least one of arguments: `--play-audio`, `--output-device`, `--output`, "
-            f"`--list-devices`."
-        )
-    if args.output is not None:
-        args.output = args.output.expanduser()
-    if args.list_devices or args.output_device or args.play_audio:
-        import riva.client.audio_io
+    if not args.list_voices:
+        if args.output is None and not args.play_audio and args.output_device is None and not args.list_devices:
+            parser.error(
+                f"You have to provide at least one of arguments: `--play-audio`, `--output-device`, `--output`, "
+                f"`--list-devices`."
+            )
+        if args.output is not None:
+            args.output = args.output.expanduser()
+        if args.list_devices or args.output_device or args.play_audio:
+            import riva.client.audio_io
     return args
 
 
@@ -71,6 +74,27 @@ def main() -> None:
     nchannels = 1
     sampwidth = 2
     sound_stream, out_f = None, None
+
+    if args.list_voices:
+        config_response = service.stub.GetRivaSynthesisConfig(
+                riva.client.proto.riva_tts_pb2.RivaSynthesisConfigRequest()
+            )
+        tts_models = dict()
+        for model_config in config_response.model_config:
+                language_code = model_config.parameters['language_code']
+                voice_name = model_config.parameters['voice_name']
+                subvoices = [voice.split(':')[0] for voice in model_config.parameters['subvoices'].split(',')]
+                full_voice_names = [voice_name + "." + subvoice for subvoice in subvoices]
+
+                if language_code in tts_models:
+                    tts_models[language_code]['voices'].extend(full_voice_names)
+                else:
+                    tts_models[language_code] = {"voices": full_voice_names}
+
+        tts_models = dict(sorted(tts_models.items()))
+        print(json.dumps(tts_models, indent=4))
+        return
+
     try:
         if args.output_device is not None or args.play_audio:
             sound_stream = riva.client.audio_io.SoundCallBack(
