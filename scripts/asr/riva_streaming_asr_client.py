@@ -63,6 +63,14 @@ def streaming_transcription_worker(
             ),
             interim_results=True,
         )
+        riva.client.add_endpoint_parameters_to_config(
+            config, 
+            args.endpoint_start_history, 
+            args.endpoint_start_threshold, 
+            args.endpoint_reset_history, 
+            args.endpoint_response_history, 
+            args.endpoint_stop_threshold
+        )
         riva.client.add_word_boosting_to_config(config, args.boosted_lm_words, args.boosted_lm_score)
         for _ in range(args.num_iterations):
             with riva.client.AudioChunkFileIterator(

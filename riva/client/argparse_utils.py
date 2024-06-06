@@ -48,6 +48,36 @@ def add_asr_config_argparse_parameters(
         action='store_true',
         help="Flag that controls if speaker diarization should be performed",
     )
+    parser.add_argument(
+        "--endpoint-start-history",
+        default=0,
+        type=int,
+        help="Value to detect and initiate start of speech utterance",
+    )
+    parser.add_argument(
+        "--endpoint-start-threshold",
+        default=0.5,
+        type=float,
+        help="Threshold value for detecting the start of speech utterance",
+    )
+    parser.add_argument(
+        "--endpoint-reset-history",
+        default=0,
+        type=int,
+        help="Value to reset the endpoint detection history",
+    )
+    parser.add_argument(
+        "--endpoint-response-history",
+        default=0,
+        type=int,
+        help="Value to determine the response history for endpoint detection",
+    )
+    parser.add_argument(
+        "--endpoint-stop-threshold",
+        default=0.5,
+        type=float,
+        help="Threshold value for detecting the end of speech utterance",
+    )
     return parser
 
 

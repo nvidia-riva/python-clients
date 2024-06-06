@@ -38,7 +38,14 @@ def main() -> None:
     )
     riva.client.add_word_boosting_to_config(config, args.boosted_lm_words, args.boosted_lm_score)
     riva.client.add_speaker_diarization_to_config(config, args.speaker_diarization)
-
+    riva.client.add_endpoint_parameters_to_config(
+        config, 
+        args.endpoint_start_history, 
+        args.endpoint_start_threshold, 
+        args.endpoint_reset_history, 
+        args.endpoint_response_history, 
+        args.endpoint_stop_threshold
+    )    
     with args.input_file.open('rb') as fh:
         data = fh.read()
     try:
