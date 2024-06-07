@@ -125,19 +125,19 @@ def add_speaker_diarization_to_config(
 
 def add_endpoint_parameters_to_config(
     config: Union[rasr.RecognitionConfig, rasr.EOUConfig],
-    endpoint_start_history: int,
-    endpoint_start_threshold: float,
-    endpoint_reset_history: int,
-    endpoint_response_history: int,
-    endpoint_stop_threshold: float,
+    start_history: int,
+    start_threshold: float,
+    stop_history: int,
+    stop_history_eou: int,
+    stop_threshold: float,
 ) -> None:
     inner_config: rasr.RecognitionConfig = config if isinstance(config, rasr.RecognitionConfig) else config.config
     eou_config = rasr.EOUConfig()
-    eou_config.endpoint_start_history = endpoint_start_history
-    eou_config.endpoint_start_threshold = endpoint_start_threshold
-    eou_config.endpoint_reset_history = endpoint_reset_history
-    eou_config.endpoint_response_history = endpoint_response_history
-    eou_config.endpoint_stop_threshold = endpoint_stop_threshold
+    eou_config.start_history = start_history
+    eou_config.start_threshold = start_threshold
+    eou_config.stop_history = stop_history
+    eou_config.stop_history_eou = stop_history_eou
+    eou_config.stop_threshold = stop_threshold
     inner_config.eou_config.CopyFrom(eou_config)
 
 
