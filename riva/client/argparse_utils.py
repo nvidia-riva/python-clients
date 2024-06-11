@@ -50,31 +50,31 @@ def add_asr_config_argparse_parameters(
     )
     parser.add_argument(
         "--start-history",
-        default=0,
+        default=-1,
         type=int,
         help="Value to detect and initiate start of speech utterance",
     )
     parser.add_argument(
         "--start-threshold",
-        default=0.0,
+        default=-1.0,
         type=float,
         help="Threshold value for detecting the start of speech utterance",
     )
     parser.add_argument(
         "--stop-history",
-        default=0,
+        default=-1,
         type=int,
         help="Value to reset the endpoint detection history",
     )
     parser.add_argument(
         "--stop-history-eou",
-        default=0,
+        default=-1,
         type=int,
         help="Value to determine the response history for endpoint detection",
     )
     parser.add_argument(
         "--stop-threshold",
-        default=0.0,
+        default=-1.0,
         type=float,
         help="Threshold value for detecting the end of speech utterance",
     )
