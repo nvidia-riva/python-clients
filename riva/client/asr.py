@@ -131,6 +131,9 @@ def add_endpoint_parameters_to_config(
     stop_history_eou: int,
     stop_threshold: float,
 ) -> None:
+    if not (start_history > 0 or start_threshold > 0 or stop_history > 0 or stop_history_eou > 0 or stop_threshold > 0):
+        return 
+         
     inner_config: rasr.RecognitionConfig = config if isinstance(config, rasr.RecognitionConfig) else config.config
     endpointing_config = rasr.EndpointingConfig()
     if start_history > 0:
