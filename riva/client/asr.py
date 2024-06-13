@@ -123,6 +123,31 @@ def add_speaker_diarization_to_config(
         diarization_config = rasr.SpeakerDiarizationConfig(enable_speaker_diarization=True)
         inner_config.diarization_config.CopyFrom(diarization_config)
 
+def add_endpoint_parameters_to_config(
+    config: Union[rasr.RecognitionConfig, rasr.EndpointingConfig],
+    start_history: int,
+    start_threshold: float,
+    stop_history: int,
+    stop_history_eou: int,
+    stop_threshold: float,
+) -> None:
+    if not (start_history > 0 or start_threshold > 0 or stop_history > 0 or stop_history_eou > 0 or stop_threshold > 0):
+        return 
+         
+    inner_config: rasr.RecognitionConfig = config if isinstance(config, rasr.RecognitionConfig) else config.config
+    endpointing_config = rasr.EndpointingConfig()
+    if start_history > 0:
+        endpointing_config.start_history = start_history
+    if start_threshold > 0:
+        endpointing_config.start_threshold = start_threshold
+    if stop_history > 0:
+        endpointing_config.stop_history = stop_history
+    if stop_history_eou > 0:
+        endpointing_config.stop_history_eou = stop_history_eou
+    if stop_threshold > 0:
+        endpointing_config.stop_threshold = stop_threshold
+    inner_config.endpointing_config.CopyFrom(endpointing_config)
+
 
 PRINT_STREAMING_ADDITIONAL_INFO_MODES = ['no', 'time', 'confidence']
 

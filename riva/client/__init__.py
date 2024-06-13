@@ -11,6 +11,7 @@ from riva.client.asr import (
     print_offline,
     print_streaming,
     sleep_audio_length,
+    add_endpoint_parameters_to_config,
 )
 from riva.client.auth import Auth
 from riva.client.nlp import (
@@ -33,7 +34,7 @@ from riva.client.package_info import (
     __shortversion__,
     __version__,
 )
-from riva.client.proto.riva_asr_pb2 import RecognitionConfig, StreamingRecognitionConfig
+from riva.client.proto.riva_asr_pb2 import RecognitionConfig, StreamingRecognitionConfig, EndpointingConfig
 from riva.client.proto.riva_audio_pb2 import AudioEncoding
 from riva.client.proto.riva_nlp_pb2 import AnalyzeIntentOptions
 from riva.client.proto.riva_nmt_pb2 import StreamingTranslateSpeechToSpeechConfig, TranslationConfig, SynthesizeSpeechConfig, StreamingTranslateSpeechToTextConfig

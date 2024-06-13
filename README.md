@@ -84,7 +84,7 @@ its purpose and parameters.
 
 #### ASR
 
-You may find a detailed documentation [here](https://docs.nvidia.com/deeplearning/riva/user-guide/docs/apis/development-cpp.html).
+You may find a detailed documentation [here](https://docs.nvidia.com/deeplearning/riva/user-guide/docs/apis/cli.html).
 
 For transcribing in streaming mode you may use `scripts/asr/transcribe_file.py`.
 ```bash
