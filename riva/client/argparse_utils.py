@@ -2,10 +2,14 @@
 # SPDX-License-Identifier: MIT
 
 import argparse
+import riva.client
 
 
 def add_asr_config_argparse_parameters(
-    parser: argparse.ArgumentParser, max_alternatives: bool = False, profanity_filter: bool = False, word_time_offsets: bool = False
+    parser: argparse.ArgumentParser,
+    max_alternatives: bool = False,
+    profanity_filter: bool = False,
+    word_time_offsets: bool = False,
 ) -> argparse.ArgumentParser:
     if word_time_offsets:
         parser.add_argument(
@@ -20,10 +24,22 @@ def add_asr_config_argparse_parameters(
         )
     if profanity_filter:
         parser.add_argument(
-        "--profanity-filter",
-        default=False,
-        action='store_true',
-        help="Flag that controls the profanity filtering in the generated transcripts",
+            "--profanity-filter",
+            default=False,
+            action='store_true',
+            help="Flag that controls the profanity filtering in the generated transcripts",
+        )
+    parser.add_argument(
+        "--encoding",
+        type=int,
+        default=riva.client.AudioEncoding.Value('ENCODING_UNSPECIFIED'),
+        help=f"Encoding of the audio data. Supported values are {riva.client.AudioEncoding.items()}",
+    )
+    parser.add_argument(
+        "--sample-rate-hertz", type=int, default=None, help=f"Sample rate in Hz of the audio data",
+    )
+    parser.add_argument(
+        "--audio-channel-count", type=int, default=None, help=f"Channel count of the audio data",
     )
     parser.add_argument(
         "--automatic-punctuation",
@@ -32,11 +48,12 @@ def add_asr_config_argparse_parameters(
         help="Flag that controls if transcript should be automatically punctuated",
     )
     parser.add_argument(
-        "--no-verbatim-transcripts",
+        "--verbatim-transcripts",
         default=False,
         action='store_true',
-        help="If specified, text inverse normalization will be applied",
+        help="Flag to disable Inverse Text Normalization (ITN) and return the text exactly as it was said",
     )
+    parser.add_argument("--model-name", default="", help="Name of the model to be used to be used.")
     parser.add_argument("--language-code", default="en-US", help="Language code of the model to be used.")
     parser.add_argument("--boosted-lm-words", action='append', help="Words to boost when decoding.")
     parser.add_argument(
