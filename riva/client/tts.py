@@ -10,6 +10,27 @@ import riva.client.proto.riva_tts_pb2_grpc as rtts_srv
 from riva.client import Auth
 from riva.client.proto.riva_audio_pb2 import AudioEncoding
 import wave
+import argparse
+
+def read_file_to_dict(file_path):
+    result_list = []
+    with open(file_path, 'r') as file:
+        for line_number, line in enumerate(file, start=1):
+            line = line.strip()
+            if not line:
+                print(f"Warning: Empty line at line number {line_number}.")
+                continue
+            try:
+                key, value = line.split('  ', 1)  # Split by double space
+                result_list.append(f"{key}  {value}")
+            except ValueError:
+                print(f"Warning: Malformed line at line number {line_number}: {line}")
+                continue
+    if not result_list:
+        raise ValueError("Error: No valid entries found in the file.")
+    
+    result_string = ', '.join(result_list)
+    return result_string
 
 class SpeechSynthesisService:
     """
@@ -38,6 +59,7 @@ class SpeechSynthesisService:
         audio_prompt_encoding: AudioEncoding = AudioEncoding.LINEAR_PCM,
         quality: int = 20,
         future: bool = False,
+        user_dictionary: Optional[str] = None,
     ) -> Union[rtts.SynthesizeSpeechResponse, _MultiThreadedRendezvous]:
         """
         Synthesizes an entire audio for text :param:`text`.
@@ -81,6 +103,9 @@ class SpeechSynthesisService:
             req.zero_shot_data.encoding = audio_prompt_encoding
             req.zero_shot_data.quality = quality
 
+        if user_dictionary is not None:
+            req.user_dictionary = read_file_to_dict(user_dictionary)
+
         func = self.stub.Synthesize.future if future else self.stub.Synthesize
         return func(req, metadata=self.auth.get_auth_metadata())
 
@@ -94,6 +119,7 @@ class SpeechSynthesisService:
         audio_prompt_file: Optional[str] = None,
         audio_prompt_encoding: AudioEncoding = AudioEncoding.LINEAR_PCM,
         quality: int = 20,
+        user_dictionary: Optional[str] = None,
     ) -> Generator[rtts.SynthesizeSpeechResponse, None, None]:
         """
         Synthesizes and yields output audio chunks for text :param:`text` as the chunks
@@ -111,6 +137,7 @@ class SpeechSynthesisService:
             audio_prompt_encoding: (:obj:`AudioEncoding`): Encoding of audio prompt file, e.g. ``AudioEncoding.LINEAR_PCM``.
             quality: (:obj:`int`): This defines the number of times decoder is run. Higher number improves quality of generated
                                    audio but also takes longer to generate the audio. Ranges between 1-40.
+            user_dictionary (:obj:`str`, `optional`): A file path to a user dictionary with key-value pairs separated by double spaces.
 
         Yields:
             :obj:`riva.client.proto.riva_tts_pb2.SynthesizeSpeechResponse`: a response with output. You may find
@@ -118,6 +145,7 @@ class SpeechSynthesisService:
             <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-tts-proto>`_.
             If :param:`future` is :obj:`True`, then a future object is returned. You may retrieve a response from a
             future object by calling ``result()`` method.
+            user_dictionary (:obj:`str`, `optional`): A file path to a user dictionary with key-value pairs separated by double spaces.
         """
         req = rtts.SynthesizeSpeechRequest(
             text=text,
@@ -137,5 +165,8 @@ class SpeechSynthesisService:
                 req.zero_shot_data.audio_prompt = audio_data
             req.zero_shot_data.encoding = audio_prompt_encoding
             req.zero_shot_data.quality = quality
+
+        if user_dictionary is not None:
+            req.user_dictionary = read_file_to_dict(user_dictionary)
 
         return self.stub.SynthesizeOnline(req, metadata=self.auth.get_auth_metadata())

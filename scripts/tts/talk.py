@@ -40,6 +40,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--sample-rate-hz", type=int, default=44100, help="Number of audio frames per second in synthesized audio."
     )
+    parser.add_argument("--user-dictionary", type=str, help="Path to user dictionary file")
     parser.add_argument(
         "--stream",
         action="store_true",
@@ -87,7 +88,8 @@ def main() -> None:
         if args.stream:
             responses = service.synthesize_online(
                 args.text, args.voice, args.language_code, sample_rate_hz=args.sample_rate_hz,
-                audio_prompt_file=args.audio_prompt_file, quality=20 if args.quality is None else args.quality
+                audio_prompt_file=args.audio_prompt_file, quality=20 if args.quality is None else args.quality,
+                user_dictionary=args.user_dictionary
             )
             first = True
             for resp in responses:
@@ -102,7 +104,8 @@ def main() -> None:
         else:
             resp = service.synthesize(
                 args.text, args.voice, args.language_code, sample_rate_hz=args.sample_rate_hz,
-                audio_prompt_file=args.audio_prompt_file, quality=20 if args.quality is None else args.quality
+                audio_prompt_file=args.audio_prompt_file, quality=20 if args.quality is None else args.quality,
+                user_dictionary=args.user_dictionary
             )
             stop = time.time()
             print(f"Time spent: {(stop - start):.3f}s")

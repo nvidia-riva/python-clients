@@ -1,4 +1,4 @@
 [submodule "common"]
 	path = common
-	url = https://github.com/nvidia-riva/common.git
-	branch = main
+	url = https://github.com/manishaj-nv/common.git
+	branch = dev/mkj/tts_add_custom_g2p
