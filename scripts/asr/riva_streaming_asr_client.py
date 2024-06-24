@@ -64,12 +64,13 @@ def streaming_transcription_worker(
             interim_results=True,
         )
         riva.client.add_endpoint_parameters_to_config(
-            config, 
-            args.start_history, 
-            args.start_threshold, 
-            args.stop_history, 
-            args.stop_history_eou, 
-            args.stop_threshold
+            config,
+            args.start_history,
+            args.start_threshold,
+            args.stop_history,
+            args.stop_history_eou,
+            args.stop_threshold,
+            args.stop_eou_threshold
         )
         riva.client.add_word_boosting_to_config(config, args.boosted_lm_words, args.boosted_lm_score)
         for _ in range(args.num_iterations):

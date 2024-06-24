@@ -78,6 +78,12 @@ def add_asr_config_argparse_parameters(
         type=float,
         help="Threshold value for detecting the end of speech utterance",
     )
+    parser.add_argument(
+        "--stop-eou-threshold",
+        default=-1.0,
+        type=float,
+        help="Threshold value for likelihood of blanks before detecting end of utterance",
+    )
     return parser
 
 
