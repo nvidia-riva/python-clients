@@ -64,7 +64,7 @@ def main() -> None:
         args.stop_history,
         args.stop_history_eou,
         args.stop_threshold,
-        args.stop_eou_threshold
+        args.stop_threshold_eou
     )
     with riva.client.audio_io.MicrophoneStream(
         args.sample_rate_hz,

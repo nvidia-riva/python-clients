@@ -86,7 +86,7 @@ def main() -> None:
         args.stop_history,
         args.stop_history_eou,
         args.stop_threshold,
-        args.stop_eou_threshold
+        args.stop_threshold_eou
     )
     sound_callback = None
     try:
