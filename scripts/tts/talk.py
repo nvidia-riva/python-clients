@@ -27,7 +27,7 @@ def parse_args() -> argparse.Namespace:
         "--audio_prompt_file",
         type=Path,
         help="An input audio prompt (.wav) file for zero shot model. This is required to do zero shot inferencing.")
-    parser.add_argument("-o", "--output", type=Path, help="Output file .wav file to write synthesized audio.")
+    parser.add_argument("-o", "--output", type=Path, default="output.wav", help="Output file .wav file to write synthesized audio.")
     parser.add_argument("--quality", type=int, help="Number of times decoder should be run on the output audio. A higher number improves quality of the produced output but introduces latencies.")
     parser.add_argument(
         "--play-audio",
@@ -51,11 +51,6 @@ def parse_args() -> argparse.Namespace:
     )
     parser = add_connection_argparse_parameters(parser)
     args = parser.parse_args()
-    if args.output is None and not args.play_audio and args.output_device is None and not args.list_devices and not args.list_voices:
-        parser.error(
-            f"You have to provide at least one of arguments: `--play-audio`, `--output-device`, `--output`, "
-            f"`--list-devices`, `--list-voices`."
-        )
     if args.output is not None:
         args.output = args.output.expanduser()
     if args.list_devices or args.output_device or args.play_audio:
