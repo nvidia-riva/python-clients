@@ -22,7 +22,7 @@ def parse_args() -> argparse.Namespace:
         help="A voice name to use. If this parameter is missing, then the server will try a first available model "
         "based on parameter `--language-code`.",
     )
-    parser.add_argument("--text", type=str, required=True, help="Text input to synthesize.")
+    parser.add_argument("--text", type=str, required=False, help="Text input to synthesize.")
     parser.add_argument(
         "--audio_prompt_file",
         type=Path,
@@ -51,16 +51,15 @@ def parse_args() -> argparse.Namespace:
     )
     parser = add_connection_argparse_parameters(parser)
     args = parser.parse_args()
-    if not args.list_voices:
-        if args.output is None and not args.play_audio and args.output_device is None and not args.list_devices:
-            parser.error(
-                f"You have to provide at least one of arguments: `--play-audio`, `--output-device`, `--output`, "
-                f"`--list-devices`."
-            )
-        if args.output is not None:
-            args.output = args.output.expanduser()
-        if args.list_devices or args.output_device or args.play_audio:
-            import riva.client.audio_io
+    if args.output is None and not args.play_audio and args.output_device is None and not args.list_devices and not args.list_voices:
+        parser.error(
+            f"You have to provide at least one of arguments: `--play-audio`, `--output-device`, `--output`, "
+            f"`--list-devices`, `--list-voices`."
+        )
+    if args.output is not None:
+        args.output = args.output.expanduser()
+    if args.list_devices or args.output_device or args.play_audio:
+        import riva.client.audio_io
     return args
 
 
@@ -68,7 +67,7 @@ def main() -> None:
     args = parse_args()
     if args.list_devices:
         riva.client.audio_io.list_output_devices()
-        return
+
     auth = riva.client.Auth(args.ssl_cert, args.use_ssl, args.server, args.metadata)
     service = riva.client.SpeechSynthesisService(auth)
     nchannels = 1
@@ -93,6 +92,9 @@ def main() -> None:
 
         tts_models = dict(sorted(tts_models.items()))
         print(json.dumps(tts_models, indent=4))
+
+    if not args.text:
+        print("No input text provided")
         return
 
     try:
