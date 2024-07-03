@@ -52,7 +52,7 @@ def add_asr_config_argparse_parameters(
         "--start-history",
         default=-1,
         type=int,
-        help="Value to detect and initiate start of speech utterance",
+        help="Value (in milliseconds) to detect and initiate start of speech utterance",
     )
     parser.add_argument(
         "--start-threshold",
@@ -64,19 +64,25 @@ def add_asr_config_argparse_parameters(
         "--stop-history",
         default=-1,
         type=int,
-        help="Value to reset the endpoint detection history",
-    )
-    parser.add_argument(
-        "--stop-history-eou",
-        default=-1,
-        type=int,
-        help="Value to determine the response history for endpoint detection",
+        help="Value (in milliseconds) to detect end of utterance and reset decoder",
     )
     parser.add_argument(
         "--stop-threshold",
         default=-1.0,
         type=float,
         help="Threshold value for detecting the end of speech utterance",
+    )
+    parser.add_argument(
+        "--stop-history-eou",
+        default=-1,
+        type=int,
+        help="Value (in milliseconds) to detect end of utterance for the 1st pass and generate an intermediate final transcript",
+    )
+    parser.add_argument(
+        "--stop-threshold-eou",
+        default=-1.0,
+        type=float,
+        help="Threshold value for likelihood of blanks before detecting end of utterance",
     )
     return parser
 
