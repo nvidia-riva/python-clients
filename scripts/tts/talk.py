@@ -127,8 +127,8 @@ def main() -> None:
             out_f.setsampwidth(sampwidth)
             out_f.setframerate(args.sample_rate_hz)
 
-        if args.user_dictionary is not None:
-            user_dictionary_input = read_file_to_dict(args.user_dictionary)
+        if args.custom_dictionary is not None:
+            custom_dictionary_input = read_file_to_dict(args.custom_dictionary)
 
         print("Generating audio for request...")
         start = time.time()
@@ -136,7 +136,7 @@ def main() -> None:
             responses = service.synthesize_online(
                 args.text, args.voice, args.language_code, sample_rate_hz=args.sample_rate_hz,
                 audio_prompt_file=args.audio_prompt_file, quality=20 if args.quality is None else args.quality,
-                user_dictionary=user_dictionary_input
+                custom_dictionary=custom_dictionary_input
             )
             first = True
             for resp in responses:
@@ -152,7 +152,7 @@ def main() -> None:
             resp = service.synthesize(
                 args.text, args.voice, args.language_code, sample_rate_hz=args.sample_rate_hz,
                 audio_prompt_file=args.audio_prompt_file, quality=20 if args.quality is None else args.quality,
-                user_dictionary=user_dictionary_input
+                custom_dictionary=custom_dictionary_input
             )
             stop = time.time()
             print(f"Time spent: {(stop - start):.3f}s")
