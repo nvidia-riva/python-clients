@@ -55,6 +55,7 @@ def streaming_transcription_worker(
         config = riva.client.StreamingRecognitionConfig(
             config=riva.client.RecognitionConfig(
                 language_code=args.language_code,
+                model=args.model_name,
                 max_alternatives=args.max_alternatives,
                 profanity_filter=args.profanity_filter,
                 enable_automatic_punctuation=args.automatic_punctuation,
