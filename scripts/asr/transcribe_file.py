@@ -3,6 +3,7 @@
 
 import argparse
 
+import os
 import riva.client
 from riva.client.argparse_utils import add_asr_config_argparse_parameters, add_connection_argparse_parameters
 
@@ -81,6 +82,10 @@ def main() -> None:
         print("Available ASR models")
         asr_models = dict(sorted(asr_models.items()))
         print(asr_models)
+        return
+
+    if not os.path.isfile(args.input_file):
+        print(f"Invalid input file path: {args.input_file}")
         return
 
     config = riva.client.StreamingRecognitionConfig(
