@@ -15,8 +15,11 @@ def parse_args() -> argparse.Namespace:
         "`--play-audio` or `--output-device`.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
-    parser.add_argument("--input-file", help="A path to a local file to stream.")
-    parser.add_argument("--list-devices", action="store_true", help="List output devices indices")
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument("--input-file", help="A path to a local file to stream.")
+    group.add_argument("--list-models", action="store_true", help="List available models.")
+    group.add_argument("--list-devices", action="store_true", help="List output devices indices")
+
     parser.add_argument(
         "--show-intermediate", action="store_true", help="Show intermediate transcripts as they are available."
     )
@@ -51,11 +54,6 @@ def parse_args() -> argparse.Namespace:
     parser = add_connection_argparse_parameters(parser)
     parser = add_asr_config_argparse_parameters(parser, max_alternatives=True, profanity_filter=True, word_time_offsets=True)
     args = parser.parse_args()
-    if not args.list_devices and args.input_file is None:
-        parser.error(
-            "You have to provide at least one of parameters `--input-file` and `--list-devices` whereas both "
-            "parameters are missing."
-        )
     if args.play_audio or args.output_device is not None or args.list_devices:
         import riva.client.audio_io
     return args
@@ -68,6 +66,23 @@ def main() -> None:
         return
     auth = riva.client.Auth(args.ssl_cert, args.use_ssl, args.server, args.metadata)
     asr_service = riva.client.ASRService(auth)
+
+    if args.list_models:
+        asr_models = dict()
+        config_response = asr_service.stub.GetRivaSpeechRecognitionConfig(riva.client.proto.riva_asr_pb2.RivaSpeechRecognitionConfigRequest())
+        for model_config in config_response.model_config:
+            if model_config.parameters["streaming"] and model_config.parameters["type"]:
+                language_code = model_config.parameters['language_code']
+                if language_code in asr_models:
+                    asr_models[language_code]["models"].append(model_config.model_name)
+                else:
+                    asr_models[language_code] = {"models": [model_config.model_name]}
+
+        print("Available ASR models")
+        asr_models = dict(sorted(asr_models.items()))
+        print(asr_models)
+        return
+
     config = riva.client.StreamingRecognitionConfig(
         config=riva.client.RecognitionConfig(
             language_code=args.language_code,

@@ -13,16 +13,18 @@ from riva.client.argparse_utils import add_connection_argparse_parameters
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="A speech synthesis via Riva AI Services. You HAVE TO provide at least one of arguments "
-        "`--output`, `--play-audio`, `--list-devices`, `--output-device`.",
+        description="Speech synthesis via Riva AI Services",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument("--text", type=str, help="Text input to synthesize.")
+    group.add_argument("--list-devices", action="store_true", help="List output audio devices indices.")
+    group.add_argument("--list-voices", action="store_true", help="List available voices.")
     parser.add_argument(
         "--voice",
         help="A voice name to use. If this parameter is missing, then the server will try a first available model "
         "based on parameter `--language-code`.",
     )
-    parser.add_argument("--text", type=str, required=False, help="Text input to synthesize.")
     parser.add_argument(
         "--audio_prompt_file",
         type=Path,
@@ -35,8 +37,6 @@ def parse_args() -> argparse.Namespace:
         help="Whether to play input audio simultaneously with transcribing. If `--output-device` is not provided, "
         "then the default output audio device will be used.",
     )
-    parser.add_argument("--list-devices", action="store_true", help="List output audio devices indices.")
-    parser.add_argument("--list-voices", action="store_true", help="List available voices.")
     parser.add_argument("--output-device", type=int, help="Output device to use.")
     parser.add_argument("--language-code", default='en-US', help="A language of input text.")
     parser.add_argument(
@@ -62,6 +62,7 @@ def main() -> None:
     args = parse_args()
     if args.list_devices:
         riva.client.audio_io.list_output_devices()
+        return
 
     auth = riva.client.Auth(args.ssl_cert, args.use_ssl, args.server, args.metadata)
     service = riva.client.SpeechSynthesisService(auth)
@@ -87,6 +88,7 @@ def main() -> None:
 
         tts_models = dict(sorted(tts_models.items()))
         print(json.dumps(tts_models, indent=4))
+        return
 
     if not args.text:
         print("No input text provided")

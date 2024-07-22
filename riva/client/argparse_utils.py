@@ -39,9 +39,9 @@ def add_asr_config_argparse_parameters(
     )
     parser.add_argument("--language-code", default="en-US", help="Language code of the model to be used.")
     parser.add_argument("--model-name", default="", help="Model name to be used.")
-    parser.add_argument("--boosted-lm-words", action='append', help="Words to boost when decoding.")
+    parser.add_argument("--boosted-lm-words", action='append', help="Words to boost when decoding. Can be used multiple times to boost multiple words.")
     parser.add_argument(
-        "--boosted-lm-score", type=float, default=4.0, help="Value by which to boost words when decoding."
+        "--boosted-lm-score", type=float, default=4.0, help="Recommended range for the boost score is 20 to 100. The higher the boost score, the more biased the ASR engine is towards this word."
     )
     parser.add_argument(
         "--speaker-diarization",
