@@ -10,8 +10,8 @@ from threading import Thread
 from typing import Union
 
 import riva.client
-from riva.client.asr import get_wav_file_parameters
 from riva.client.argparse_utils import add_asr_config_argparse_parameters, add_connection_argparse_parameters
+from riva.client.asr import get_wav_file_parameters
 
 
 def parse_args() -> argparse.Namespace:
@@ -38,7 +38,9 @@ def parse_args() -> argparse.Namespace:
         "--file-streaming-chunk", type=int, default=1600, help="Number of frames in one chunk sent to server."
     )
     parser = add_connection_argparse_parameters(parser)
-    parser = add_asr_config_argparse_parameters(parser, max_alternatives=True, profanity_filter=True, word_time_offsets=True)
+    parser = add_asr_config_argparse_parameters(
+        parser, max_alternatives=True, profanity_filter=True, word_time_offsets=True
+    )
     args = parser.parse_args()
     if args.max_alternatives < 1:
         parser.error("`--max-alternatives` must be greater than or equal to 1")
@@ -54,12 +56,16 @@ def streaming_transcription_worker(
         asr_service = riva.client.ASRService(auth)
         config = riva.client.StreamingRecognitionConfig(
             config=riva.client.RecognitionConfig(
+                encoding=args.encoding,
+                sample_rate_hertz=args.sample_rate_hertz,
                 language_code=args.language_code,
                 max_alternatives=args.max_alternatives,
                 profanity_filter=args.profanity_filter,
-                enable_automatic_punctuation=args.automatic_punctuation,
-                verbatim_transcripts=not args.no_verbatim_transcripts,
+                audio_channel_count=args.audio_channel_count,
                 enable_word_time_offsets=args.word_time_offsets,
+                enable_automatic_punctuation=args.automatic_punctuation,
+                model=args.model_name,
+                verbatim_transcripts=args.verbatim_transcripts,
             ),
             interim_results=True,
         )
@@ -81,8 +87,7 @@ def streaming_transcription_worker(
             ) as audio_chunk_iterator:
                 riva.client.print_streaming(
                     responses=asr_service.streaming_response_generator(
-                        audio_chunks=audio_chunk_iterator,
-                        streaming_config=config,
+                        audio_chunks=audio_chunk_iterator, streaming_config=config,
                     ),
                     output_file=output_file,
                     additional_info='time',
