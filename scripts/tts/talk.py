@@ -51,9 +51,6 @@ def parse_args() -> argparse.Namespace:
     )
     parser = add_connection_argparse_parameters(parser)
     args = parser.parse_args()
-    if not args.output.strip():
-        print("Empty output file path not allowed")
-        return
     if args.output is not None:
         args.output = args.output.expanduser()
     if args.list_devices or args.output_device or args.play_audio:
@@ -63,6 +60,9 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
+    if args.output.is_dir():
+        print("Empty output file path not allowed")
+        return
     if args.list_devices:
         riva.client.audio_io.list_output_devices()
         return
