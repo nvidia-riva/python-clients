@@ -17,7 +17,7 @@ def add_custom_dictionary_to_config(req, custom_dictionary):
         raise ValueError("Error: Input dictionary is empty.")
     
     result_list = [f"{key}  {value}" for key, value in custom_dictionary.items()]
-    result_string = ', '.join(result_list)
+    result_string = ','.join(result_list)
     req.custom_dictionary = result_string
 
 class SpeechSynthesisService:
@@ -66,6 +66,7 @@ class SpeechSynthesisService:
                                    audio but also takes longer to generate the audio. Ranges between 1-40.
             future (:obj:`bool`, defaults to :obj:`False`): Whether to return an async result instead of usual
                 response. You can get a response by calling ``result()`` method of the future object.
+            custom_dictionary (:obj:`dict`, `optional`): Dictionary with key-value pair containing grapheme and corresponding phoneme
 
         Returns:
             :obj:`Union[riva.client.proto.riva_tts_pb2.SynthesizeSpeechResponse, grpc._channel._MultiThreadedRendezvous]`:
@@ -124,7 +125,7 @@ class SpeechSynthesisService:
             audio_prompt_encoding: (:obj:`AudioEncoding`): Encoding of audio prompt file, e.g. ``AudioEncoding.LINEAR_PCM``.
             quality: (:obj:`int`): This defines the number of times decoder is run. Higher number improves quality of generated
                                    audio but also takes longer to generate the audio. Ranges between 1-40.
-            custom_dictionary (:obj:`dict`, `optional`): Key with grapheme and corresponding phoneme shared as dictionary converted to key-value pairs separated by double spaces.
+            custom_dictionary (:obj:`dict`, `optional`): Dictionary with key-value pair containing grapheme and corresponding phoneme
 
         Yields:
             :obj:`riva.client.proto.riva_tts_pb2.SynthesizeSpeechResponse`: a response with output. You may find
