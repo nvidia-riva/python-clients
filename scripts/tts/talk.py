@@ -60,7 +60,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--sample-rate-hz", type=int, default=44100, help="Number of audio frames per second in synthesized audio."
     )
-    parser.add_argument("--user-dictionary", type=str, help="A file path to a user dictionary with key-value pairs separated by double spaces.")
+    parser.add_argument("--custom-dictionary", type=str, help="A file path to a user dictionary with key-value pairs separated by double spaces.")
     parser.add_argument(
         "--stream",
         action="store_true",
