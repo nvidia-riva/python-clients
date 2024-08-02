@@ -10,12 +10,8 @@ import riva.client.proto.riva_tts_pb2_grpc as rtts_srv
 from riva.client import Auth
 from riva.client.proto.riva_audio_pb2 import AudioEncoding
 import wave
-import argparse
 
 def add_custom_dictionary_to_config(req, custom_dictionary):
-    if not custom_dictionary:
-        raise ValueError("Error: Input dictionary is empty.")
-    
     result_list = [f"{key}  {value}" for key, value in custom_dictionary.items()]
     result_string = ','.join(result_list)
     req.custom_dictionary = result_string

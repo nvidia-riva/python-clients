@@ -6,7 +6,6 @@ import time
 import wave
 import json
 from pathlib import Path
-import json
 
 import riva.client
 from riva.client.argparse_utils import add_connection_argparse_parameters
@@ -16,14 +15,11 @@ def read_file_to_dict(file_path):
     with open(file_path, 'r') as file:
         for line_number, line in enumerate(file, start=1):
             line = line.strip()
-            if not line:
-                print(f"Warning: Empty line at line number {line_number}.")
-                continue
             try:
                 key, value = line.split('  ', 1)  # Split by double space
                 result_dict[str(key.strip())] = str(value.strip())
             except ValueError:
-                print(f"Warning: Malformed line at line number {line_number}: {line}")
+                print(f"Warning: Malformed line {line}")
                 continue
     if not result_dict:
         raise ValueError("Error: No valid entries found in the file.")
@@ -127,6 +123,7 @@ def main() -> None:
             out_f.setsampwidth(sampwidth)
             out_f.setframerate(args.sample_rate_hz)
 
+        custom_dictionary_input = {}
         if args.custom_dictionary is not None:
             custom_dictionary_input = read_file_to_dict(args.custom_dictionary)
 
