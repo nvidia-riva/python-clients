@@ -11,6 +11,11 @@ from riva.client import Auth
 from riva.client.proto.riva_audio_pb2 import AudioEncoding
 import wave
 
+def add_custom_dictionary_to_config(req, custom_dictionary):
+    result_list = [f"{key}  {value}" for key, value in custom_dictionary.items()]
+    result_string = ','.join(result_list)
+    req.custom_dictionary = result_string
+
 class SpeechSynthesisService:
     """
     A class for synthesizing speech from text. Provides :meth:`synthesize` which returns entire audio for a text
@@ -38,6 +43,7 @@ class SpeechSynthesisService:
         audio_prompt_encoding: AudioEncoding = AudioEncoding.LINEAR_PCM,
         quality: int = 20,
         future: bool = False,
+        custom_dictionary: Optional[dict] = None,
     ) -> Union[rtts.SynthesizeSpeechResponse, _MultiThreadedRendezvous]:
         """
         Synthesizes an entire audio for text :param:`text`.
@@ -56,6 +62,7 @@ class SpeechSynthesisService:
                                    audio but also takes longer to generate the audio. Ranges between 1-40.
             future (:obj:`bool`, defaults to :obj:`False`): Whether to return an async result instead of usual
                 response. You can get a response by calling ``result()`` method of the future object.
+            custom_dictionary (:obj:`dict`, `optional`): Dictionary with key-value pair containing grapheme and corresponding phoneme
 
         Returns:
             :obj:`Union[riva.client.proto.riva_tts_pb2.SynthesizeSpeechResponse, grpc._channel._MultiThreadedRendezvous]`:
@@ -81,6 +88,8 @@ class SpeechSynthesisService:
             req.zero_shot_data.encoding = audio_prompt_encoding
             req.zero_shot_data.quality = quality
 
+        add_custom_dictionary_to_config(req, custom_dictionary)
+
         func = self.stub.Synthesize.future if future else self.stub.Synthesize
         return func(req, metadata=self.auth.get_auth_metadata())
 
@@ -94,6 +103,7 @@ class SpeechSynthesisService:
         audio_prompt_file: Optional[str] = None,
         audio_prompt_encoding: AudioEncoding = AudioEncoding.LINEAR_PCM,
         quality: int = 20,
+        custom_dictionary: Optional[dict] = None,
     ) -> Generator[rtts.SynthesizeSpeechResponse, None, None]:
         """
         Synthesizes and yields output audio chunks for text :param:`text` as the chunks
@@ -111,6 +121,7 @@ class SpeechSynthesisService:
             audio_prompt_encoding: (:obj:`AudioEncoding`): Encoding of audio prompt file, e.g. ``AudioEncoding.LINEAR_PCM``.
             quality: (:obj:`int`): This defines the number of times decoder is run. Higher number improves quality of generated
                                    audio but also takes longer to generate the audio. Ranges between 1-40.
+            custom_dictionary (:obj:`dict`, `optional`): Dictionary with key-value pair containing grapheme and corresponding phoneme
 
         Yields:
             :obj:`riva.client.proto.riva_tts_pb2.SynthesizeSpeechResponse`: a response with output. You may find
@@ -137,5 +148,7 @@ class SpeechSynthesisService:
                 req.zero_shot_data.audio_prompt = audio_data
             req.zero_shot_data.encoding = audio_prompt_encoding
             req.zero_shot_data.quality = quality
+
+        add_custom_dictionary_to_config(req, custom_dictionary)                   
 
         return self.stub.SynthesizeOnline(req, metadata=self.auth.get_auth_metadata())
