@@ -157,6 +157,8 @@ def main() -> None:
                 sound_stream(resp.audio)
             if out_f is not None:
                 out_f.writeframesraw(resp.audio)
+    except Exception as e:
+        print(e.details())
     finally:
         if out_f is not None:
             out_f.close()
