@@ -123,6 +123,7 @@ def add_speaker_diarization_to_config(
         diarization_config = rasr.SpeakerDiarizationConfig(enable_speaker_diarization=True)
         inner_config.diarization_config.CopyFrom(diarization_config)
 
+
 def add_endpoint_parameters_to_config(
     config: Union[rasr.RecognitionConfig, rasr.EndpointingConfig],
     start_history: int,
@@ -150,6 +151,20 @@ def add_endpoint_parameters_to_config(
     if stop_threshold_eou > 0:
         endpointing_config.stop_threshold_eou = stop_threshold_eou
     inner_config.endpointing_config.CopyFrom(endpointing_config)
+
+
+def add_ast_parameters_to_config(
+    config: Union[rasr.RecognitionConfig, rasr.EndpointingConfig],
+    source_language: str,
+    target_language: str,
+    task: str,
+) -> None:
+    if not source_language:
+        return
+    inner_config: rasr.RecognitionConfig = config if isinstance(config, rasr.RecognitionConfig) else config.config
+    inner_config.custom_configuration["source_language"] = source_language
+    inner_config.custom_configuration["target_language"] = target_language
+    inner_config.custom_configuration["task"] = task
 
 
 PRINT_STREAMING_ADDITIONAL_INFO_MODES = ['no', 'time', 'confidence']

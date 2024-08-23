@@ -39,14 +39,20 @@ def main() -> None:
     riva.client.add_word_boosting_to_config(config, args.boosted_lm_words, args.boosted_lm_score)
     riva.client.add_speaker_diarization_to_config(config, args.speaker_diarization)
     riva.client.add_endpoint_parameters_to_config(
-        config,
-        args.start_history,
-        args.start_threshold,
-        args.stop_history,
-        args.stop_history_eou,
+        config, 
+        args.start_history, 
+        args.start_threshold, 
+        args.stop_history, 
+        args.stop_history_eou, 
         args.stop_threshold,
         args.stop_threshold_eou
-    )    
+    )
+    riva.client.add_ast_parameters_to_config(
+        config,
+        args.source_language,
+        args.target_language,
+        args.task
+    )
     with args.input_file.open('rb') as fh:
         data = fh.read()
     try:
