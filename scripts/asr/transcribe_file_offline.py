@@ -47,11 +47,9 @@ def main() -> None:
         args.stop_threshold,
         args.stop_threshold_eou
     )
-    riva.client.add_ast_parameters_to_config(
+    riva.client.add_custom_configuration(
         config,
-        args.source_language,
-        args.target_language,
-        args.task
+        args.custom_configuration
     )
     with args.input_file.open('rb') as fh:
         data = fh.read()

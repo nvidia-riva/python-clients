@@ -86,22 +86,10 @@ def add_asr_config_argparse_parameters(
         help="Threshold value for likelihood of blanks before detecting end of utterance",
     )
     parser.add_argument(
-        "--source-language",
+        "--custom-configuration",
         default="",
         type=str,
-        help="Language of the audio file",
-    )
-    parser.add_argument(
-        "--task",
-        default="transcribe",
-        type=str,
-        help="Task for the model (transcribe/translate)",
-    )
-    parser.add_argument(
-        "--target-language",
-        default="",
-        type=str,
-        help="Target language for translation",
+        help="Add custom configurations to be sent to the custom backends. <key:value,key:value>",
     )
     return parser
 

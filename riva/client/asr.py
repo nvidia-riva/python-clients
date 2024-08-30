@@ -153,18 +153,20 @@ def add_endpoint_parameters_to_config(
     inner_config.endpointing_config.CopyFrom(endpointing_config)
 
 
-def add_ast_parameters_to_config(
+def add_custom_configuration(
     config: Union[rasr.RecognitionConfig, rasr.EndpointingConfig],
-    source_language: str,
-    target_language: str,
-    task: str,
+    custom_configuration: str,
 ) -> None:
-    if not source_language:
+    custom_configuration = custom_configuration.strip().replace(" ", "")
+    if not custom_configuration:
         return
     inner_config: rasr.RecognitionConfig = config if isinstance(config, rasr.RecognitionConfig) else config.config
-    inner_config.custom_configuration["source_language"] = source_language
-    inner_config.custom_configuration["target_language"] = target_language
-    inner_config.custom_configuration["task"] = task
+    for pair in custom_configuration.split(","):
+        key_value = pair.split(":")
+        if len(key_value) == 2:
+            inner_config.custom_configuration[key_value[0]] = key_value[1]
+        else:
+            raise ValueError(f"Invalid key:value pair {key_value}")
 
 
 PRINT_STREAMING_ADDITIONAL_INFO_MODES = ['no', 'time', 'confidence']
