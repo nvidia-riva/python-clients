@@ -67,7 +67,7 @@ def main() -> None:
         args.stop_threshold,
         args.stop_threshold_eou
     )
-    riva.client.add_custom_configuration(
+    riva.client.add_custom_configuration_to_config(
         config,
         args.custom_configuration
     )

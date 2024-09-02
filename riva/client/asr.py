@@ -125,7 +125,7 @@ def add_speaker_diarization_to_config(
 
 
 def add_endpoint_parameters_to_config(
-    config: Union[rasr.RecognitionConfig, rasr.EndpointingConfig],
+    config: Union[rasr.StreamingRecognitionConfig, rasr.RecognitionConfig],
     start_history: int,
     start_threshold: float,
     stop_history: int,
@@ -153,8 +153,8 @@ def add_endpoint_parameters_to_config(
     inner_config.endpointing_config.CopyFrom(endpointing_config)
 
 
-def add_custom_configuration(
-    config: Union[rasr.RecognitionConfig, rasr.EndpointingConfig],
+def add_custom_configuration_to_config(
+    config: Union[rasr.StreamingRecognitionConfig, rasr.RecognitionConfig],
     custom_configuration: str,
 ) -> None:
     custom_configuration = custom_configuration.strip().replace(" ", "")

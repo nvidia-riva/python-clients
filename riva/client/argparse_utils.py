@@ -89,7 +89,7 @@ def add_asr_config_argparse_parameters(
         "--custom-configuration",
         default="",
         type=str,
-        help="Add custom configurations to be sent to the custom backends. <key:value,key:value>",
+        help="Add custom configurations to be sent to the custom backends. <key:value,key:value,...>",
     )
     return parser
 
