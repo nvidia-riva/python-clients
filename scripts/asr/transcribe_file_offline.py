@@ -46,7 +46,11 @@ def main() -> None:
         args.stop_history_eou,
         args.stop_threshold,
         args.stop_threshold_eou
-    )    
+    )
+    riva.client.add_custom_configuration_to_config(
+        config,
+        args.custom_configuration
+    )
     with args.input_file.open('rb') as fh:
         data = fh.read()
     try:

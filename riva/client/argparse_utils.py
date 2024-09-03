@@ -85,6 +85,12 @@ def add_asr_config_argparse_parameters(
         type=float,
         help="Threshold value for likelihood of blanks before detecting end of utterance",
     )
+    parser.add_argument(
+        "--custom-configuration",
+        default="",
+        type=str,
+        help="Custom configurations to be sent to the server as key value pairs <key:value,key:value,...>",
+    )
     return parser
 
 

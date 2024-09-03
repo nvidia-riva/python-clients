@@ -12,6 +12,7 @@ from riva.client.asr import (
     print_streaming,
     sleep_audio_length,
     add_endpoint_parameters_to_config,
+    add_custom_configuration_to_config,
 )
 from riva.client.auth import Auth
 from riva.client.nlp import (
