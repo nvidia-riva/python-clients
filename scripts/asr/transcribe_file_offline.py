@@ -37,7 +37,7 @@ def main() -> None:
         enable_word_time_offsets=args.word_time_offsets or args.speaker_diarization,
     )
     riva.client.add_word_boosting_to_config(config, args.boosted_lm_words, args.boosted_lm_score)
-    riva.client.add_speaker_diarization_to_config(config, args.speaker_diarization)
+    riva.client.add_speaker_diarization_to_config(config, args.speaker_diarization, args.max_speaker_count)
     riva.client.add_endpoint_parameters_to_config(
         config,
         args.start_history,
