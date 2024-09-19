@@ -117,7 +117,7 @@ def add_audio_file_specs_to_config(
 def add_speaker_diarization_to_config(
     config: Union[rasr.RecognitionConfig],
     diarization_enable: bool,
-    diarization_max_speakers: int=3,
+    diarization_max_speakers: int,
 ) -> None:
     inner_config: rasr.RecognitionConfig = config if isinstance(config, rasr.RecognitionConfig) else config.config
     if diarization_enable:
