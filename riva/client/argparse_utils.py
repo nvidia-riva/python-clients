@@ -50,7 +50,7 @@ def add_asr_config_argparse_parameters(
         help="Flag that controls if speaker diarization should be performed",
     )
     parser.add_argument(
-        "--max-speaker-count",
+        "--diarization-max-speakers",
         default=3,
         type=int,
         help="Max number of speakers to detect when performing speaker diarization",
