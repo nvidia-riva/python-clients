@@ -50,6 +50,12 @@ def add_asr_config_argparse_parameters(
         help="Flag that controls if speaker diarization should be performed",
     )
     parser.add_argument(
+        "--diarization-max-speakers",
+        default=3,
+        type=int,
+        help="Max number of speakers to detect when performing speaker diarization",
+    )
+    parser.add_argument(
         "--start-history",
         default=-1,
         type=int,
@@ -84,6 +90,12 @@ def add_asr_config_argparse_parameters(
         default=-1.0,
         type=float,
         help="Threshold value for likelihood of blanks before detecting end of utterance",
+    )
+    parser.add_argument(
+        "--custom-configuration",
+        default="",
+        type=str,
+        help="Custom configurations to be sent to the server as key value pairs <key:value,key:value,...>",
     )
     return parser
 

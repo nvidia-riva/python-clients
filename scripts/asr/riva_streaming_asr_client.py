@@ -73,6 +73,10 @@ def streaming_transcription_worker(
             args.stop_threshold,
             args.stop_threshold_eou
         )
+        riva.client.add_custom_configuration_to_config(
+            config,
+            args.custom_configuration
+        )
         riva.client.add_word_boosting_to_config(config, args.boosted_lm_words, args.boosted_lm_score)
         for _ in range(args.num_iterations):
             with riva.client.AudioChunkFileIterator(

@@ -109,6 +109,10 @@ def main() -> None:
         args.stop_threshold,
         args.stop_threshold_eou
     )
+    riva.client.add_custom_configuration_to_config(
+        config,
+        args.custom_configuration
+    )
     sound_callback = None
     try:
         if args.play_audio or args.output_device is not None:

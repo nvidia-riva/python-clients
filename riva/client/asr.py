@@ -117,14 +117,19 @@ def add_audio_file_specs_to_config(
 def add_speaker_diarization_to_config(
     config: Union[rasr.RecognitionConfig],
     diarization_enable: bool,
+    diarization_max_speakers: int,
 ) -> None:
     inner_config: rasr.RecognitionConfig = config if isinstance(config, rasr.RecognitionConfig) else config.config
     if diarization_enable:
-        diarization_config = rasr.SpeakerDiarizationConfig(enable_speaker_diarization=True)
+        diarization_config = rasr.SpeakerDiarizationConfig(
+            enable_speaker_diarization=True,
+            max_speaker_count=diarization_max_speakers,
+        )
         inner_config.diarization_config.CopyFrom(diarization_config)
 
+
 def add_endpoint_parameters_to_config(
-    config: Union[rasr.RecognitionConfig, rasr.EndpointingConfig],
+    config: Union[rasr.StreamingRecognitionConfig, rasr.RecognitionConfig],
     start_history: int,
     start_threshold: float,
     stop_history: int,
@@ -150,6 +155,22 @@ def add_endpoint_parameters_to_config(
     if stop_threshold_eou > 0:
         endpointing_config.stop_threshold_eou = stop_threshold_eou
     inner_config.endpointing_config.CopyFrom(endpointing_config)
+
+
+def add_custom_configuration_to_config(
+    config: Union[rasr.StreamingRecognitionConfig, rasr.RecognitionConfig],
+    custom_configuration: str,
+) -> None:
+    custom_configuration = custom_configuration.strip().replace(" ", "")
+    if not custom_configuration:
+        return
+    inner_config: rasr.RecognitionConfig = config if isinstance(config, rasr.RecognitionConfig) else config.config
+    for pair in custom_configuration.split(","):
+        key_value = pair.split(":")
+        if len(key_value) == 2:
+            inner_config.custom_configuration[key_value[0]] = key_value[1]
+        else:
+            raise ValueError(f"Invalid key:value pair {key_value}")
 
 
 PRINT_STREAMING_ADDITIONAL_INFO_MODES = ['no', 'time', 'confidence']
