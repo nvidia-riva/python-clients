@@ -248,6 +248,12 @@ def print_streaming(
                 continue
             partial_transcript = ""
             for result in response.results:
+                if result.pipeline_states and len(result.pipeline_states.vad_probabilities) > 0:
+                    vad_prob_logs = "VAD States: "
+                    for vad_state in result.pipeline_states.vad_probabilities:
+                            vad_prob_logs += str(vad_state) + " "
+                    for i, f in enumerate(output_file):
+                        f.write(vad_prob_logs + "\n")
                 if not result.alternatives:
                     continue
                 transcript = result.alternatives[0].transcript
