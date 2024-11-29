@@ -12,9 +12,11 @@ from riva.client.proto.riva_audio_pb2 import AudioEncoding
 import wave
 
 def add_custom_dictionary_to_config(req, custom_dictionary):
-    result_list = [f"{key}  {value}" for key, value in custom_dictionary.items()]
-    result_string = ','.join(result_list)
-    req.custom_dictionary = result_string
+    if custom_dictionary is not None:
+        result_list = [f"{key}  {value}" for key, value in custom_dictionary.items()]
+    if result_list:
+        result_string = ','.join(result_list)
+        req.custom_dictionary = result_string
 
 class SpeechSynthesisService:
     """
