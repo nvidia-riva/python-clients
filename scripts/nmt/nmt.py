@@ -31,10 +31,10 @@ import os
 import sys
 
 import grpc
-
-import riva.client
 import riva.client.proto.riva_nmt_pb2 as riva_nmt
 import riva.client.proto.riva_nmt_pb2_grpc as riva_nmt_srv
+
+import riva.client
 from riva.client.argparse_utils import add_connection_argparse_parameters
 
 
@@ -75,48 +75,26 @@ def parse_args() -> argparse.Namespace:
     )
     inputs = parser.add_mutually_exclusive_group()
     inputs.add_argument(
-        "--text", default="Good morning everyone", type=str, help="Text to translate"
+        "--text", default="mir Das ist mir Wurs, bien ich ein berliner", type=str, help="Text to translate"
     )
     inputs.add_argument("--text-file", type=str, help="Path to file for translation")
+    parser.add_argument("--dnt-phrases-file", type=str, help="Path to file which contains dnt phrases and custom translations")
+    parser.add_argument("--model-name", default="", type=str, help="model to use to translate")
     parser.add_argument(
-        "--dnt-phrases-file",
-        type=str,
-        help="Path to file which contains dnt phrases and custom translations",
+        "--source-language-code", type=str, default="en-US", help="Source language code (according to BCP-47 standard)"
     )
     parser.add_argument(
-        "--model-name", default="", type=str, help="model to use to translate"
+        "--target-language-code", type=str, default="en-US", help="Target language code (according to BCP-47 standard)"
     )
-    parser.add_argument(
-        "--source-language-code",
-        type=str,
-        default="en-US",
-        help="Source language code (according to BCP-47 standard)",
-    )
-    parser.add_argument(
-        "--target-language-code",
-        type=str,
-        default="de-DE",
-        help="Target language code (according to BCP-47 standard)",
-    )
-    parser.add_argument(
-        "--batch-size",
-        type=int,
-        default=8,
-        help="Batch size to use for file translation",
-    )
-    parser.add_argument(
-        "--list-models",
-        default=False,
-        action="store_true",
-        help="List available models on server",
-    )
+    parser.add_argument("--batch-size", type=int, default=8, help="Batch size to use for file translation")
+    parser.add_argument("--list-models", default=False, action='store_true', help="List available models on server")
     parser = add_connection_argparse_parameters(parser)
 
     return parser.parse_args()
 
 
 def main() -> None:
-    def request(inputs, args, dnt_phrases_input):
+    def request(inputs,args,dnt_phrases_input):
         try:
             response = nmt_client.translate(
                 texts=inputs,
@@ -130,15 +108,14 @@ def main() -> None:
                 print(translation.text)
         except grpc.RpcError as e:
             if e.code() == grpc.StatusCode.INVALID_ARGUMENT:
-                result = {"msg": "invalid arg error"}
+                result = {'msg': 'invalid arg error'}
             elif e.code() == grpc.StatusCode.ALREADY_EXISTS:
-                result = {"msg": "already exists error"}
+                result = {'msg': 'already exists error'}
             elif e.code() == grpc.StatusCode.UNAVAILABLE:
-                result = {"msg": "server unavailable check network"}
+                result = {'msg': 'server unavailable check network'}
             else:
-                result = {"msg": "error code:{}".format(e.code())}
+                result = {'msg': 'error code:{}'.format(e.code())}
             print(f"{result['msg']} : {e.details()}")
-
     args = parse_args()
 
     auth = riva.client.Auth(args.ssl_cert, args.use_ssl, args.server, args.metadata)
@@ -170,5 +147,5 @@ def main() -> None:
         request([args.text], args, dnt_phrases_input)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
