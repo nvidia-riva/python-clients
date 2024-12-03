@@ -67,7 +67,6 @@ def read_dnt_phrases_file(file_path):
 
     return dnt_phrases_dict
 
-
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Neural machine translation by Riva AI Services",
