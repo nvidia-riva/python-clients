@@ -31,11 +31,41 @@ import os
 import sys
 
 import grpc
-import riva.client.proto.riva_nmt_pb2 as riva_nmt
-import riva.client.proto.riva_nmt_pb2_grpc as riva_nmt_srv
 
 import riva.client
+import riva.client.proto.riva_nmt_pb2 as riva_nmt
+import riva.client.proto.riva_nmt_pb2_grpc as riva_nmt_srv
 from riva.client.argparse_utils import add_connection_argparse_parameters
+
+
+def read_dnt_phrases_file(file_path):
+    dnt_phrases_dict = {}
+    if file_path:
+        try:
+            with open(file_path, "r") as infile:
+                for line in infile:
+                    # Trim leading and trailing whitespaces
+                    line = line.strip()
+
+                    if line:
+                        pos = line.find("##")
+                        if pos != -1:
+                            # Line contains "##"
+                            key = line[:pos].strip()
+                            value = line[pos + 2 :].strip()
+                        else:
+                            # Line doesn't contain "##"
+                            key = line.strip()
+                            value = ""
+
+                        # Add the key-value pair to the dictionary
+                        if key:
+                            dnt_phrases_dict[key] = value
+
+        except IOError:
+            raise RuntimeError(f"Could not open file {file_path}")
+
+    return dnt_phrases_dict
 
 
 def parse_args() -> argparse.Namespace:
@@ -45,38 +75,68 @@ def parse_args() -> argparse.Namespace:
     )
     inputs = parser.add_mutually_exclusive_group()
     inputs.add_argument(
-        "--text", default="mir Das ist mir Wurs, bien ich ein berliner", type=str, help="Text to translate"
+        "--text", default="Good morning everyone", type=str, help="Text to translate"
     )
     inputs.add_argument("--text-file", type=str, help="Path to file for translation")
-    parser.add_argument("--model-name", default="", type=str, help="model to use to translate")
     parser.add_argument(
-        "--source-language-code", type=str, default="en-US", help="Source language code (according to BCP-47 standard)"
+        "--dnt-phrases-file",
+        type=str,
+        help="Path to file which contains dnt phrases and custom translations",
     )
     parser.add_argument(
-        "--target-language-code", type=str, default="en-US", help="Target language code (according to BCP-47 standard)"
+        "--model-name", default="", type=str, help="model to use to translate"
     )
-    parser.add_argument("--batch-size", type=int, default=8, help="Batch size to use for file translation")
-    parser.add_argument("--list-models", default=False, action='store_true', help="List available models on server")
+    parser.add_argument(
+        "--source-language-code",
+        type=str,
+        default="en-US",
+        help="Source language code (according to BCP-47 standard)",
+    )
+    parser.add_argument(
+        "--target-language-code",
+        type=str,
+        default="de-DE",
+        help="Target language code (according to BCP-47 standard)",
+    )
+    parser.add_argument(
+        "--batch-size",
+        type=int,
+        default=8,
+        help="Batch size to use for file translation",
+    )
+    parser.add_argument(
+        "--list-models",
+        default=False,
+        action="store_true",
+        help="List available models on server",
+    )
     parser = add_connection_argparse_parameters(parser)
 
     return parser.parse_args()
 
 
 def main() -> None:
-    def request(inputs,args):
+    def request(inputs, args, dnt_phrases_input):
         try:
-            response = nmt_client.translate(inputs, args.model_name, args.source_language_code, args.target_language_code)
+            response = nmt_client.translate(
+                texts=inputs,
+                model=args.model_name,
+                source_language=args.source_language_code,
+                target_language=args.target_language_code,
+                future=False,
+                dnt_phrases_dict=dnt_phrases_input,
+            )
             for translation in response.translations:
                 print(translation.text)
         except grpc.RpcError as e:
             if e.code() == grpc.StatusCode.INVALID_ARGUMENT:
-                result = {'msg': 'invalid arg error'}
+                result = {"msg": "invalid arg error"}
             elif e.code() == grpc.StatusCode.ALREADY_EXISTS:
-                result = {'msg': 'already exists error'}
+                result = {"msg": "already exists error"}
             elif e.code() == grpc.StatusCode.UNAVAILABLE:
-                result = {'msg': 'server unavailable check network'}
+                result = {"msg": "server unavailable check network"}
             else:
-                result = {'msg': 'error code:{}'.format(e.code())}
+                result = {"msg": "error code:{}".format(e.code())}
             print(f"{result['msg']} : {e.details()}")
 
     args = parse_args()
@@ -89,7 +149,9 @@ def main() -> None:
         response = nmt_client.get_config(args.model_name)
         print(response)
         return
-
+    dnt_phrases_input = {}
+    if args.dnt_phrases_file != None:
+        dnt_phrases_input = read_dnt_phrases_file(args.dnt_phrases_file)
     if args.text_file != None and os.path.exists(args.text_file):
         with open(args.text_file, "r") as f:
             batch = []
@@ -101,12 +163,12 @@ def main() -> None:
                     request(batch, args)
                     batch = []
             if len(batch) > 0:
-                request(batch, args)
+                request(batch, args, dnt_phrases_input)
         return
 
     if args.text != "":
-        request([args.text], args)
+        request([args.text], args, dnt_phrases_input)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

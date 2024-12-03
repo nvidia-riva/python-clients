@@ -1,31 +1,45 @@
 # SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: MIT
 
-from typing import Callable, Dict, Generator, Iterable, List, Optional, TextIO, Union
+from typing import (Callable, Dict, Generator, Iterable, List, Optional,
+                    TextIO, Union)
+
 from grpc._channel import _MultiThreadedRendezvous
 
 import riva.client.proto.riva_nmt_pb2 as riva_nmt
 import riva.client.proto.riva_nmt_pb2_grpc as riva_nmt_srv
 from riva.client import Auth
 
+
 def streaming_s2s_request_generator(
-    audio_chunks: Iterable[bytes], streaming_config: riva_nmt.StreamingTranslateSpeechToSpeechConfig
+    audio_chunks: Iterable[bytes],
+    streaming_config: riva_nmt.StreamingTranslateSpeechToSpeechConfig,
 ) -> Generator[riva_nmt.StreamingTranslateSpeechToSpeechRequest, None, None]:
     yield riva_nmt.StreamingTranslateSpeechToSpeechRequest(config=streaming_config)
     for chunk in audio_chunks:
         yield riva_nmt.StreamingTranslateSpeechToSpeechRequest(audio_content=chunk)
 
+
 def streaming_s2t_request_generator(
-    audio_chunks: Iterable[bytes], streaming_config: riva_nmt.StreamingTranslateSpeechToTextConfig
+    audio_chunks: Iterable[bytes],
+    streaming_config: riva_nmt.StreamingTranslateSpeechToTextConfig,
 ) -> Generator[riva_nmt.StreamingTranslateSpeechToTextRequest, None, None]:
     yield riva_nmt.StreamingTranslateSpeechToTextRequest(config=streaming_config)
     for chunk in audio_chunks:
         yield riva_nmt.StreamingTranslateSpeechToTextRequest(audio_content=chunk)
 
+
+def add_dnt_phrases_dict(req, dnt_phrases_dict):
+    dnt_phrases = [f"{key}##{value}" for key, value in dnt_phrases_dict.items()]
+    result_dnt_phrases = ",".join(dnt_phrases)
+    req.dnt_phrases.append(result_dnt_phrases)
+
+
 class NeuralMachineTranslationClient:
     """
     A class for translating text to text. Provides :meth:`translate` which returns translated text
     """
+
     def __init__(self, auth: Auth) -> None:
         """
         Initializes an instance of the class.
@@ -38,7 +52,9 @@ class NeuralMachineTranslationClient:
         self.stub = riva_nmt_srv.RivaTranslationStub(self.auth.channel)
 
     def streaming_s2s_response_generator(
-        self, audio_chunks: Iterable[bytes], streaming_config: riva_nmt.StreamingTranslateSpeechToSpeechConfig
+        self,
+        audio_chunks: Iterable[bytes],
+        streaming_config: riva_nmt.StreamingTranslateSpeechToSpeechConfig,
     ) -> Generator[riva_nmt.StreamingTranslateSpeechToSpeechResponse, None, None]:
         """
         Generates speech to speech translation responses for fragments of speech audio in :param:`audio_chunks`.
@@ -80,12 +96,15 @@ class NeuralMachineTranslationClient:
             <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-nmt-proto>`_.
         """
         generator = streaming_s2s_request_generator(audio_chunks, streaming_config)
-        for response in self.stub.StreamingTranslateSpeechToSpeech(generator, metadata=self.auth.get_auth_metadata()):
+        for response in self.stub.StreamingTranslateSpeechToSpeech(
+            generator, metadata=self.auth.get_auth_metadata()
+        ):
             yield response
 
-
     def streaming_s2t_response_generator(
-        self, audio_chunks: Iterable[bytes], streaming_config: riva_nmt.StreamingTranslateSpeechToTextConfig
+        self,
+        audio_chunks: Iterable[bytes],
+        streaming_config: riva_nmt.StreamingTranslateSpeechToTextConfig,
     ) -> Generator[riva_nmt.StreamingTranslateSpeechToTextResponse, None, None]:
         """
         Generates speech to text translation responses for fragments of speech audio in :param:`audio_chunks`.
@@ -126,9 +145,10 @@ class NeuralMachineTranslationClient:
             <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-nmt-proto>`_.
         """
         generator = streaming_s2t_request_generator(audio_chunks, streaming_config)
-        for response in self.stub.StreamingTranslateSpeechToText(generator, metadata=self.auth.get_auth_metadata()):
+        for response in self.stub.StreamingTranslateSpeechToText(
+            generator, metadata=self.auth.get_auth_metadata()
+        ):
             yield response
-
 
     def translate(
         self,
@@ -137,6 +157,7 @@ class NeuralMachineTranslationClient:
         source_language: str,
         target_language: str,
         future: bool = False,
+        dnt_phrases_dict: Optional[dict] = None,
     ) -> Union[riva_nmt.TranslateTextResponse, _MultiThreadedRendezvous]:
         """
         Translate input list of input text :param:`text` using model :param:`model` from :param:`source_language` into :param:`target_language`
@@ -156,17 +177,21 @@ class NeuralMachineTranslationClient:
             texts=texts,
             model=model,
             source_language=source_language,
-            target_language=target_language
+            target_language=target_language,
         )
-
+        add_dnt_phrases_dict(req, dnt_phrases_dict)
         func = self.stub.TranslateText.future if future else self.stub.TranslateText
         return func(req, metadata=self.auth.get_auth_metadata())
 
     def get_config(
-            self,
-            model: str,
-            future: bool = False,
+        self,
+        model: str,
+        future: bool = False,
     ) -> Union[riva_nmt.AvailableLanguageResponse, _MultiThreadedRendezvous]:
         req = riva_nmt.AvailableLanguageRequest(model=model)
-        func = self.stub.ListSupportedLanguagePairs.future if future else self.stub.ListSupportedLanguagePairs
+        func = (
+            self.stub.ListSupportedLanguagePairs.future
+            if future
+            else self.stub.ListSupportedLanguagePairs
+        )
         return func(req, metadata=self.auth.get_auth_metadata())
