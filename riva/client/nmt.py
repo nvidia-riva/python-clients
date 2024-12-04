@@ -33,7 +33,6 @@ class NeuralMachineTranslationClient:
     """
     A class for translating text to text. Provides :meth:`translate` which returns translated text
     """
-
     def __init__(self, auth: Auth) -> None:
         """
         Initializes an instance of the class.
