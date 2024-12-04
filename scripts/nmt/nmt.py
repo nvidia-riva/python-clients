@@ -67,7 +67,6 @@ def read_dnt_phrases_file(file_path):
 
     return dnt_phrases_dict
 
-
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Neural machine translation by Riva AI Services",
@@ -94,8 +93,11 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
-    def request(inputs,args,dnt_phrases_input):
+    def request(inputs,args):
         try:
+            dnt_phrases_input = {}
+            if args.dnt_phrases_file != None:
+                dnt_phrases_input = read_dnt_phrases_file(args.dnt_phrases_file)
             response = nmt_client.translate(
                 texts=inputs,
                 model=args.model_name,
@@ -126,9 +128,6 @@ def main() -> None:
         response = nmt_client.get_config(args.model_name)
         print(response)
         return
-    dnt_phrases_input = {}
-    if args.dnt_phrases_file != None:
-        dnt_phrases_input = read_dnt_phrases_file(args.dnt_phrases_file)
     if args.text_file != None and os.path.exists(args.text_file):
         with open(args.text_file, "r") as f:
             batch = []
@@ -140,11 +139,11 @@ def main() -> None:
                     request(batch, args)
                     batch = []
             if len(batch) > 0:
-                request(batch, args, dnt_phrases_input)
+                request(batch, args)
         return
 
     if args.text != "":
-        request([args.text], args, dnt_phrases_input)
+        request([args.text], args)
 
 
 if __name__ == '__main__':

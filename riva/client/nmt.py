@@ -2,13 +2,11 @@
 # SPDX-License-Identifier: MIT
 
 from typing import Callable, Dict, Generator, Iterable, List, Optional, TextIO, Union
-
 from grpc._channel import _MultiThreadedRendezvous
 
 import riva.client.proto.riva_nmt_pb2 as riva_nmt
 import riva.client.proto.riva_nmt_pb2_grpc as riva_nmt_srv
 from riva.client import Auth
-
 
 def streaming_s2s_request_generator(
     audio_chunks: Iterable[bytes], streaming_config: riva_nmt.StreamingTranslateSpeechToSpeechConfig
@@ -17,7 +15,6 @@ def streaming_s2s_request_generator(
     for chunk in audio_chunks:
         yield riva_nmt.StreamingTranslateSpeechToSpeechRequest(audio_content=chunk)
 
-
 def streaming_s2t_request_generator(
     audio_chunks: Iterable[bytes], streaming_config: riva_nmt.StreamingTranslateSpeechToTextConfig
 ) -> Generator[riva_nmt.StreamingTranslateSpeechToTextRequest, None, None]:
@@ -25,12 +22,11 @@ def streaming_s2t_request_generator(
     for chunk in audio_chunks:
         yield riva_nmt.StreamingTranslateSpeechToTextRequest(audio_content=chunk)
 
-
 def add_dnt_phrases_dict(req, dnt_phrases_dict):
     dnt_phrases = [f"{key}##{value}" for key, value in dnt_phrases_dict.items()]
-    result_dnt_phrases = ",".join(dnt_phrases)
-    req.dnt_phrases.append(result_dnt_phrases)
-
+    if dnt_phrases:
+        result_dnt_phrases = ",".join(dnt_phrases)
+        req.dnt_phrases.append(result_dnt_phrases)
 
 class NeuralMachineTranslationClient:
     """
@@ -49,7 +45,7 @@ class NeuralMachineTranslationClient:
         self.stub = riva_nmt_srv.RivaTranslationStub(self.auth.channel)
 
     def streaming_s2s_response_generator(
-       self, audio_chunks: Iterable[bytes], streaming_config: riva_nmt.StreamingTranslateSpeechToSpeechConfig
+        self, audio_chunks: Iterable[bytes], streaming_config: riva_nmt.StreamingTranslateSpeechToSpeechConfig
     ) -> Generator[riva_nmt.StreamingTranslateSpeechToSpeechResponse, None, None]:
         """
         Generates speech to speech translation responses for fragments of speech audio in :param:`audio_chunks`.
@@ -166,7 +162,7 @@ class NeuralMachineTranslationClient:
             texts=texts,
             model=model,
             source_language=source_language,
-            target_language=target_language,
+            target_language=target_language
         )
         add_dnt_phrases_dict(req, dnt_phrases_dict)
         func = self.stub.TranslateText.future if future else self.stub.TranslateText
