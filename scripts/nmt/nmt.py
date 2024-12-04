@@ -118,6 +118,7 @@ def main() -> None:
             else:
                 result = {'msg': 'error code:{}'.format(e.code())}
             print(f"{result['msg']} : {e.details()}")
+            
     args = parse_args()
 
     auth = riva.client.Auth(args.ssl_cert, args.use_ssl, args.server, args.metadata)
@@ -128,6 +129,7 @@ def main() -> None:
         response = nmt_client.get_config(args.model_name)
         print(response)
         return
+    
     if args.text_file != None and os.path.exists(args.text_file):
         with open(args.text_file, "r") as f:
             batch = []

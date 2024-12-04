@@ -91,6 +91,7 @@ class NeuralMachineTranslationClient:
         for response in self.stub.StreamingTranslateSpeechToSpeech(generator, metadata=self.auth.get_auth_metadata()):
             yield response
 
+
     def streaming_s2t_response_generator(
         self, audio_chunks: Iterable[bytes], streaming_config: riva_nmt.StreamingTranslateSpeechToTextConfig
     ) -> Generator[riva_nmt.StreamingTranslateSpeechToTextResponse, None, None]:
@@ -135,6 +136,7 @@ class NeuralMachineTranslationClient:
         generator = streaming_s2t_request_generator(audio_chunks, streaming_config)
         for response in self.stub.StreamingTranslateSpeechToText(generator, metadata=self.auth.get_auth_metadata()):
             yield response
+
 
     def translate(
         self,
