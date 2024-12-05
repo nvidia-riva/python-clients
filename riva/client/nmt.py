@@ -22,6 +22,13 @@ def streaming_s2t_request_generator(
     for chunk in audio_chunks:
         yield riva_nmt.StreamingTranslateSpeechToTextRequest(audio_content=chunk)
 
+def add_dnt_phrases_dict(req, dnt_phrases_dict):
+    if dnt_phrases_dict is not None:
+        dnt_phrases = [f"{key}##{value}" for key, value in dnt_phrases_dict.items()]
+    if dnt_phrases:
+        result_dnt_phrases = ",".join(dnt_phrases)
+        req.dnt_phrases.append(result_dnt_phrases)
+
 class NeuralMachineTranslationClient:
     """
     A class for translating text to text. Provides :meth:`translate` which returns translated text
@@ -137,6 +144,7 @@ class NeuralMachineTranslationClient:
         source_language: str,
         target_language: str,
         future: bool = False,
+        dnt_phrases_dict: Optional[dict] = None,
     ) -> Union[riva_nmt.TranslateTextResponse, _MultiThreadedRendezvous]:
         """
         Translate input list of input text :param:`text` using model :param:`model` from :param:`source_language` into :param:`target_language`
@@ -158,7 +166,7 @@ class NeuralMachineTranslationClient:
             source_language=source_language,
             target_language=target_language
         )
-
+        add_dnt_phrases_dict(req, dnt_phrases_dict)
         func = self.stub.TranslateText.future if future else self.stub.TranslateText
         return func(req, metadata=self.auth.get_auth_metadata())
 
