@@ -23,6 +23,7 @@ def streaming_s2t_request_generator(
         yield riva_nmt.StreamingTranslateSpeechToTextRequest(audio_content=chunk)
 
 def add_dnt_phrases_dict(req, dnt_phrases_dict):
+    dnt_phrases = None
     if dnt_phrases_dict is not None:
         dnt_phrases = [f"{key}##{value}" for key, value in dnt_phrases_dict.items()]
     if dnt_phrases:
