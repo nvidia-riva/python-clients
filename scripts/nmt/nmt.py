@@ -38,6 +38,35 @@ import riva.client
 from riva.client.argparse_utils import add_connection_argparse_parameters
 
 
+def read_dnt_phrases_file(file_path):
+    dnt_phrases_dict = {}
+    if file_path:
+        try:
+            with open(file_path, "r") as infile:
+                for line in infile:
+                    # Trim leading and trailing whitespaces
+                    line = line.strip()
+
+                    if line:
+                        pos = line.find("##")
+                        if pos != -1:
+                            # Line contains "##"
+                            key = line[:pos].strip()
+                            value = line[pos + 2 :].strip()
+                        else:
+                            # Line doesn't contain "##"
+                            key = line.strip()
+                            value = ""
+
+                        # Add the key-value pair to the dictionary
+                        if key:
+                            dnt_phrases_dict[key] = value
+
+        except IOError:
+            raise RuntimeError(f"Could not open file {file_path}")
+
+    return dnt_phrases_dict
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Neural machine translation by Riva AI Services",
@@ -48,6 +77,7 @@ def parse_args() -> argparse.Namespace:
         "--text", default="mir Das ist mir Wurs, bien ich ein berliner", type=str, help="Text to translate"
     )
     inputs.add_argument("--text-file", type=str, help="Path to file for translation")
+    parser.add_argument("--dnt-phrases-file", type=str, help="Path to file which contains dnt phrases and custom translations")
     parser.add_argument("--model-name", default="", type=str, help="model to use to translate")
     parser.add_argument(
         "--source-language-code", type=str, default="en-US", help="Source language code (according to BCP-47 standard)"
@@ -65,7 +95,17 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     def request(inputs,args):
         try:
-            response = nmt_client.translate(inputs, args.model_name, args.source_language_code, args.target_language_code)
+            dnt_phrases_input = {}
+            if args.dnt_phrases_file != None:
+                dnt_phrases_input = read_dnt_phrases_file(args.dnt_phrases_file)
+            response = nmt_client.translate(
+                texts=inputs,
+                model=args.model_name,
+                source_language=args.source_language_code,
+                target_language=args.target_language_code,
+                future=False,
+                dnt_phrases_dict=dnt_phrases_input,
+            )
             for translation in response.translations:
                 print(translation.text)
         except grpc.RpcError as e:
