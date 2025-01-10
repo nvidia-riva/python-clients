@@ -66,7 +66,6 @@ class Auth:
         Metadata for authorizing requests. Should be passed to stub methods.
 
         Returns:
-            :obj:`List[Tuple[str, str]]`: an empty list.
+            :obj:`List[Tuple[str, str]]`: an tuple list of provided metadata
         """
-        metadata = []
-        return metadata
+        return self.metadata
