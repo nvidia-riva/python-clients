@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: MIT
 
 import argparse
-from pathlib import Path
 
 import os
 import riva.client
@@ -89,8 +88,6 @@ def main() -> None:
         print(f"Invalid input file path: {args.input_file}")
         return
 
-    output_file = Path(f"output.txt").expanduser()
-
     config = riva.client.StreamingRecognitionConfig(
         config=riva.client.RecognitionConfig(
             language_code=args.language_code,
@@ -136,8 +133,6 @@ def main() -> None:
                     audio_chunks=audio_chunk_iterator,
                     streaming_config=config,
                 ),
-                output_file=output_file,
-                file_mode='a',
                 show_intermediate=args.show_intermediate,
                 additional_info="time" if (args.word_time_offsets or args.speaker_diarization) else ("confidence" if args.print_confidence else "no"),
                 word_time_offsets=args.word_time_offsets or args.speaker_diarization,
