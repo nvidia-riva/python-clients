@@ -60,7 +60,7 @@ def streaming_transcription_worker(
                 profanity_filter=args.profanity_filter,
                 enable_automatic_punctuation=args.automatic_punctuation,
                 verbatim_transcripts=not args.no_verbatim_transcripts,
-                enable_word_time_offsets=args.word_time_offsets,
+                enable_word_time_offsets=args.word_time_offsets or args.speaker_diarization,
             ),
             interim_results=True,
         )
@@ -78,6 +78,7 @@ def streaming_transcription_worker(
             args.custom_configuration
         )
         riva.client.add_word_boosting_to_config(config, args.boosted_lm_words, args.boosted_lm_score)
+        riva.client.add_speaker_diarization_to_config(config, args.speaker_diarization, args.diarization_max_speakers)
         for _ in range(args.num_iterations):
             with riva.client.AudioChunkFileIterator(
                 args.input_file,
@@ -92,7 +93,8 @@ def streaming_transcription_worker(
                     output_file=output_file,
                     additional_info='time',
                     file_mode='a',
-                    word_time_offsets=args.word_time_offsets,
+                    word_time_offsets=args.word_time_offsets or args.speaker_diarization,
+                    speaker_diarization=args.speaker_diarization,
                 )
     except BaseException as e:
         exception_queue.put((e, thread_i))
