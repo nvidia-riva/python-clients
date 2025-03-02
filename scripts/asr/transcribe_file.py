@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 import argparse
+from pathlib import Path
 
 import os
 import riva.client
@@ -88,6 +89,8 @@ def main() -> None:
         print(f"Invalid input file path: {args.input_file}")
         return
 
+    output_file = Path(f"output.txt").expanduser()
+
     config = riva.client.StreamingRecognitionConfig(
         config=riva.client.RecognitionConfig(
             language_code=args.language_code,
@@ -96,10 +99,12 @@ def main() -> None:
             profanity_filter=args.profanity_filter,
             enable_automatic_punctuation=args.automatic_punctuation,
             verbatim_transcripts=not args.no_verbatim_transcripts,
+            enable_word_time_offsets=args.word_time_offsets or args.speaker_diarization,
         ),
         interim_results=True,
     )
     riva.client.add_word_boosting_to_config(config, args.boosted_lm_words, args.boosted_lm_score)
+    riva.client.add_speaker_diarization_to_config(config, args.speaker_diarization, args.diarization_max_speakers)
     riva.client.add_endpoint_parameters_to_config(
         config,
         args.start_history,
@@ -131,8 +136,12 @@ def main() -> None:
                     audio_chunks=audio_chunk_iterator,
                     streaming_config=config,
                 ),
+                output_file=output_file,
+                file_mode='a',
                 show_intermediate=args.show_intermediate,
-                additional_info="confidence" if args.print_confidence else "no",
+                additional_info="time",
+                word_time_offsets=args.word_time_offsets or args.speaker_diarization,
+                speaker_diarization=args.speaker_diarization,
             )
     finally:
         if sound_callback is not None and sound_callback.opened:
