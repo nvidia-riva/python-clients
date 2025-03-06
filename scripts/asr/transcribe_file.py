@@ -72,12 +72,13 @@ def main() -> None:
         asr_models = dict()
         config_response = asr_service.stub.GetRivaSpeechRecognitionConfig(riva.client.proto.riva_asr_pb2.RivaSpeechRecognitionConfigRequest())
         for model_config in config_response.model_config:
-            if model_config.parameters["streaming"] and model_config.parameters["type"]:
+            if model_config.parameters["type"] == "online":
                 language_code = model_config.parameters['language_code']
+                model = {"model": [model_config.model_name]}
                 if language_code in asr_models:
-                    asr_models[language_code]["models"].append(model_config.model_name)
+                    asr_models[language_code].append(model)
                 else:
-                    asr_models[language_code] = {"models": [model_config.model_name]}
+                    asr_models[language_code] = [model]
 
         print("Available ASR models")
         asr_models = dict(sorted(asr_models.items()))
