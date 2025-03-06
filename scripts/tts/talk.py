@@ -9,6 +9,7 @@ from pathlib import Path
 
 import riva.client
 from riva.client.argparse_utils import add_connection_argparse_parameters
+from riva.client.proto.riva_audio_pb2 import AudioEncoding
 
 def read_file_to_dict(file_path):
     result_dict = {}
@@ -56,6 +57,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--sample-rate-hz", type=int, default=44100, help="Number of audio frames per second in synthesized audio."
     )
+    parser.add_argument("--encoding", default="LINEAR_PCM", choices={"LINEAR_PCM", "OGGOPUS"}, help="Output audio encoding.")
     parser.add_argument("--custom-dictionary", type=str, help="A file path to a user dictionary with key-value pairs separated by double spaces.")
     parser.add_argument(
         "--stream",
@@ -132,6 +134,7 @@ def main() -> None:
         if args.stream:
             responses = service.synthesize_online(
                 args.text, args.voice, args.language_code, sample_rate_hz=args.sample_rate_hz,
+                encoding=AudioEncoding.OGGOPUS if args.encoding == "OGGOPUS" else AudioEncoding.LINEAR_PCM,
                 audio_prompt_file=args.audio_prompt_file, quality=20 if args.quality is None else args.quality,
                 custom_dictionary=custom_dictionary_input
             )
@@ -148,6 +151,7 @@ def main() -> None:
         else:
             resp = service.synthesize(
                 args.text, args.voice, args.language_code, sample_rate_hz=args.sample_rate_hz,
+                encoding=AudioEncoding.OGGOPUS if args.encoding == "OGGOPUS" else AudioEncoding.LINEAR_PCM,
                 audio_prompt_file=args.audio_prompt_file, quality=20 if args.quality is None else args.quality,
                 custom_dictionary=custom_dictionary_input
             )
