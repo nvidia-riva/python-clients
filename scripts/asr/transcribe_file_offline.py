@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: MIT
 
+import os
 import argparse
 from pathlib import Path
 
@@ -16,18 +17,45 @@ def parse_args() -> argparse.Namespace:
         "one response.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
-    parser.add_argument("--input-file", required=True, type=Path, help="A path to a local file to transcribe.")
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument("--input-file", type=Path, help="A path to a local file to transcribe.")
+    group.add_argument("--list-models", action="store_true", help="List available models.")
+
     parser = add_connection_argparse_parameters(parser)
     parser = add_asr_config_argparse_parameters(parser, max_alternatives=True, profanity_filter=True, word_time_offsets=True)
     args = parser.parse_args()
-    args.input_file = args.input_file.expanduser()
+    if args.input_file:
+        args.input_file = args.input_file.expanduser()
     return args
 
 
 def main() -> None:
     args = parse_args()
+
     auth = riva.client.Auth(args.ssl_cert, args.use_ssl, args.server, args.metadata)
     asr_service = riva.client.ASRService(auth)
+
+    if args.list_models:
+        asr_models = dict()
+        config_response = asr_service.stub.GetRivaSpeechRecognitionConfig(riva.client.proto.riva_asr_pb2.RivaSpeechRecognitionConfigRequest())
+        for model_config in config_response.model_config:
+            if model_config.parameters["type"] == "offline":
+                language_code = model_config.parameters['language_code']
+                model = {"model": [model_config.model_name]}
+                if language_code in asr_models:
+                    asr_models[language_code].append(model)
+                else:
+                    asr_models[language_code] = [model]
+
+        print("Available ASR models")
+        asr_models = dict(sorted(asr_models.items()))
+        print(asr_models)
+        return
+
+    if not os.path.isfile(args.input_file):
+        print(f"Invalid input file path: {args.input_file}")
+        return
+
     config = riva.client.RecognitionConfig(
         language_code=args.language_code,
         max_alternatives=args.max_alternatives,
