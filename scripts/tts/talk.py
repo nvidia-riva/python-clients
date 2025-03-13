@@ -70,8 +70,13 @@ def parse_args() -> argparse.Namespace:
     args = parser.parse_args()
     if args.output is not None:
         args.output = args.output.expanduser()
-    if args.list_devices or args.output_device or args.play_audio:
-        import riva.client.audio_io
+    try:
+        if args.list_devices or args.output_device or args.play_audio:
+            import riva.client.audio_io
+    except ModuleNotFoundError as e:
+        print(f"ModuleNotFoundError: {e}")
+        print("Please install pyaudio from https://pypi.org/project/PyAudio")
+        exit(1)
     return args
 
 

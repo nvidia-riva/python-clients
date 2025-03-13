@@ -6,8 +6,12 @@ import argparse
 import riva.client
 from riva.client.argparse_utils import add_asr_config_argparse_parameters, add_connection_argparse_parameters
 
-import riva.client.audio_io
-
+try:
+    import riva.client.audio_io
+except ModuleNotFoundError as e:
+    print(f"ModuleNotFoundError: {e}")
+    print("Please install pyaudio from https://pypi.org/project/PyAudio")
+    exit(1)
 
 def parse_args() -> argparse.Namespace:
     default_device_info = riva.client.audio_io.get_default_input_device_info()
