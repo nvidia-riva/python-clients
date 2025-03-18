@@ -183,6 +183,7 @@ def print_streaming(
     word_time_offsets: bool = False,
     show_intermediate: bool = False,
     file_mode: str = 'w',
+    speaker_diarization: bool = False,
 ) -> None:
     """
     Prints streaming speech recognition results to provided files or streams.
@@ -284,12 +285,21 @@ def print_streaming(
                         if word_time_offsets:
                             for f in output_file:
                                 f.write("Timestamps:\n")
-                                f.write('{: <40s}{: <16s}{: <16s}\n'.format('Word', 'Start (ms)', 'End (ms)'))
+                                temp = '{: <40s}{: <16s}{: <16s}'
+                                value = ['Word', 'Start (ms)', 'End (ms)']
+                                if speaker_diarization:
+                                    temp += '{: <16s}'
+                                    value.append('Speaker')
+                                temp += '\n'
+                                f.write(temp.format(*value))
                                 for word_info in result.alternatives[0].words:
                                     f.write(
                                         f'{word_info.word: <40s}{word_info.start_time: <16.0f}'
-                                        f'{word_info.end_time: <16.0f}\n'
+                                        f'{word_info.end_time: <16.0f}'
                                     )
+                                    if speaker_diarization:
+                                        f.write(f'{word_info.speaker_tag: <16d}')
+                                    f.write('\n')
                     else:
                         partial_transcript += transcript
                 else:  # additional_info == 'confidence'
