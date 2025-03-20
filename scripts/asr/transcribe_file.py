@@ -138,6 +138,7 @@ def main() -> None:
                 additional_info="time" if (args.word_time_offsets or args.speaker_diarization) else ("confidence" if args.print_confidence else "no"),
                 word_time_offsets=args.word_time_offsets or args.speaker_diarization,
                 speaker_diarization=args.speaker_diarization,
+                seglst_output_file=os.path.basename(args.input_file).split(".")[0],
             )
     finally:
         if sound_callback is not None and sound_callback.opened:
