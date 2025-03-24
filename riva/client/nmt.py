@@ -146,6 +146,7 @@ class NeuralMachineTranslationClient:
         target_language: str,
         future: bool = False,
         dnt_phrases_dict: Optional[dict] = None,
+        max_len_variation: Optional[str] = None,
     ) -> Union[riva_nmt.TranslateTextResponse, _MultiThreadedRendezvous]:
         """
         Translate input list of input text :param:`text` using model :param:`model` from :param:`source_language` into :param:`target_language`
@@ -168,6 +169,8 @@ class NeuralMachineTranslationClient:
             target_language=target_language
         )
         add_dnt_phrases_dict(req, dnt_phrases_dict)
+        if max_len_variation:
+            req.max_len_variation = max_len_variation
         func = self.stub.TranslateText.future if future else self.stub.TranslateText
         return func(req, metadata=self.auth.get_auth_metadata())
 
