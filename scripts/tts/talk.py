@@ -66,6 +66,11 @@ def parse_args() -> argparse.Namespace:
         "as it gets ready. If `--stream` is not set, then a synthesized audio is returned in 1 response only when "
         "all text is processed.",
     )
+    parser.add_argument(
+        "--target_transcript",
+        type=str,
+        help="A corresponding transcript for input audio prompt file. This is required to do zero shot inferencing.",
+    )
     parser = add_connection_argparse_parameters(parser)
     args = parser.parse_args()
     if args.output is not None:
@@ -158,7 +163,8 @@ def main() -> None:
                 args.text, args.voice, args.language_code, sample_rate_hz=args.sample_rate_hz,
                 encoding=AudioEncoding.OGGOPUS if args.encoding == "OGGOPUS" else AudioEncoding.LINEAR_PCM,
                 audio_prompt_file=args.audio_prompt_file, quality=20 if args.quality is None else args.quality,
-                custom_dictionary=custom_dictionary_input
+                custom_dictionary=custom_dictionary_input,
+                target_transcript=args.target_transcript
             )
             stop = time.time()
             print(f"Time spent: {(stop - start):.3f}s")
