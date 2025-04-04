@@ -39,7 +39,7 @@ class SpeechSynthesisService:
         self,
         text: str,
         voice_name: Optional[str] = None,
-        language_code: str = 'en-US',
+        language_code: str = "en-US",
         encoding: AudioEncoding = AudioEncoding.LINEAR_PCM,
         sample_rate_hz: int = 44100,
         audio_prompt_file: Optional[str] = None,
@@ -47,6 +47,7 @@ class SpeechSynthesisService:
         quality: int = 20,
         future: bool = False,
         custom_dictionary: Optional[dict] = None,
+        target_transcript: Optional[str] = None,
     ) -> Union[rtts.SynthesizeSpeechResponse, _MultiThreadedRendezvous]:
         """
         Synthesizes an entire audio for text :param:`text`.
@@ -66,7 +67,7 @@ class SpeechSynthesisService:
             future (:obj:`bool`, defaults to :obj:`False`): Whether to return an async result instead of usual
                 response. You can get a response by calling ``result()`` method of the future object.
             custom_dictionary (:obj:`dict`, `optional`): Dictionary with key-value pair containing grapheme and corresponding phoneme
-
+            target_transcript (:obj:`str`, `optional`): Target transcript corresponding to audio_prompt_file for zero shot model.
         Returns:
             :obj:`Union[riva.client.proto.riva_tts_pb2.SynthesizeSpeechResponse, grpc._channel._MultiThreadedRendezvous]`:
             a response with output. You may find :class:`riva.client.proto.riva_tts_pb2.SynthesizeSpeechResponse` fields
@@ -90,6 +91,8 @@ class SpeechSynthesisService:
                 req.zero_shot_data.audio_prompt = audio_data
             req.zero_shot_data.encoding = audio_prompt_encoding
             req.zero_shot_data.quality = quality
+            if target_transcript is not None:
+                req.zero_shot_data.target_transcript = target_transcript
 
         add_custom_dictionary_to_config(req, custom_dictionary)
 
