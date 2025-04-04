@@ -78,6 +78,7 @@ def parse_args() -> argparse.Namespace:
     )
     inputs.add_argument("--text-file", type=str, help="Path to file for translation")
     parser.add_argument("--dnt-phrases-file", type=str, help="Path to file which contains dnt phrases and custom translations")
+    parser.add_argument("--max-len-variation", type=str, help="Parameter to control the maximum variation between the length of source and translated text in terms of tokens")
     parser.add_argument("--model-name", default="", type=str, help="model to use to translate")
     parser.add_argument(
         "--source-language-code", type=str, default="en-US", help="Source language code (according to BCP-47 standard)"
@@ -105,6 +106,7 @@ def main() -> None:
                 target_language=args.target_language_code,
                 future=False,
                 dnt_phrases_dict=dnt_phrases_input,
+                max_len_variation=args.max_len_variation,
             )
             for translation in response.translations:
                 print(translation.text)
