@@ -1,4 +1,4 @@
 [submodule "common"]
 	path = common
-	url = https://github.com/ydharavath/common.git
-	branch = max_gen_delta
+	url = https://github.com/nvidia-riva/common.git
+	branch = main
