@@ -1,0 +1,102 @@
+syntax = "proto3";
+
+package nvidia.riva;
+
+service RivaLanguageUnderstanding {
+  rpc ClassifyText(ClassifyRequest) returns (ClassifyResponse);
+  rpc ClassifyTokens(TokenClassifyRequest) returns (TokenClassifyResponse);
+  rpc AnalyzeEntities(AnalyzeEntitiesRequest) returns (AnalyzeEntitiesResponse);
+  rpc AnalyzeIntent(AnalyzeIntentRequest) returns (AnalyzeIntentResponse);
+  rpc TransformText(TransformTextRequest) returns (TransformTextResponse);
+  rpc PunctuateText(TransformTextRequest) returns (TransformTextResponse);
+  rpc NaturalQuery(NaturalQueryRequest) returns (NaturalQueryResponse);
+}
+
+message ClassifyRequest {
+  repeated string text = 1;
+  message Model {
+    string model_name = 1;
+    string language_code = 2;
+  }
+  Model model = 2;
+}
+
+message ClassifyResponse {
+  message Result {
+    string label = 1;
+    float score = 2;
+  }
+  repeated Result results = 1;
+}
+
+message TokenClassifyRequest {
+  repeated string text = 1;
+  message Model {
+    string model_name = 1;
+    string language_code = 2;
+  }
+  Model model = 2;
+}
+
+message TokenClassifyResponse {
+  message Token {
+    string text = 1;
+    string label = 2;
+    float score = 3;
+    int32 start = 4;
+    int32 end = 5;
+  }
+  message Result {
+    repeated Token tokens = 1;
+  }
+  repeated Result results = 1;
+}
+
+message AnalyzeEntitiesRequest {
+  string text = 1;
+}
+
+message AnalyzeEntitiesResponse {
+  message Entity {
+    string text = 1;
+    string type = 2;
+    float score = 3;
+    int32 start = 4;
+    int32 end = 5;
+  }
+  repeated Entity entities = 1;
+}
+
+message AnalyzeIntentRequest {
+  string text = 1;
+}
+
+message AnalyzeIntentResponse {
+  string intent = 1;
+  float confidence = 2;
+  message Slot {
+    string text = 1;
+    string type = 2;
+    float score = 3;
+  }
+  repeated Slot slots = 3;
+}
+
+message TransformTextRequest {
+  string text = 1;
+  string model = 2;
+}
+
+message TransformTextResponse {
+  string text = 1;
+}
+
+message NaturalQueryRequest {
+  string query = 1;
+  string context = 2;
+}
+
+message NaturalQueryResponse {
+  string response = 1;
+  float confidence = 2;
+}
