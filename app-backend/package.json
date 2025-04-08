@@ -1,0 +1,35 @@
+{
+  "name": "riva-app-backend",
+  "version": "1.0.0",
+  "description": "Proxy server for connecting riva-frontend with riva-ts-client",
+  "main": "server.js",
+  "scripts": {
+    "download-protos": "node download-protos.js",
+    "prestart": "npm run download-protos",
+    "start": "node server.js",
+    "debug": "node debug-client.js",
+    "install-client": "cd ../riva-ts-client && npm install && npm run build && cd ../app-backend && npm link ../riva-ts-client"
+  },
+  "keywords": [
+    "riva",
+    "proxy",
+    "grpc"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@grpc/grpc-js": "^1.6.7",
+    "@grpc/proto-loader": "^0.6.13",
+    "axios": "^1.8.4",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.1",
+    "express": "^4.18.1",
+    "google-protobuf": "^3.21.4",
+    "morgan": "^1.10.0",
+    "nvidia-riva-client": "file:../riva-ts-client",
+    "ws": "^8.9.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.22"
+  }
+}
