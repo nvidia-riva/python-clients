@@ -42,12 +42,12 @@ class SpeechSynthesisService:
         language_code: str = "en-US",
         encoding: AudioEncoding = AudioEncoding.LINEAR_PCM,
         sample_rate_hz: int = 44100,
-        audio_prompt_file: Optional[str] = None,
+        zero_shot_audio_prompt_file: Optional[str] = None,
         audio_prompt_encoding: AudioEncoding = AudioEncoding.LINEAR_PCM,
-        quality: int = 20,
+        zero_shot_quality: int = 20,
         future: bool = False,
         custom_dictionary: Optional[dict] = None,
-        target_transcript: Optional[str] = None,
+        zero_shot_transcript: Optional[str] = None,
     ) -> Union[rtts.SynthesizeSpeechResponse, _MultiThreadedRendezvous]:
         """
         Synthesizes an entire audio for text :param:`text`.
@@ -60,14 +60,14 @@ class SpeechSynthesisService:
             language_code (:obj:`str`): a language to use.
             encoding (:obj:`AudioEncoding`): An output audio encoding, e.g. ``AudioEncoding.LINEAR_PCM``.
             sample_rate_hz (:obj:`int`): Number of frames per second in output audio.
-            audio_prompt_file (:obj:`str`): An audio prompt file location for zero shot model.
+            zero_shot_audio_prompt_file (:obj:`str`): An audio prompt file location for zero shot model.
             audio_prompt_encoding: (:obj:`AudioEncoding`): Encoding of audio prompt file, e.g. ``AudioEncoding.LINEAR_PCM``.
-            quality: (:obj:`int`): This defines the number of times decoder is run. Higher number improves quality of generated
+            zero_shot_quality: (:obj:`int`): This defines the number of times decoder is run. Higher number improves quality of generated
                                    audio but also takes longer to generate the audio. Ranges between 1-40.
             future (:obj:`bool`, defaults to :obj:`False`): Whether to return an async result instead of usual
                 response. You can get a response by calling ``result()`` method of the future object.
             custom_dictionary (:obj:`dict`, `optional`): Dictionary with key-value pair containing grapheme and corresponding phoneme
-            target_transcript (:obj:`str`, `optional`): Target transcript corresponding to audio_prompt_file for zero shot model.
+            zero_shot_transcript (:obj:`str`, `optional`): Transcript corresponding to zero_shot_audio_prompt_file for zero shot model.
         Returns:
             :obj:`Union[riva.client.proto.riva_tts_pb2.SynthesizeSpeechResponse, grpc._channel._MultiThreadedRendezvous]`:
             a response with output. You may find :class:`riva.client.proto.riva_tts_pb2.SynthesizeSpeechResponse` fields
@@ -82,17 +82,17 @@ class SpeechSynthesisService:
         )
         if voice_name is not None:
             req.voice_name = voice_name
-        if audio_prompt_file is not None:
-            with wave.open(str(audio_prompt_file), 'rb') as wf:
+        if zero_shot_audio_prompt_file is not None:
+            with wave.open(str(zero_shot_audio_prompt_file), 'rb') as wf:
                 rate = wf.getframerate()
                 req.zero_shot_data.sample_rate_hz = rate
-            with audio_prompt_file.open('rb') as wav_f:
+            with zero_shot_audio_prompt_file.open('rb') as wav_f:
                 audio_data = wav_f.read()
                 req.zero_shot_data.audio_prompt = audio_data
             req.zero_shot_data.encoding = audio_prompt_encoding
-            req.zero_shot_data.quality = quality
-            if target_transcript is not None:
-                req.zero_shot_data.target_transcript = target_transcript
+            req.zero_shot_data.quality = zero_shot_quality
+            if zero_shot_transcript is not None:
+                req.zero_shot_data.transcript = zero_shot_transcript
 
         add_custom_dictionary_to_config(req, custom_dictionary)
 
@@ -106,9 +106,9 @@ class SpeechSynthesisService:
         language_code: str = 'en-US',
         encoding: AudioEncoding = AudioEncoding.LINEAR_PCM,
         sample_rate_hz: int = 44100,
-        audio_prompt_file: Optional[str] = None,
+        zero_shot_audio_prompt_file: Optional[str] = None,
         audio_prompt_encoding: AudioEncoding = AudioEncoding.LINEAR_PCM,
-        quality: int = 20,
+        zero_shot_quality: int = 20,
         custom_dictionary: Optional[dict] = None,
     ) -> Generator[rtts.SynthesizeSpeechResponse, None, None]:
         """
@@ -123,9 +123,9 @@ class SpeechSynthesisService:
             language_code (:obj:`str`): A language to use.
             encoding (:obj:`AudioEncoding`): An output audio encoding, e.g. ``AudioEncoding.LINEAR_PCM``.
             sample_rate_hz (:obj:`int`): Number of frames per second in output audio.
-            audio_prompt_file (:obj:`str`): An audio prompt file location for zero shot model.
+            zero_shot_audio_prompt_file (:obj:`str`): An audio prompt file location for zero shot model.
             audio_prompt_encoding: (:obj:`AudioEncoding`): Encoding of audio prompt file, e.g. ``AudioEncoding.LINEAR_PCM``.
-            quality: (:obj:`int`): This defines the number of times decoder is run. Higher number improves quality of generated
+            zero_shot_quality: (:obj:`int`): This defines the number of times decoder is run. Higher number improves quality of generated
                                    audio but also takes longer to generate the audio. Ranges between 1-40.
             custom_dictionary (:obj:`dict`, `optional`): Dictionary with key-value pair containing grapheme and corresponding phoneme
 
@@ -145,15 +145,15 @@ class SpeechSynthesisService:
         if voice_name is not None:
             req.voice_name = voice_name
 
-        if audio_prompt_file is not None:
-            with wave.open(str(audio_prompt_file), 'rb') as wf:
+        if zero_shot_audio_prompt_file is not None:
+            with wave.open(str(zero_shot_audio_prompt_file), 'rb') as wf:
                 rate = wf.getframerate()
                 req.zero_shot_data.sample_rate_hz = rate
-            with audio_prompt_file.open('rb') as wav_f:
+            with zero_shot_audio_prompt_file.open('rb') as wav_f:
                 audio_data = wav_f.read()
                 req.zero_shot_data.audio_prompt = audio_data
             req.zero_shot_data.encoding = audio_prompt_encoding
-            req.zero_shot_data.quality = quality
+            req.zero_shot_data.quality = zero_shot_quality
 
         add_custom_dictionary_to_config(req, custom_dictionary)                   
 
