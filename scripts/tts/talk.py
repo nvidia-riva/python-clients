@@ -43,13 +43,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--zero_shot_audio_prompt_file",
         type=Path,
-        help="An input audio prompt (.wav) file for zero shot model. This is required to do zero shot inferencing.",
+        help="Input audio prompt file for Zero Shot Model. Audio length should be between 3-10 seconds.",
     )
     parser.add_argument("-o", "--output", type=Path, default="output.wav", help="Output file .wav file to write synthesized audio.")
     parser.add_argument(
         "--zero_shot_quality",
         type=int,
-        help="Number of times decoder should be run on the output audio. A higher number improves quality of the produced output but introduces latencies.",
+        help="Required quality of output audio, ranges between 1-40.",
     )
     parser.add_argument(
         "--play-audio",
@@ -74,7 +74,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--zero_shot_transcript",
         type=str,
-        help="A corresponding transcript for input audio prompt file. This is required to do zero shot inferencing.",
+        help="Transcript corresponding to Zero shot audio prompt.",
     )
     parser = add_connection_argparse_parameters(parser)
     args = parser.parse_args()

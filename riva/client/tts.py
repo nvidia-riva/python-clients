@@ -60,14 +60,13 @@ class SpeechSynthesisService:
             language_code (:obj:`str`): a language to use.
             encoding (:obj:`AudioEncoding`): An output audio encoding, e.g. ``AudioEncoding.LINEAR_PCM``.
             sample_rate_hz (:obj:`int`): Number of frames per second in output audio.
-            zero_shot_audio_prompt_file (:obj:`str`): An audio prompt file location for zero shot model.
+            zero_shot_audio_prompt_file (:obj:`str`): Input audio prompt file for Zero Shot Model. Audio length should be between 3-10 seconds.
             audio_prompt_encoding: (:obj:`AudioEncoding`): Encoding of audio prompt file, e.g. ``AudioEncoding.LINEAR_PCM``.
-            zero_shot_quality: (:obj:`int`): This defines the number of times decoder is run. Higher number improves quality of generated
-                                   audio but also takes longer to generate the audio. Ranges between 1-40.
+            zero_shot_quality: (:obj:`int`): Required quality of output audio, ranges between 1-40.
             future (:obj:`bool`, defaults to :obj:`False`): Whether to return an async result instead of usual
                 response. You can get a response by calling ``result()`` method of the future object.
             custom_dictionary (:obj:`dict`, `optional`): Dictionary with key-value pair containing grapheme and corresponding phoneme
-            zero_shot_transcript (:obj:`str`, `optional`): Transcript corresponding to zero_shot_audio_prompt_file for zero shot model.
+            zero_shot_transcript (:obj:`str`, `optional`): Transcript corresponding to Zero shot audio prompt.
         Returns:
             :obj:`Union[riva.client.proto.riva_tts_pb2.SynthesizeSpeechResponse, grpc._channel._MultiThreadedRendezvous]`:
             a response with output. You may find :class:`riva.client.proto.riva_tts_pb2.SynthesizeSpeechResponse` fields
@@ -123,10 +122,9 @@ class SpeechSynthesisService:
             language_code (:obj:`str`): A language to use.
             encoding (:obj:`AudioEncoding`): An output audio encoding, e.g. ``AudioEncoding.LINEAR_PCM``.
             sample_rate_hz (:obj:`int`): Number of frames per second in output audio.
-            zero_shot_audio_prompt_file (:obj:`str`): An audio prompt file location for zero shot model.
+            zero_shot_audio_prompt_file (:obj:`str`): Input audio prompt file for Zero Shot Model. Audio length should be between 3-10 seconds.
             audio_prompt_encoding: (:obj:`AudioEncoding`): Encoding of audio prompt file, e.g. ``AudioEncoding.LINEAR_PCM``.
-            zero_shot_quality: (:obj:`int`): This defines the number of times decoder is run. Higher number improves quality of generated
-                                   audio but also takes longer to generate the audio. Ranges between 1-40.
+            zero_shot_quality: (:obj:`int`): Required quality of output audio, ranges between 1-40.
             custom_dictionary (:obj:`dict`, `optional`): Dictionary with key-value pair containing grapheme and corresponding phoneme
 
         Yields:
