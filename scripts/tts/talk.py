@@ -41,11 +41,16 @@ def parse_args() -> argparse.Namespace:
         "based on parameter `--language-code`.",
     )
     parser.add_argument(
-        "--audio_prompt_file",
+        "--zero_shot_audio_prompt_file",
         type=Path,
-        help="An input audio prompt (.wav) file for zero shot model. This is required to do zero shot inferencing.")
+        help="Input audio prompt file for Zero Shot Model. Audio length should be between 3-10 seconds.",
+    )
     parser.add_argument("-o", "--output", type=Path, default="output.wav", help="Output file .wav file to write synthesized audio.")
-    parser.add_argument("--quality", type=int, help="Number of times decoder should be run on the output audio. A higher number improves quality of the produced output but introduces latencies.")
+    parser.add_argument(
+        "--zero_shot_quality",
+        type=int,
+        help="Required quality of output audio, ranges between 1-40.",
+    )
     parser.add_argument(
         "--play-audio",
         action="store_true",
@@ -65,6 +70,11 @@ def parse_args() -> argparse.Namespace:
         help="If this option is set, then streaming synthesis is applied. Streaming means that audio is yielded "
         "as it gets ready. If `--stream` is not set, then a synthesized audio is returned in 1 response only when "
         "all text is processed.",
+    )
+    parser.add_argument(
+        "--zero_shot_transcript",
+        type=str,
+        help="Transcript corresponding to Zero shot audio prompt.",
     )
     parser = add_connection_argparse_parameters(parser)
     args = parser.parse_args()
@@ -139,9 +149,10 @@ def main() -> None:
         if args.stream:
             responses = service.synthesize_online(
                 args.text, args.voice, args.language_code, sample_rate_hz=args.sample_rate_hz,
-                encoding=AudioEncoding.OGGOPUS if args.encoding == "OGGOPUS" else AudioEncoding.LINEAR_PCM,
-                audio_prompt_file=args.audio_prompt_file, quality=20 if args.quality is None else args.quality,
-                custom_dictionary=custom_dictionary_input
+                encoding=(AudioEncoding.OGGOPUS if args.encoding == "OGGOPUS" else AudioEncoding.LINEAR_PCM),
+                zero_shot_audio_prompt_file=args.zero_shot_audio_prompt_file,
+                zero_shot_quality=(20 if args.zero_shot_quality is None else args.zero_shot_quality),
+                custom_dictionary=custom_dictionary_input,
             )
             first = True
             for resp in responses:
@@ -156,9 +167,11 @@ def main() -> None:
         else:
             resp = service.synthesize(
                 args.text, args.voice, args.language_code, sample_rate_hz=args.sample_rate_hz,
-                encoding=AudioEncoding.OGGOPUS if args.encoding == "OGGOPUS" else AudioEncoding.LINEAR_PCM,
-                audio_prompt_file=args.audio_prompt_file, quality=20 if args.quality is None else args.quality,
-                custom_dictionary=custom_dictionary_input
+                encoding=(AudioEncoding.OGGOPUS if args.encoding == "OGGOPUS" else AudioEncoding.LINEAR_PCM),
+                zero_shot_audio_prompt_file=args.zero_shot_audio_prompt_file,
+                zero_shot_quality=(20 if args.zero_shot_quality is None else args.zero_shot_quality),
+                custom_dictionary=custom_dictionary_input,
+                zero_shot_transcript=args.zero_shot_transcript,
             )
             stop = time.time()
             print(f"Time spent: {(stop - start):.3f}s")
