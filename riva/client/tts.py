@@ -43,7 +43,7 @@ class SpeechSynthesisService:
         encoding: AudioEncoding = AudioEncoding.LINEAR_PCM,
         sample_rate_hz: int = 44100,
         zero_shot_audio_prompt_file: Optional[str] = None,
-        audio_prompt_encoding: AudioEncoding = AudioEncoding.LINEAR_PCM,
+        audio_prompt_encoding: AudioEncoding = AudioEncoding.ENCODING_UNSPECIFIED,
         zero_shot_quality: int = 20,
         future: bool = False,
         custom_dictionary: Optional[dict] = None,
@@ -82,11 +82,8 @@ class SpeechSynthesisService:
         if voice_name is not None:
             req.voice_name = voice_name
         if zero_shot_audio_prompt_file is not None:
-            with wave.open(str(zero_shot_audio_prompt_file), 'rb') as wf:
-                rate = wf.getframerate()
-                req.zero_shot_data.sample_rate_hz = rate
-            with zero_shot_audio_prompt_file.open('rb') as wav_f:
-                audio_data = wav_f.read()
+            with zero_shot_audio_prompt_file.open('rb') as f:
+                audio_data = f.read()
                 req.zero_shot_data.audio_prompt = audio_data
             req.zero_shot_data.encoding = audio_prompt_encoding
             req.zero_shot_data.quality = zero_shot_quality
@@ -106,7 +103,7 @@ class SpeechSynthesisService:
         encoding: AudioEncoding = AudioEncoding.LINEAR_PCM,
         sample_rate_hz: int = 44100,
         zero_shot_audio_prompt_file: Optional[str] = None,
-        audio_prompt_encoding: AudioEncoding = AudioEncoding.LINEAR_PCM,
+        audio_prompt_encoding: AudioEncoding = AudioEncoding.ENCODING_UNSPECIFIED,
         zero_shot_quality: int = 20,
         custom_dictionary: Optional[dict] = None,
     ) -> Generator[rtts.SynthesizeSpeechResponse, None, None]:
@@ -144,11 +141,8 @@ class SpeechSynthesisService:
             req.voice_name = voice_name
 
         if zero_shot_audio_prompt_file is not None:
-            with wave.open(str(zero_shot_audio_prompt_file), 'rb') as wf:
-                rate = wf.getframerate()
-                req.zero_shot_data.sample_rate_hz = rate
-            with zero_shot_audio_prompt_file.open('rb') as wav_f:
-                audio_data = wav_f.read()
+            with zero_shot_audio_prompt_file.open('rb') as f:
+                audio_data = f.read()
                 req.zero_shot_data.audio_prompt = audio_data
             req.zero_shot_data.encoding = audio_prompt_encoding
             req.zero_shot_data.quality = zero_shot_quality
