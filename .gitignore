@@ -186,3 +186,22 @@ tests/integration/tts/outputs
 riva/client/proto/*_pb2.py
 riva/client/proto/*_pb2_grpc.py
 
+
+# Downloaded/generated proto files and repositories
+app-backend/common/
+app-backend/riva/proto/
+
+# Node.js specific ignores for app-backend
+app-backend/node_modules/
+app-backend/coverage/
+app-backend/.nyc_output/
+app-backend/logs/
+app-backend/*.log
+app-backend/.env
+app-backend/.env.local
+app-backend/.env.development.local
+app-backend/.env.test.local
+app-backend/.env.production.local
+app-backend/npm-debug.log*
+app-backend/yarn-debug.log*
+app-backend/yarn-error.log*
