@@ -104,6 +104,7 @@ class SpeechSynthesisService:
         sample_rate_hz: int = 44100,
         zero_shot_audio_prompt_file: Optional[str] = None,
         audio_prompt_encoding: AudioEncoding = AudioEncoding.ENCODING_UNSPECIFIED,
+        zero_shot_quality: int = 20,
         custom_dictionary: Optional[dict] = None,
     ) -> Generator[rtts.SynthesizeSpeechResponse, None, None]:
         """
