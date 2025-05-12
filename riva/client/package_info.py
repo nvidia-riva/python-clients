@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: MIT
 
 MAJOR = 2
-MINOR = 19
-PATCH = 1
+MINOR = 20
+PATCH = 0
 PRE_RELEASE = 'rc0'
 
 # Use the following formatting: (major, minor, patch, pre-release)
@@ -21,6 +21,6 @@ __download_url__ = 'hhttps://github.com/nvidia-riva/python-clients/releases'
 __description__ = "Python implementation of the Riva Client API"
 __license__ = 'MIT'
 __keywords__ = 'deep learning, machine learning, gpu, NLP, ASR, TTS, NMT, nvidia, speech, language, Riva, client'
-__riva_version__ = "2.19.1"
-__riva_release__ = "25.04"
-__riva_models_version__ = "2.19.0"
+__riva_version__ = "2.20.0"
+__riva_release__ = "25.05"
+__riva_models_version__ = "2.20.0"
