@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+package nvidia.riva;
+
+import "riva_services.proto";
+
+service RivaSpeechRecognition {
+  rpc Recognize(RecognizeRequest) returns (RecognizeResponse);
+  rpc StreamingRecognize(stream StreamingRecognizeRequest) returns (stream StreamingRecognizeResponse);
+}
+
+message RecognizeRequest {
+  AudioConfig config = 1;
+  bytes audio = 2;
+  string model = 3;
+}
+
+message RecognizeResponse {
+  message Result {
+    string transcript = 1;
+    float confidence = 2;
+    repeated WordInfo words = 3;
+  }
+  repeated Result results = 1;
+}
+
+message StreamingRecognizeRequest {
+  oneof streaming_request {
+    AudioConfig config = 1;
+    bytes audio_content = 2;
+  }
+}
+
+message StreamingRecognizeResponse {
+  message Result {
+    string transcript = 1;
+    float confidence = 2;
+    bool is_final = 3;
+    repeated WordInfo words = 4;
+  }
+  repeated Result results = 1;
+}
+
+message WordInfo {
+  string word = 1;
+  float start_time = 2;
+  float end_time = 3;
+  float confidence = 4;
+}
