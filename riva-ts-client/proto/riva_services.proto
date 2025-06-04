@@ -1,0 +1,56 @@
+syntax = "proto3";
+
+package nvidia.riva;
+
+// Service definitions
+service RivaSpeechSynthesis {
+  rpc Synthesize(SynthesizeRequest) returns (SynthesizeResponse);
+  rpc SynthesizeOnline(SynthesizeRequest) returns (stream SynthesizeResponse);
+  rpc GetRivaSynthesisConfig(GetRivaSynthesisConfigRequest) returns (GetRivaSynthesisConfigResponse);
+}
+
+// Message types for Speech Synthesis
+message SynthesizeRequest {
+  string text = 1;
+  string language_code = 2;
+  int32 sample_rate_hz = 3;
+  AudioEncoding encoding = 4;
+  string voice_name = 5;
+  optional string custom_dictionary = 6;
+}
+
+message SynthesizeResponse {
+  bytes audio = 1;
+  AudioConfig audio_config = 2;
+}
+
+message GetRivaSynthesisConfigRequest {}
+
+message GetRivaSynthesisConfigResponse {
+  message ModelConfig {
+    message Parameters {
+      string language_code = 1;
+      string voice_name = 2;
+      string subvoices = 3;
+    }
+    Parameters parameters = 1;
+  }
+  repeated ModelConfig model_config = 1;
+}
+
+// Common types
+message AudioConfig {
+  AudioEncoding encoding = 1;
+  int32 sample_rate_hz = 2;
+  string language_code = 3;
+  bool enable_word_time_offsets = 4;
+  int32 channels = 5;
+}
+
+enum AudioEncoding {
+  ENCODING_UNSPECIFIED = 0;
+  LINEAR_PCM = 1;
+  FLAC = 2;
+  MULAW = 3;
+  ALAW = 4;
+}
