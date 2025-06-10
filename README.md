@@ -117,7 +117,10 @@ python scripts/asr/transcribe_file_offline.py \
 You can improve transcription of this audio by word boosting.
 ```bash
 python scripts/asr/transcribe_file_offline.py \
-  --input-file data/examples/en-US_AntiBERTa_for_word_boosting_testing.wav
+  --input-file data/examples/en-US_AntiBERTa_for_word_boosting_testing.wav \
+  --boosted-lm-words AntiBERTa \
+  --boosted-lm-words ABlooper \
+  --boosted-lm-score 20.0
 ```
 
 For transcribing in realtime mode you may use `scripts/asr/realtime_asr_client.py`.
