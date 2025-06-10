@@ -123,9 +123,7 @@ python scripts/asr/transcribe_file_offline.py \
 For transcribing in realtime mode you may use `scripts/asr/realtime_asr_client.py`.
 ```bash
 python scripts/asr/realtime_asr_client.py \
-    --input data/examples/en-US_AntiBERTa_for_word_boosting_testing.wav \
-    --simulate-realtime \
-    --show-intermediate
+  --input data/examples/en-US_AntiBERTa_for_word_boosting_testing.wav
 ```
 
 #### NLP
