@@ -111,6 +111,6 @@ def add_connection_argparse_parameters(parser: argparse.ArgumentParser) -> argpa
 
 def add_realtime_config_argparse_parameters(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
     parser.add_argument("--server", default="ws://localhost:9090", help="URI to WebSocket server endpoint.")
-    parser.add_argument("--endpoint", default="/realtime", help="Endpoint to WebSocket server endpoint.")
+    parser.add_argument("--endpoint", default="/v1/realtime", help="Endpoint to WebSocket server endpoint.")
     parser.add_argument("--query-params", default="intent=transcription", help="Query parameters to WebSocket server endpoint.")
     return parser

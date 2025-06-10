@@ -47,8 +47,10 @@ class RealtimeASRClient:
         response_data = json.loads(response)
         logger.info("Session created: %s", response_data)
 
+        print(f"response_data: {response_data}")
         response_data.pop("event_id")
         response_data["session_config"].pop("id")
+        response_data["session_config"].pop("object")
 
         response_data["type"] = "transcription_session.update"
 
@@ -137,6 +139,8 @@ class RealtimeASRClient:
         logger.info("Sending audio chunks...")
 
         if isinstance(audio_chunks, list):
+            max_chunk_commit = 4
+            current_chunk_count = 0
             # Handle pre-recorded chunks from file
             for _, chunk in tqdm(enumerate(audio_chunks)):
                 chunk_base64 = base64.b64encode(chunk).decode("utf-8")
@@ -147,7 +151,17 @@ class RealtimeASRClient:
                         "audio": chunk_base64,
                     }
                 )
+                current_chunk_count += 1
                 await asyncio.sleep(0.1)
+                
+                if current_chunk_count == max_chunk_commit:
+                    await self._send_message(
+                        {
+                            "type": "input_audio_buffer.commit",
+                        }
+                    )
+                    print(f"Committed chunks")
+                    current_chunk_count = 0
         else:
             # Handle streaming chunks from microphone
             async for chunk in self._stream_chunks(audio_chunks):
@@ -182,6 +196,7 @@ class RealtimeASRClient:
                     continue
 
                 event = json.loads(response)
+                print(f"event: {event}")
                 event_type = event.get("type", "")
 
                 if event_type == "conversation.item.input_audio_transcription.delta":

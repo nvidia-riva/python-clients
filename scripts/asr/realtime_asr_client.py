@@ -24,7 +24,7 @@ def parse_args() -> argparse.Namespace:
         required=True,
         help="Input audio file",
     )
-    #parser.add_argument("--mic", action="store_true", help="Use microphone input")
+    parser.add_argument("--mic", action="store_true", help="Use microphone input", default=False)
     parser.add_argument(
         "--duration", type=int, help="Recording duration in seconds (for microphone)"
     )
@@ -39,6 +39,11 @@ def parse_args() -> argparse.Namespace:
         type=int,
         default=1600,
         help="A maximum number of frames in a audio chunk sent to server.",
+    )
+    parser.add_argument(
+        "--output-text",
+        type=str,
+        help="Output text file",
     )
     parser = add_realtime_config_argparse_parameters(parser)
     args = parser.parse_args()
@@ -67,9 +72,9 @@ async def main() -> None:
         send_task = asyncio.create_task(client.send_audio_chunks(audio_chunks))
         receive_task = asyncio.create_task(client.receive_responses())
         await asyncio.gather(send_task, receive_task)
-        client.save_responses(
-            args.output_audio, args.output_text, args.mic_input if args.mic else None
-        )
+        
+        if args.output_text:
+            client.save_responses(args.output_text)
 
     except Exception as e:
         print(f"Error: {e}")
