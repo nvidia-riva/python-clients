@@ -6,12 +6,12 @@ import json
 import logging
 import queue
 import time
+import wave
+from pathlib import Path
 
-import librosa
 import numpy as np
 import pyaudio
 import websockets
-from tqdm import tqdm
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
@@ -43,40 +43,116 @@ class RealtimeASRClient:
         await self._initialize_session()
 
     async def _initialize_session(self):
-        response = await self.websocket.recv()
-        response_data = json.loads(response)
-        logger.info("Session created: %s", response_data)
+        try:
+            # Handle first response: "conversation.created"
+            response = await self.websocket.recv()
+            response_data = json.loads(response)
+            logger.info("First response received: %s", response_data)
+            
+            event_type = response_data.get("type", "")
+            if event_type == "conversation.created":
+                logger.info("Conversation created successfully")
+                # Print the structure for debugging
+                logger.debug("Response structure: %s", list(response_data.keys()))
+            else:
+                logger.warning(f"Unexpected first response type: {event_type}")
+                logger.debug("Full response: %s", response_data)
 
-        print(f"response_data: {response_data}")
-        response_data.pop("event_id")
-        response_data["session_config"].pop("id")
-        response_data["session_config"].pop("object")
-
-        response_data["type"] = "transcription_session.update"
-
-        await self.websocket.send(json.dumps(response_data))
-        response = await self.websocket.recv()
-        response_data = json.loads(response)
-
-        logger.info("Session updated: %s", response_data)
+            # Handle second response: "transcription_session.updated" or similar
+            response = await self.websocket.recv()
+            response_data = json.loads(response)
+            logger.info("Second response received: %s", response_data)
+            
+            event_type = response_data.get("type", "")
+            if event_type == "transcription_session.updated":
+                logger.info("Transcription session updated successfully")
+                # Print the structure for debugging
+                logger.debug("Response structure: %s", list(response_data.keys()))
+            else:
+                logger.warning(f"Unexpected second response type: {event_type}")
+                logger.debug("Full response: %s", response_data)
+                
+            logger.info("Session initialization complete")
+            
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to parse JSON response: {e}")
+            raise
+        except KeyError as e:
+            logger.error(f"Missing expected key in response: {e}")
+            raise
+        except Exception as e:
+            logger.error(f"Unexpected error during session initialization: {e}")
+            raise
 
     async def _send_message(self, message):
         await self.websocket.send(json.dumps(message))
 
     def get_audio_chunks(self, audio_file):
+        """
+        Load audio from WAV file and convert to chunks.
+        
+        This method uses Python's built-in wave module instead of librosa,
+        making it lightweight with no external dependencies.
+        
+        Note: Only supports WAV files. For other formats, use librosa version.
+        """
         logger.info(f"Loading audio: {audio_file}")
-        audio_signal, sr = librosa.load(audio_file, sr=self.input_sample_rate)
-
-        if len(audio_signal.shape) > 1:
+        
+        # Get file parameters using wave module
+        audio_file = Path(audio_file).expanduser()
+        
+        try:
+            with wave.open(str(audio_file), 'rb') as wf:
+                # Validate audio parameters
+                sample_rate = wf.getframerate()
+                n_channels = wf.getnchannels()
+                sample_width = wf.getsampwidth()
+                n_frames = wf.getnframes()
+                
+                logger.info(f"Audio info: {sample_rate}Hz, {n_channels} channels, {sample_width} bytes/sample")
+                
+                # Check if resampling is needed
+                if sample_rate != self.input_sample_rate:
+                    logger.warning(f"Sample rate mismatch: file={sample_rate}Hz, expected={self.input_sample_rate}Hz")
+                    logger.warning("Consider resampling the file or use librosa-based version for automatic resampling")
+                
+                # Read all audio data
+                audio_data = wf.readframes(n_frames)
+                
+        except wave.Error as e:
+            raise ValueError(f"Error reading WAV file {audio_file}: {e}")
+        except FileNotFoundError:
+            raise FileNotFoundError(f"Audio file not found: {audio_file}")
+        
+        # Convert bytes to numpy array
+        if sample_width == 1:
+            # 8-bit unsigned
+            audio_signal = np.frombuffer(audio_data, dtype=np.uint8).astype(np.float32) / 128.0 - 1.0
+        elif sample_width == 2:
+            # 16-bit signed
+            audio_signal = np.frombuffer(audio_data, dtype=np.int16).astype(np.float32) / 32768.0
+        elif sample_width == 4:
+            # 32-bit signed
+            audio_signal = np.frombuffer(audio_data, dtype=np.int32).astype(np.float32) / 2147483648.0
+        else:
+            raise ValueError(f"Unsupported sample width: {sample_width} bytes")
+        
+        # Convert stereo to mono if needed
+        if n_channels > 1:
+            audio_signal = audio_signal.reshape(-1, n_channels)
             audio_signal = np.mean(audio_signal, axis=1)
-
+            logger.info(f"Converted from {n_channels} channels to mono")
+        
+        # Split into chunks
         chunks = []
         for i in range(0, len(audio_signal), self.input_chunk_size_samples):
             chunk = audio_signal[i : i + self.input_chunk_size_samples]
 
+            # Pad last chunk if needed
             if len(chunk) < self.input_chunk_size_samples:
                 chunk = np.pad(chunk, (0, self.input_chunk_size_samples - len(chunk)))
 
+            # Convert to 16-bit integer bytes
             chunk_bytes = (chunk * 32767).astype(np.int16).tobytes()
             chunks.append(chunk_bytes)
 
@@ -142,7 +218,7 @@ class RealtimeASRClient:
             max_chunk_commit = 4
             current_chunk_count = 0
             # Handle pre-recorded chunks from file
-            for _, chunk in tqdm(enumerate(audio_chunks)):
+            for chunk in audio_chunks:
                 chunk_base64 = base64.b64encode(chunk).decode("utf-8")
 
                 await self._send_message(

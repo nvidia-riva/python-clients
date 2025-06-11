@@ -49,10 +49,16 @@ pip install nvidia-riva-client
 ```
 
 If you would like to use output and input audio devices 
-(scripts `scripts/asr/transcribe_file_rt.py`, `scripts/asr/transcribe_mic.py`, `scripts/tts/talk.py` or module 
+(scripts `scripts/asr/transcribe_file_rt.py`, `scripts/asr/transcribe_mic.py`, `scripts/tts/talk.py`, `scripts/asr/realtime_asr_client.py` or module 
 `riva.client/audio_io.py`), you will need to install `PyAudio`.
 ```bash
 conda install -c anaconda pyaudio
+```
+
+If you would like to use Realtime ASR (WebSocket-based real-time transcription) script `scripts/asr/realtime_asr_client.py`, you will need the following dependencies:
+```bash
+conda install -c anaconda websockets
+conda install -c anaconda numpy 
 ```
 
 For NLP evaluation you will need `transformers` and `sklearn` libraries.
@@ -127,6 +133,61 @@ For transcribing in realtime mode you may use `scripts/asr/realtime_asr_client.p
 ```bash
 python scripts/asr/realtime_asr_client.py \
   --input data/examples/en-US_AntiBERTa_for_word_boosting_testing.wav
+```
+
+For **WebSocket-based Realtime ASR** (using `riva.client.realtime.RealtimeASRClient`), you can transcribe audio files or microphone input with real-time results:
+
+**From audio file:**
+```python
+from riva.client.realtime import RealtimeASRClient
+import asyncio
+
+async def transcribe_file():
+    client = RealtimeASRClient(
+        server_url="ws://localhost:8080",
+        endpoint="/transcribe", 
+        query_params="model=en-US",
+        input_sample_rate=16000,
+        input_chunk_size_samples=1024
+    )
+    
+    await client.connect()
+    audio_chunks = client.get_audio_chunks("path/to/audio.wav")
+    
+    # Send audio and receive responses concurrently
+    await asyncio.gather(
+        client.send_audio_chunks(audio_chunks),
+        client.receive_responses()
+    )
+    
+    client.save_responses("transcript.txt")
+    await client.disconnect()
+
+asyncio.run(transcribe_file())
+```
+
+**From microphone:**
+```python
+async def transcribe_microphone():
+    client = RealtimeASRClient(
+        server_url="ws://localhost:8080",
+        endpoint="/transcribe",
+        query_params="model=en-US", 
+        input_sample_rate=16000,
+        input_chunk_size_samples=1024
+    )
+    
+    await client.connect()
+    mic_chunks = client.get_mic_chunks(duration=30)  # 30 seconds
+    
+    await asyncio.gather(
+        client.send_audio_chunks(mic_chunks),
+        client.receive_responses()
+    )
+    
+    await client.disconnect()
+
+asyncio.run(transcribe_microphone())
 ```
 
 #### NLP
