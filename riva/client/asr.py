@@ -337,49 +337,60 @@ def print_streaming(
                 elem.close()
 
     if speaker_diarization and len(words) > 0 and seglst_output_file is not None:
-        seglst_output = open(seglst_output_file + ".seglst.json", 'w')
-        seglst = []
-
-        seg = {
-            "session_id": seglst_output_file,
-            "words": words[0].word,
-            "start_time": words[0].start_time / 1000,
-            "end_time": words[0].end_time / 1000,
-            "speaker": "speaker" + str(int(words[0].speaker_tag) + 1),
-        }
-        last_update = 0
+        write_seglst(words, seglst_output_file)
         
-        for i, word in enumerate(words[1:]):
-            curr_speaker = "speaker" + str(int(word.speaker_tag) + 1)
-            if curr_speaker != seg["speaker"]:
-                seg["start_time"] = str(seg["start_time"])
-                seg["end_time"] = str(seg["end_time"])
-                seglst.append(copy.deepcopy(seg))
-                last_update = i + 1
-                
-                seg["words"] = word.word
-                seg["start_time"] = word.start_time / 1000
-                seg["end_time"] = word.end_time / 1000
-                seg["speaker"] = curr_speaker
-            else:
-                seg["words"] += " " + word.word
-                seg["end_time"] = word.end_time / 1000
+def write_seglst(words, seglst_output_file):
+    seglst_output = open(seglst_output_file + ".seglst.json", 'w')
+    seglst = []
 
-        if last_update != len(words) - 1:
+    seg = {
+        "session_id": seglst_output_file,
+        "words": words[0].word,
+        "start_time": words[0].start_time / 1000,
+        "end_time": words[0].end_time / 1000,
+        "speaker": "speaker" + str(int(words[0].speaker_tag) + 1),
+    }
+    last_update = 0
+    
+    for i, word in enumerate(words[1:]):
+        curr_speaker = "speaker" + str(int(word.speaker_tag) + 1)
+        if curr_speaker != seg["speaker"]:
             seg["start_time"] = str(seg["start_time"])
             seg["end_time"] = str(seg["end_time"])
             seglst.append(copy.deepcopy(seg))
-                
-        json.dump(seglst, seglst_output)
+            last_update = i + 1
+            
+            seg["words"] = word.word
+            seg["start_time"] = word.start_time / 1000
+            seg["end_time"] = word.end_time / 1000
+            seg["speaker"] = curr_speaker
+        else:
+            seg["words"] += " " + word.word
+            seg["end_time"] = word.end_time / 1000
+
+    if last_update != len(words) - 1:
+        seg["start_time"] = str(seg["start_time"])
+        seg["end_time"] = str(seg["end_time"])
+        seglst.append(copy.deepcopy(seg))
+            
+    json.dump(seglst, seglst_output)
 
 
-def print_offline(response: rasr.RecognizeResponse) -> None:
+def print_offline(response: rasr.RecognizeResponse, speaker_diarization: bool = False, seglst_output_file: str = None) -> None:
     print(response)
     if len(response.results) > 0 and len(response.results[0].alternatives) > 0:
         final_transcript = ""
+        words = []
         for res in response.results:
             final_transcript += res.alternatives[0].transcript
+            if speaker_diarization:
+                for word_info in res.alternatives[0].words:
+                    words.append(word_info)
+
         print("Final transcript:", final_transcript)
+
+        if speaker_diarization and len(words) > 0 and seglst_output_file is not None:
+            write_seglst(words, seglst_output_file)
 
 
 def streaming_request_generator(

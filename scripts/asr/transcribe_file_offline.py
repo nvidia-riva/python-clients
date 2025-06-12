@@ -82,7 +82,7 @@ def main() -> None:
     with args.input_file.open('rb') as fh:
         data = fh.read()
     try:
-        riva.client.print_offline(response=asr_service.offline_recognize(data, config))
+        riva.client.print_offline(response=asr_service.offline_recognize(data, config), speaker_diarization=args.speaker_diarization, seglst_output_file=os.path.basename(args.input_file).split(".")[0])
     except grpc.RpcError as e:
         print(e.details())
 
