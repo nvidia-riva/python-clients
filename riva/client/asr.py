@@ -9,6 +9,7 @@ import copy
 import warnings
 import json
 import wave
+from itertools import groupby
 from pathlib import Path
 from typing import Callable, Dict, Generator, Iterable, List, Optional, TextIO, Union
 
@@ -340,40 +341,23 @@ def print_streaming(
         write_seglst(words, seglst_output_file)
         
 def write_seglst(words, seglst_output_file):
-    seglst_output = open(seglst_output_file + ".seglst.json", 'w')
-    seglst = []
-
-    seg = {
-        "session_id": seglst_output_file,
-        "words": words[0].word,
-        "start_time": words[0].start_time / 1000,
-        "end_time": words[0].end_time / 1000,
-        "speaker": "speaker" + str(int(words[0].speaker_tag) + 1),
-    }
-    last_update = 0
+    # Sort words by start_time to ensure chronological order
+    sorted_words = sorted(words, key=lambda word: word.start_time)
     
-    for i, word in enumerate(words[1:]):
-        curr_speaker = "speaker" + str(int(word.speaker_tag) + 1)
-        if curr_speaker != seg["speaker"]:
-            seg["start_time"] = str(seg["start_time"])
-            seg["end_time"] = str(seg["end_time"])
-            seglst.append(copy.deepcopy(seg))
-            last_update = i + 1
+    seglst = []
+    for speaker_tag, group in groupby(sorted_words, key=lambda word: word.speaker_tag):
+        group_words = list(group)
+        seg = {
+            "session_id": seglst_output_file,
+            "words": " ".join(word.word for word in group_words),
+            "start_time": str(group_words[0].start_time / 1000),
+            "end_time": str(group_words[-1].end_time / 1000),
+            "speaker": f"speaker{int(speaker_tag) + 1}",
+        }
+        seglst.append(seg)
             
-            seg["words"] = word.word
-            seg["start_time"] = word.start_time / 1000
-            seg["end_time"] = word.end_time / 1000
-            seg["speaker"] = curr_speaker
-        else:
-            seg["words"] += " " + word.word
-            seg["end_time"] = word.end_time / 1000
-
-    if last_update != len(words) - 1:
-        seg["start_time"] = str(seg["start_time"])
-        seg["end_time"] = str(seg["end_time"])
-        seglst.append(copy.deepcopy(seg))
-            
-    json.dump(seglst, seglst_output)
+    with open(seglst_output_file + ".seglst.json", 'w') as seglst_output:
+        json.dump(seglst, seglst_output)
 
 
 def print_offline(response: rasr.RecognizeResponse, speaker_diarization: bool = False, seglst_output_file: str = None) -> None:
