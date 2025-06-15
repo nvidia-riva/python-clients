@@ -17,6 +17,7 @@ case and deliver real-time performance. This repo provides performant client exa
     - `scripts/asr/transcribe_file.py` performs streaming transcription,
     - `scripts/asr/transcribe_file_offline.py` performs offline transcription,
     - `scripts/asr/transcribe_mic.py` performs streaming transcription of audio acquired through microphone.
+    - 
 - **Speech Synthesis (TTS)**
     - `scripts/tts/talk.py` synthesizes audio for a text in streaming or offline mode.
 - **Natural Language Processing (NLP)**
@@ -57,8 +58,9 @@ conda install -c anaconda pyaudio
 
 If you would like to use Realtime ASR (WebSocket-based real-time transcription) script `scripts/asr/realtime_asr_client.py`, you will need the following dependencies:
 ```bash
-conda install -c anaconda websockets
 conda install -c anaconda numpy 
+conda install -c anaconda requests
+conda install -c anaconda websockets
 ```
 
 For NLP evaluation you will need `transformers` and `sklearn` libraries.

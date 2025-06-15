@@ -11,19 +11,23 @@ from pathlib import Path
 
 import numpy as np
 import pyaudio
+import requests
 import websockets
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 class RealtimeASRClient:
-    def __init__(self, server_url: str, endpoint: str, query_params: str, input_sample_rate: int, input_chunk_size_samples: int):
-        self.server_url = server_url
+    def __init__(self, server: str, endpoint: str, query_params: str, input_sample_rate: int, input_chunk_size_samples: int, speaker_diarization: bool = False, diarization_max_speakers: int = 2):
+        self.server = server
         self.endpoint = endpoint
         self.query_params = query_params
         self.input_sample_rate = input_sample_rate
         self.input_chunk_size_samples = input_chunk_size_samples
+        self.speaker_diarization = speaker_diarization
+        self.diarization_max_speakers = diarization_max_speakers
         self.websocket = None
+        self.session_config = None
 
         # Input audio playback
         self.input_audio_queue = queue.Queue()
@@ -34,20 +38,98 @@ class RealtimeASRClient:
         self.collected_text = []
 
     async def connect(self):
-        url = f"{self.server_url}{self.endpoint}?{self.query_params}"
+        try:
+            # First make POST request to initialize session
+            headers = {
+                "Authorization": f"Bearer {self.query_params}",
+                "Content-Type": "application/json"
+            }
+            response = requests.post(
+                f"http://{self.server}/v1/realtime/transcription_sessions",
+                headers=headers,
+                json={}
+            )
+            
+            if response.status_code != 200:
+                raise Exception(f"Failed to initialize session. Status: {response.status_code}, Error: {response.text}")
+                
+            session_data = response.json()
+            logger.info(f"Session initialized: {session_data}")
+            self.session_config = session_data
+            
+            # Then connect to WebSocket
+            ws_url = f"ws://{self.server}{self.endpoint}?{self.query_params}"
+            logger.info(f"Connecting to WebSocket: {ws_url}")
+            
+            self.websocket = await websockets.connect(
+                ws_url,
+                extra_headers=headers  # Add authorization headers to WebSocket connection
+            )
+            
+            await self._initialize_session()
+            
+        except requests.exceptions.RequestException as e:
+            logger.error(f"HTTP request failed: {e}")
+            raise
+        except websockets.exceptions.WebSocketException as e:
+            logger.error(f"WebSocket connection failed: {e}")
+            raise
+        except Exception as e:
+            logger.error(f"Unexpected error during connection: {e}")
+            raise
 
-        self.websocket = await websockets.connect(
-            url,
+    async def _update_session(self):
+        logger.info("Updating session...")
+        
+        # Create a copy of the session config
+        session_config = self.session_config.copy()
+        
+        # First check here, what we need to update?
+        # Speaker diarization:
+        if self.speaker_diarization:
+            session_config["speaker_diarization"] = {
+                "type": "speaker_diarization",
+                "enable_speaker_diarization": True,
+                "max_speaker_count": self.diarization_max_speakers
+            }
+        
+        # Now client sends request to update session
+        update_session_request = {
+            "type": "transcription_session.update",
+            "session": session_config
+        }
+        await self._send_message(
+            update_session_request
         )
-
-        await self._initialize_session()
-
+        
+        # Handle response: "transcription_session.updated"
+        response = await self.websocket.recv()
+        response_data = json.loads(response)
+        logger.info("Session updated: %s", response_data)
+        
+        is_updated = False
+        event_type = response_data.get("type", "")
+        if event_type == "transcription_session.updated":
+            is_updated = True
+            logger.info("Transcription session updated successfully")
+            # Print the structure for debugging
+            logger.debug("Response structure: %s", list(response_data.keys()))
+        else:
+            logger.warning(f"Unexpected response type: {event_type}")
+            logger.debug("Full response: %s", response_data)
+            
+        if is_updated:
+            self.session_config = response_data["session"]
+        
+        return is_updated
+                
+        
     async def _initialize_session(self):
         try:
             # Handle first response: "conversation.created"
             response = await self.websocket.recv()
             response_data = json.loads(response)
-            logger.info("First response received: %s", response_data)
+            logger.info("Session created: %s", response_data)
             
             event_type = response_data.get("type", "")
             if event_type == "conversation.created":
@@ -58,19 +140,12 @@ class RealtimeASRClient:
                 logger.warning(f"Unexpected first response type: {event_type}")
                 logger.debug("Full response: %s", response_data)
 
-            # Handle second response: "transcription_session.updated" or similar
-            response = await self.websocket.recv()
-            response_data = json.loads(response)
-            logger.info("Second response received: %s", response_data)
-            
-            event_type = response_data.get("type", "")
-            if event_type == "transcription_session.updated":
-                logger.info("Transcription session updated successfully")
-                # Print the structure for debugging
-                logger.debug("Response structure: %s", list(response_data.keys()))
-            else:
-                logger.warning(f"Unexpected second response type: {event_type}")
-                logger.debug("Full response: %s", response_data)
+            # Update session if needed
+            if self.speaker_diarization:
+                is_updated = await self._update_session()
+                if not is_updated:
+                    logger.error("Failed to update session")
+                    raise Exception("Failed to update session")
                 
             logger.info("Session initialization complete")
             
@@ -276,8 +351,14 @@ class RealtimeASRClient:
                 event_type = event.get("type", "")
 
                 if event_type == "conversation.item.input_audio_transcription.delta":
-                    logger.info("Transcript: %s", event.get("delta"))
-                    self.collected_text.append(event.get("delta"))
+                    delta = event.get("delta", "")
+                    if self.speaker_diarization and "speaker" in event:
+                        speaker = event.get("speaker", "Unknown")
+                        logger.info(f"Speaker {speaker}: {delta}")
+                        self.collected_text.append(f"[Speaker {speaker}] {delta}")
+                    else:
+                        logger.info("Transcript: %s", delta)
+                        self.collected_text.append(delta)
                 elif "error" in event_type.lower():
                     logger.error(f"Error: {event.get('error', {}).get('message', 'Unknown error')}")
                     break

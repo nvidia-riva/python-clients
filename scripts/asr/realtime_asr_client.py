@@ -45,6 +45,17 @@ def parse_args() -> argparse.Namespace:
         type=str,
         help="Output text file",
     )
+    parser.add_argument(
+        "--speaker-diarization",
+        action="store_true",
+        help="Enable speaker diarization to identify different speakers in the audio",
+    )
+    parser.add_argument(
+        "--diarization-max-speakers",
+        type=int,
+        default=2,
+        help="Maximum number of speakers to detect in the audio",
+    )
     parser = add_realtime_config_argparse_parameters(parser)
     args = parser.parse_args()
     return args
@@ -52,7 +63,15 @@ def parse_args() -> argparse.Namespace:
 
 async def main() -> None:
     args = parse_args()
-    client = RealtimeASRClient(args.server, args.endpoint, args.query_params, args.sample_rate_hz, args.file_streaming_chunk)       
+    client = RealtimeASRClient(
+        server=args.server,
+        endpoint=args.endpoint,
+        query_params=args.query_params,
+        input_sample_rate=args.sample_rate_hz,
+        input_chunk_size_samples=args.file_streaming_chunk,
+        speaker_diarization=args.speaker_diarization,
+        diarization_max_speakers=args.diarization_max_speakers,
+    )       
 
     # Set up signal handler for graceful shutdown
     def signal_handler(sig, frame):
