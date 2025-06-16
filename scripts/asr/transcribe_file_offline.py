@@ -20,6 +20,7 @@ def parse_args() -> argparse.Namespace:
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--input-file", type=Path, help="A path to a local file to transcribe.")
     group.add_argument("--list-models", action="store_true", help="List available models.")
+    parser.add_argument("--output-seglst", action="store_true", help="Output seglst file for speaker diarization.")
 
     parser = add_connection_argparse_parameters(parser)
     parser = add_asr_config_argparse_parameters(parser, max_alternatives=True, profanity_filter=True, word_time_offsets=True)
@@ -82,7 +83,10 @@ def main() -> None:
     with args.input_file.open('rb') as fh:
         data = fh.read()
     try:
-        riva.client.print_offline(response=asr_service.offline_recognize(data, config), speaker_diarization=args.speaker_diarization, seglst_output_file=os.path.basename(args.input_file).split(".")[0])
+        seglst_output_file = None
+        if args.output_seglst:
+            seglst_output_file = os.path.basename(args.input_file).split(".")[0]
+        riva.client.print_offline(response=asr_service.offline_recognize(data, config), speaker_diarization=args.speaker_diarization, seglst_output_file=seglst_output_file)
     except grpc.RpcError as e:
         print(e.details())
 
