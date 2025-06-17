@@ -99,14 +99,19 @@ class RealtimeASRClient:
             "max_speaker_count": self.args.diarization_max_speakers
         }
         
-        # --boosted-lm-words
-        # --boosted-lm-score
-        '''
-        session_config["word_boosting"] = {
-            "enable_word_boosting": True,
-            "word_boosting_list": self.args.word_boosting_list
-        }
-        '''
+        if self.args.boosted_lm_words:
+            if len(self.args.boosted_lm_words):
+                word_boosting_list = [
+                    {
+                        "phrases" : self.args.boosted_lm_words,
+                        "boost": self.args.boosted_lm_score
+                    }
+                ]
+                session_config["word_boosting"] = {
+                    "enable_word_boosting": True,
+                    "word_boosting_list": word_boosting_list
+                }
+        
         
         if self.args.start_history > 0 or self.args.start_threshold > 0 or self.args.stop_history > 0 or self.args.stop_history_eou > 0 or self.args.stop_threshold > 0 or self.args.stop_threshold_eou > 0:
             self.args.endpointing_config.start_history = self.args.start_history
