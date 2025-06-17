@@ -6,8 +6,9 @@ import asyncio
 import signal
 import sys
 
+from riva.client.asr import get_wav_file_parameters
 from riva.client.realtime import RealtimeASRClient
-from riva.client.argparse_utils import add_realtime_config_argparse_parameters
+from riva.client.argparse_utils import add_asr_config_argparse_parameters, add_realtime_config_argparse_parameters
 
 
 def parse_args() -> argparse.Namespace:
@@ -19,43 +20,15 @@ def parse_args() -> argparse.Namespace:
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     
-    parser.add_argument(
-        "--input",
-        required=True,
-        help="Input audio file",
-    )
-    parser.add_argument("--mic", action="store_true", help="Use microphone input", default=False)
-    parser.add_argument(
-        "--duration", type=int, help="Recording duration in seconds (for microphone)"
-    )
-    parser.add_argument(
-        "--sample-rate-hz",
-        type=int,
-        help="A number of frames per second in audio streamed from a microphone.",
-        default=16000,
-    )
-    parser.add_argument(
-        "--file-streaming-chunk",
-        type=int,
-        default=1600,
-        help="A maximum number of frames in a audio chunk sent to server.",
-    )
-    parser.add_argument(
-        "--output-text",
-        type=str,
-        help="Output text file",
-    )
-    parser.add_argument(
-        "--speaker-diarization",
-        action="store_true",
-        help="Enable speaker diarization to identify different speakers in the audio",
-    )
-    parser.add_argument(
-        "--diarization-max-speakers",
-        type=int,
-        default=2,
-        help="Maximum number of speakers to detect in the audio",
-    )
+    parser.add_argument("--input-file", required=True, help="Input audio file")
+    parser.add_argument("--mic", action="store_true", help="Use microphone input instead of file input", default=False)
+    parser.add_argument("--duration", type=int, help="Duration in seconds to record from microphone (only used with --mic)", default=None)
+    parser.add_argument("--sample-rate-hz", type=int, help="A number of frames per second in audio streamed from a microphone.", default=16000)
+    parser.add_argument("--num-channels", type=int, help="A number of frames per second in audio streamed from a microphone.", default=16000)
+    parser.add_argument("--file-streaming-chunk", type=int, default=1600, help="A maximum number of frames in one chunk sent to server.")
+    parser.add_argument("--output-text", type=str, help="Output text file")
+    parser.add_argument("--max-commit-count", type=int, default=5, help="Commit the input audio buffer to Realtime Server")
+    parser = add_asr_config_argparse_parameters(parser, max_alternatives=True, profanity_filter=True, word_time_offsets=True)
     parser = add_realtime_config_argparse_parameters(parser)
     args = parser.parse_args()
     return args
@@ -63,15 +36,6 @@ def parse_args() -> argparse.Namespace:
 
 async def main() -> None:
     args = parse_args()
-    client = RealtimeASRClient(
-        server=args.server,
-        endpoint=args.endpoint,
-        query_params=args.query_params,
-        input_sample_rate=args.sample_rate_hz,
-        input_chunk_size_samples=args.file_streaming_chunk,
-        speaker_diarization=args.speaker_diarization,
-        diarization_max_speakers=args.diarization_max_speakers,
-    )       
 
     # Set up signal handler for graceful shutdown
     def signal_handler(sig, frame):
@@ -81,13 +45,20 @@ async def main() -> None:
     signal.signal(signal.SIGINT, signal_handler)
 
     try:
-        await client.connect()
-
+        client = RealtimeASRClient(args=args) 
+        
         if args.mic:
             audio_chunks = client.get_mic_chunks(duration=args.duration)
         else:
-            audio_chunks = client.get_audio_chunks(args.input)
+            audio_chunks = client.get_audio_chunks(args.input_file)
+            wav_parameters = get_wav_file_parameters(args.input_file)
+            if wav_parameters is not None:
+                args.sample_rate_hz = wav_parameters['framerate']
+                args.num_channels = wav_parameters['nchannels']
 
+              
+        await client.connect()
+        
         send_task = asyncio.create_task(client.send_audio_chunks(audio_chunks))
         receive_task = asyncio.create_task(client.receive_responses())
         await asyncio.gather(send_task, receive_task)

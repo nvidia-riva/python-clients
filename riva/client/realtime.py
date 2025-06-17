@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import argparse
 import asyncio
 import base64
 import json
@@ -13,21 +14,18 @@ import numpy as np
 import pyaudio
 import requests
 import websockets
+from websockets.exceptions import WebSocketException
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 class RealtimeASRClient:
-    def __init__(self, server: str, endpoint: str, query_params: str, input_sample_rate: int, input_chunk_size_samples: int, speaker_diarization: bool = False, diarization_max_speakers: int = 2):
-        self.server = server
-        self.endpoint = endpoint
-        self.query_params = query_params
-        self.input_sample_rate = input_sample_rate
-        self.input_chunk_size_samples = input_chunk_size_samples
-        self.speaker_diarization = speaker_diarization
-        self.diarization_max_speakers = diarization_max_speakers
+    def __init__(self, args: argparse.Namespace):
+        self.args = args
         self.websocket = None
         self.session_config = None
+        self.text_done = False
+        self.max_chunk_commit = 4
 
         # Input audio playback
         self.input_audio_queue = queue.Queue()
@@ -41,11 +39,10 @@ class RealtimeASRClient:
         try:
             # First make POST request to initialize session
             headers = {
-                "Authorization": f"Bearer {self.query_params}",
                 "Content-Type": "application/json"
             }
             response = requests.post(
-                f"http://{self.server}/v1/realtime/transcription_sessions",
+                f"http://{self.args.server}/v1/realtime/transcription_sessions",
                 headers=headers,
                 json={}
             )
@@ -58,20 +55,16 @@ class RealtimeASRClient:
             self.session_config = session_data
             
             # Then connect to WebSocket
-            ws_url = f"ws://{self.server}{self.endpoint}?{self.query_params}"
+            ws_url = f"ws://{self.args.server}{self.args.endpoint}?{self.args.query_params}"
             logger.info(f"Connecting to WebSocket: {ws_url}")
             
-            self.websocket = await websockets.connect(
-                ws_url,
-                extra_headers=headers  # Add authorization headers to WebSocket connection
-            )
-            
+            self.websocket = await websockets.connect(ws_url)
             await self._initialize_session()
             
         except requests.exceptions.RequestException as e:
             logger.error(f"HTTP request failed: {e}")
             raise
-        except websockets.exceptions.WebSocketException as e:
+        except WebSocketException as e:
             logger.error(f"WebSocket connection failed: {e}")
             raise
         except Exception as e:
@@ -84,13 +77,51 @@ class RealtimeASRClient:
         # Create a copy of the session config
         session_config = self.session_config.copy()
         
-        # First check here, what we need to update?
-        # Speaker diarization:
-        if self.speaker_diarization:
-            session_config["speaker_diarization"] = {
-                "type": "speaker_diarization",
-                "enable_speaker_diarization": True,
-                "max_speaker_count": self.diarization_max_speakers
+        self.model = "parakeet-1.1b-en-US-asr-streaming-silero-vad-asr-bls-ensemble"
+        session_config["input_audio_transcription"] = {
+            "language" : "en-US",
+            "model": self.model,
+            "prompt": ""
+        }
+        session_config["input_audio_params"] = {
+            "sample_rate_hz": self.args.sample_rate_hz,
+            "num_channels": self.args.num_channels
+        }
+        session_config["recognition_config"] = {
+            "max_alternatives": self.args.max_alternatives,
+            "enable_automatic_punctuation": self.args.automatic_punctuation,
+            "enable_word_time_offsets": self.args.word_time_offsets,
+            "enable_profanity_filter": self.args.profanity_filter,
+            "enable_verbatim_transcripts": self.args.no_verbatim_transcripts
+        }
+        session_config["speaker_diarization"] = {
+            "enable_speaker_diarization": True,
+            "max_speaker_count": self.args.diarization_max_speakers
+        }
+        
+        # --boosted-lm-words
+        # --boosted-lm-score
+        '''
+        session_config["word_boosting"] = {
+            "enable_word_boosting": True,
+            "word_boosting_list": self.args.word_boosting_list
+        }
+        '''
+        
+        if self.args.start_history > 0 or self.args.start_threshold > 0 or self.args.stop_history > 0 or self.args.stop_history_eou > 0 or self.args.stop_threshold > 0 or self.args.stop_threshold_eou > 0:
+            self.args.endpointing_config.start_history = self.args.start_history
+            self.args.endpointing_config.start_threshold = self.args.start_threshold
+            self.args.endpointing_config.stop_history = self.args.stop_history
+            self.args.endpointing_config.stop_history_eou = self.args.stop_history_eou
+            self.args.endpointing_config.stop_threshold = self.args.stop_threshold
+            self.args.endpointing_config.stop_threshold_eou = self.args.stop_threshold_eou
+            session_config["endpointing_config"] = {
+                "start_history": self.args.start_history,
+                "start_threshold": self.args.start_threshold,
+                "stop_history": self.args.stop_history,
+                "stop_threshold": self.args.stop_threshold,
+                "stop_history_eou": self.args.stop_history_eou,
+                "stop_threshold_eou": self.args.stop_threshold_eou
             }
         
         # Now client sends request to update session
@@ -140,12 +171,10 @@ class RealtimeASRClient:
                 logger.warning(f"Unexpected first response type: {event_type}")
                 logger.debug("Full response: %s", response_data)
 
-            # Update session if needed
-            if self.speaker_diarization:
-                is_updated = await self._update_session()
-                if not is_updated:
-                    logger.error("Failed to update session")
-                    raise Exception("Failed to update session")
+            self.is_config_updated = await self._update_session()
+            if not self.is_config_updated:
+                logger.error("Failed to update session")
+                raise Exception("Failed to update session")
                 
             logger.info("Session initialization complete")
             
@@ -187,8 +216,8 @@ class RealtimeASRClient:
                 logger.info(f"Audio info: {sample_rate}Hz, {n_channels} channels, {sample_width} bytes/sample")
                 
                 # Check if resampling is needed
-                if sample_rate != self.input_sample_rate:
-                    logger.warning(f"Sample rate mismatch: file={sample_rate}Hz, expected={self.input_sample_rate}Hz")
+                if sample_rate != self.args.sample_rate_hz:
+                    logger.warning(f"Sample rate mismatch: file={sample_rate}Hz, expected={self.args.sample_rate_hz}Hz")
                     logger.warning("Consider resampling the file or use librosa-based version for automatic resampling")
                 
                 # Read all audio data
@@ -220,12 +249,12 @@ class RealtimeASRClient:
         
         # Split into chunks
         chunks = []
-        for i in range(0, len(audio_signal), self.input_chunk_size_samples):
-            chunk = audio_signal[i : i + self.input_chunk_size_samples]
+        for i in range(0, len(audio_signal), self.args.file_streaming_chunk):
+            chunk = audio_signal[i : i + self.args.file_streaming_chunk]
 
             # Pad last chunk if needed
-            if len(chunk) < self.input_chunk_size_samples:
-                chunk = np.pad(chunk, (0, self.input_chunk_size_samples - len(chunk)))
+            if len(chunk) < self.args.file_streaming_chunk:
+                chunk = np.pad(chunk, (0, self.args.file_streaming_chunk - len(chunk)))
 
             # Convert to 16-bit integer bytes
             chunk_bytes = (chunk * 32767).astype(np.int16).tobytes()
@@ -252,7 +281,7 @@ class RealtimeASRClient:
             channels=1,
             rate=self.input_sample_rate,
             input=True,
-            frames_per_buffer=self.input_chunk_size_samples,
+            frames_per_buffer=self.args.file_streaming_chunk,
         )
 
         logger.info("Recording from microphone...")
@@ -267,7 +296,7 @@ class RealtimeASRClient:
                 if duration and time.time() - start_time > duration:
                     break
 
-                data = stream.read(self.input_chunk_size_samples, exception_on_overflow=False)
+                data = stream.read(self.args.file_streaming_chunk, exception_on_overflow=False)
                 chunk_count += 1
 
                 self.mic_input_chunks.append(data)
@@ -290,12 +319,13 @@ class RealtimeASRClient:
         logger.info("Sending audio chunks...")
 
         if isinstance(audio_chunks, list):
-            max_chunk_commit = 4
             current_chunk_count = 0
             # Handle pre-recorded chunks from file
             for chunk in audio_chunks:
-                chunk_base64 = base64.b64encode(chunk).decode("utf-8")
+                if self.text_done:
+                    break
 
+                chunk_base64 = base64.b64encode(chunk).decode("utf-8")
                 await self._send_message(
                     {
                         "type": "input_audio_buffer.append",
@@ -305,7 +335,7 @@ class RealtimeASRClient:
                 current_chunk_count += 1
                 await asyncio.sleep(0.1)
                 
-                if current_chunk_count == max_chunk_commit:
+                if current_chunk_count == self.max_chunk_commit:
                     await self._send_message(
                         {
                             "type": "input_audio_buffer.commit",
@@ -352,15 +382,11 @@ class RealtimeASRClient:
 
                 if event_type == "conversation.item.input_audio_transcription.delta":
                     delta = event.get("delta", "")
-                    if self.speaker_diarization and "speaker" in event:
-                        speaker = event.get("speaker", "Unknown")
-                        logger.info(f"Speaker {speaker}: {delta}")
-                        self.collected_text.append(f"[Speaker {speaker}] {delta}")
-                    else:
-                        logger.info("Transcript: %s", delta)
-                        self.collected_text.append(delta)
+                    logger.info("Transcript: %s", delta)
+                    self.collected_text.append(delta)
                 elif "error" in event_type.lower():
                     logger.error(f"Error: {event.get('error', {}).get('message', 'Unknown error')}")
+                    self.text_done = True
                     break
 
             except (asyncio.TimeoutError, Exception) as e:
