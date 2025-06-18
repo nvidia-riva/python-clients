@@ -16,6 +16,8 @@ import requests
 import websockets
 from websockets.exceptions import WebSocketException
 
+import riva
+
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
@@ -94,10 +96,12 @@ class RealtimeASRClient:
             "enable_profanity_filter": self.args.profanity_filter,
             "enable_verbatim_transcripts": self.args.no_verbatim_transcripts
         }
-        session_config["speaker_diarization"] = {
-            "enable_speaker_diarization": True,
-            "max_speaker_count": self.args.diarization_max_speakers
-        }
+        
+        if self.args.speaker_diarization:
+            session_config["speaker_diarization"] = {
+                "enable_speaker_diarization": True,
+                "max_speaker_count": self.args.diarization_max_speakers
+            }
         
         if self.args.boosted_lm_words:
             if len(self.args.boosted_lm_words):
@@ -111,7 +115,6 @@ class RealtimeASRClient:
                     "enable_word_boosting": True,
                     "word_boosting_list": word_boosting_list
                 }
-        
         
         if self.args.start_history > 0 or self.args.start_threshold > 0 or self.args.stop_history > 0 or self.args.stop_history_eou > 0 or self.args.stop_threshold > 0 or self.args.stop_threshold_eou > 0:
             self.args.endpointing_config.start_history = self.args.start_history
@@ -196,193 +199,49 @@ class RealtimeASRClient:
     async def _send_message(self, message):
         await self.websocket.send(json.dumps(message))
 
-    def get_audio_chunks(self, audio_file):
-        """
-        Load audio from WAV file and convert to chunks.
-        
-        This method uses Python's built-in wave module instead of librosa,
-        making it lightweight with no external dependencies.
-        
-        Note: Only supports WAV files. For other formats, use librosa version.
-        """
-        logger.info(f"Loading audio: {audio_file}")
-        
-        # Get file parameters using wave module
-        audio_file = Path(audio_file).expanduser()
-        
-        try:
-            with wave.open(str(audio_file), 'rb') as wf:
-                # Validate audio parameters
-                sample_rate = wf.getframerate()
-                n_channels = wf.getnchannels()
-                sample_width = wf.getsampwidth()
-                n_frames = wf.getnframes()
-                
-                logger.info(f"Audio info: {sample_rate}Hz, {n_channels} channels, {sample_width} bytes/sample")
-                
-                # Check if resampling is needed
-                if sample_rate != self.args.sample_rate_hz:
-                    logger.warning(f"Sample rate mismatch: file={sample_rate}Hz, expected={self.args.sample_rate_hz}Hz")
-                    logger.warning("Consider resampling the file or use librosa-based version for automatic resampling")
-                
-                # Read all audio data
-                audio_data = wf.readframes(n_frames)
-                
-        except wave.Error as e:
-            raise ValueError(f"Error reading WAV file {audio_file}: {e}")
-        except FileNotFoundError:
-            raise FileNotFoundError(f"Audio file not found: {audio_file}")
-        
-        # Convert bytes to numpy array
-        if sample_width == 1:
-            # 8-bit unsigned
-            audio_signal = np.frombuffer(audio_data, dtype=np.uint8).astype(np.float32) / 128.0 - 1.0
-        elif sample_width == 2:
-            # 16-bit signed
-            audio_signal = np.frombuffer(audio_data, dtype=np.int16).astype(np.float32) / 32768.0
-        elif sample_width == 4:
-            # 32-bit signed
-            audio_signal = np.frombuffer(audio_data, dtype=np.int32).astype(np.float32) / 2147483648.0
-        else:
-            raise ValueError(f"Unsupported sample width: {sample_width} bytes")
-        
-        # Convert stereo to mono if needed
-        if n_channels > 1:
-            audio_signal = audio_signal.reshape(-1, n_channels)
-            audio_signal = np.mean(audio_signal, axis=1)
-            logger.info(f"Converted from {n_channels} channels to mono")
-        
-        # Split into chunks
-        chunks = []
-        for i in range(0, len(audio_signal), self.args.file_streaming_chunk):
-            chunk = audio_signal[i : i + self.args.file_streaming_chunk]
-
-            # Pad last chunk if needed
-            if len(chunk) < self.args.file_streaming_chunk:
-                chunk = np.pad(chunk, (0, self.args.file_streaming_chunk - len(chunk)))
-
-            # Convert to 16-bit integer bytes
-            chunk_bytes = (chunk * 32767).astype(np.int16).tobytes()
-            chunks.append(chunk_bytes)
-
-        logger.info(f"Created {len(chunks)} chunks")
-        return chunks
-
-    def get_mic_chunks(self, duration=None):
-        """
-        Capture audio from microphone and return chunks.
-
-        Args:
-            duration: Recording duration in seconds. If None, record until interrupted.
-
-        Returns:
-            Generator yielding audio chunks
-        """
-        logger.info("Initializing microphone...")
-
-        p = pyaudio.PyAudio()
-        stream = p.open(
-            format=pyaudio.paInt16,
-            channels=1,
-            rate=self.input_sample_rate,
-            input=True,
-            frames_per_buffer=self.args.file_streaming_chunk,
-        )
-
-        logger.info("Recording from microphone...")
-        self.is_recording = True
-        self.mic_input_chunks = []
-
-        start_time = time.time()
-        chunk_count = 0
-
-        try:
-            while self.is_recording:
-                if duration and time.time() - start_time > duration:
-                    break
-
-                data = stream.read(self.args.file_streaming_chunk, exception_on_overflow=False)
-                chunk_count += 1
-
-                self.mic_input_chunks.append(data)
-
-                if chunk_count % 20 == 0:
-                    logger.info(f"Recorded {chunk_count} chunks")
-
-                yield data
-
-        except KeyboardInterrupt:
-            logger.info("Recording interrupted by user")
-        finally:
-            self.is_recording = False
-            stream.stop_stream()
-            stream.close()
-            p.terminate()
-            logger.info(f"Recording stopped. Total chunks: {chunk_count}")
-
     async def send_audio_chunks(self, audio_chunks):
         logger.info("Sending audio chunks...")
+        current_chunk_count = 0
+        
+        for chunk in audio_chunks:
+            if self.text_done:
+                break
 
-        if isinstance(audio_chunks, list):
-            current_chunk_count = 0
-            # Handle pre-recorded chunks from file
-            for chunk in audio_chunks:
-                if self.text_done:
-                    break
-
-                chunk_base64 = base64.b64encode(chunk).decode("utf-8")
+            chunk_base64 = base64.b64encode(chunk).decode("utf-8")
+            await self._send_message(
+                {
+                    "type": "input_audio_buffer.append",
+                    "audio": chunk_base64,
+                }
+            )
+            current_chunk_count += 1
+            await asyncio.sleep(0.1)
+            
+            if current_chunk_count == self.max_chunk_commit:
                 await self._send_message(
                     {
-                        "type": "input_audio_buffer.append",
-                        "audio": chunk_base64,
+                        "type": "input_audio_buffer.commit",
                     }
                 )
-                current_chunk_count += 1
-                await asyncio.sleep(0.1)
-                
-                if current_chunk_count == self.max_chunk_commit:
-                    await self._send_message(
-                        {
-                            "type": "input_audio_buffer.commit",
-                        }
-                    )
-                    print(f"Committed chunks")
-                    current_chunk_count = 0
-        else:
-            # Handle streaming chunks from microphone
-            async for chunk in self._stream_chunks(audio_chunks):
-                chunk_base64 = base64.b64encode(chunk).decode("utf-8")
-
-                await self._send_message(
-                    {
-                        "type": "input_audio_buffer.append",
-                        "audio": chunk_base64,
-                    }
-                )
-                await asyncio.sleep(0.1)
+                print(f"Committed chunks")
+                current_chunk_count = 0
 
         logger.info("All chunks sent")
-
-    async def _stream_chunks(self, chunk_generator):
-        """Convert synchronous generator to async generator"""
-        for chunk in chunk_generator:
-            yield chunk
-            await asyncio.sleep(0)
 
     async def receive_responses(self):
         logger.info("Listening for responses...")
 
-        text_done = False
+        self.text_done = False
 
-        while not text_done:
+        while not self.text_done:
             try:
                 try:
                     response = await asyncio.wait_for(self.websocket.recv(), 10.0)
                 except asyncio.TimeoutError:
                     continue
-
+                
                 event = json.loads(response)
-                print(f"event: {event}")
+                #print(f"event: {event}")
                 event_type = event.get("type", "")
 
                 if event_type == "conversation.item.input_audio_transcription.delta":

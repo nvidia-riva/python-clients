@@ -6,7 +6,8 @@ import asyncio
 import signal
 import sys
 
-from riva.client.asr import get_wav_file_parameters
+from riva.client.audio_io import MicrophoneStream
+from riva.client.asr import get_wav_file_parameters, AudioChunkFileIterator
 from riva.client.realtime import RealtimeASRClient
 from riva.client.argparse_utils import add_asr_config_argparse_parameters, add_realtime_config_argparse_parameters
 
@@ -46,20 +47,21 @@ async def main() -> None:
 
     try:
         client = RealtimeASRClient(args=args) 
+        audio_chunk_iterator = None
         
         if args.mic:
-            audio_chunks = client.get_mic_chunks(duration=args.duration)
+            audio_chunk_iterator = MicrophoneStream(args.sample_rate_hz, args.file_streaming_chunk, device=args.input_device)
+            args.num_channels = 1
         else:
-            audio_chunks = client.get_audio_chunks(args.input_file)
+            audio_chunk_iterator = AudioChunkFileIterator(args.input_file, args.file_streaming_chunk, delay_callback=None)
             wav_parameters = get_wav_file_parameters(args.input_file)
             if wav_parameters is not None:
                 args.sample_rate_hz = wav_parameters['framerate']
                 args.num_channels = wav_parameters['nchannels']
-
               
         await client.connect()
         
-        send_task = asyncio.create_task(client.send_audio_chunks(audio_chunks))
+        send_task = asyncio.create_task(client.send_audio_chunks(audio_chunk_iterator))
         receive_task = asyncio.create_task(client.receive_responses())
         await asyncio.gather(send_task, receive_task)
         
