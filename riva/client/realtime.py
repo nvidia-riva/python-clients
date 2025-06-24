@@ -248,6 +248,12 @@ class RealtimeASRClient:
                     delta = event.get("delta", "")
                     logger.info("Transcript: %s", delta)
                     self.collected_text.append(delta)
+                elif event_type == "conversation.item.input_audio_transcription.completed":
+                    logger.info("Transcription completed")
+                    self.text_done = True
+                    logger.info(f"Final Transcript: {event.get('transcript', '')}")
+                    logger.info(f"Words Info: {event.get('words_info', '')}")
+                    break
                 elif "error" in event_type.lower():
                     logger.error(f"Error: {event.get('error', {}).get('message', 'Unknown error')}")
                     self.text_done = True
