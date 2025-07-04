@@ -13,6 +13,7 @@ from itertools import groupby
 from pathlib import Path
 from typing import Callable, Dict, Generator, Iterable, List, Optional, TextIO, Union
 
+from google.protobuf.json_format import MessageToJson
 from grpc._channel import _MultiThreadedRendezvous
 
 import riva.client
@@ -328,7 +329,7 @@ def print_streaming(
             elif additional_info == 'time':
                 for f in output_file:
                     if partial_transcript:
-                        f.write(f">>>Time {time.time():.2f}s: {partial_transcript}\n")
+                        f.write(f">>>Time {time.time() - start_time:.2f}s: {partial_transcript}\n")
             else:
                 for f in output_file:
                     f.write('----\n')
@@ -361,7 +362,7 @@ def write_seglst(words, seglst_output_file):
 
 
 def print_offline(response: rasr.RecognizeResponse, speaker_diarization: bool = False, seglst_output_file: str = None) -> None:
-    print(response)
+    print(MessageToJson(response, always_print_fields_with_no_presence=True))
     if len(response.results) > 0 and len(response.results[0].alternatives) > 0:
         final_transcript = ""
         words = []
@@ -387,6 +388,7 @@ def streaming_request_generator(
 
 class ASRService:
     """Provides streaming and offline recognition services. Calls gRPC stubs with authentication metadata."""
+
     def __init__(self, auth: Auth) -> None:
         """
         Initializes an instance of the class.

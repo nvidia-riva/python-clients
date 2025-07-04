@@ -99,7 +99,9 @@ def main() -> None:
         riva.client.audio_io.list_output_devices()
         return
 
-    auth = riva.client.Auth(args.ssl_cert, args.use_ssl, args.server, args.metadata)
+    auth = riva.client.Auth(
+        args.ssl_cert, args.use_ssl, args.server, args.metadata, max_message_length=args.max_message_length
+    )
     service = riva.client.SpeechSynthesisService(auth)
     nchannels = 1
     sampwidth = 2
