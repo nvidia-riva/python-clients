@@ -27,7 +27,7 @@ def create_channel(
         if metadata:
             auth_creds = grpc.metadata_call_credentials(metadata_callback)
             creds = grpc.composite_channel_credentials(creds, auth_creds)
-        channel = grpc.secure_channel(uri, creds, options=[('grpc.max_receive_message_length', max_message_length)])
+        channel = grpc.secure_channel(uri, creds, options=[('grpc.max_receive_message_length', max_message_length), ('grpc.max_send_message_length', max_message_length)])
     else:
         channel = grpc.insecure_channel(uri)
     return channel
