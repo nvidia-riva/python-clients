@@ -11,7 +11,6 @@ import riva.client
 from riva.client.argparse_utils import add_connection_argparse_parameters
 from riva.client.proto.riva_audio_pb2 import AudioEncoding
 
-
 def read_file_to_dict(file_path):
     result_dict = {}
     with open(file_path, 'r') as file:
@@ -26,7 +25,6 @@ def read_file_to_dict(file_path):
     if not result_dict:
         raise ValueError("Error: No valid entries found in the file.")
     return result_dict
-
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
