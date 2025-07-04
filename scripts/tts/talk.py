@@ -2,14 +2,15 @@
 # SPDX-License-Identifier: MIT
 
 import argparse
+import json
 import time
 import wave
-import json
 from pathlib import Path
 
 import riva.client
 from riva.client.argparse_utils import add_connection_argparse_parameters
 from riva.client.proto.riva_audio_pb2 import AudioEncoding
+
 
 def read_file_to_dict(file_path):
     result_dict = {}
@@ -26,10 +27,10 @@ def read_file_to_dict(file_path):
         raise ValueError("Error: No valid entries found in the file.")
     return result_dict
 
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Speech synthesis via Riva AI Services",
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+        description="Speech synthesis via Riva AI Services", formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--text", type=str, help="Text input to synthesize.")
@@ -45,11 +46,11 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         help="Input audio prompt file for Zero Shot Model. Audio length should be between 3-10 seconds.",
     )
-    parser.add_argument("-o", "--output", type=Path, default="output.wav", help="Output file .wav file to write synthesized audio.")
     parser.add_argument(
-        "--zero_shot_quality",
-        type=int,
-        help="Required quality of output audio, ranges between 1-40.",
+        "-o", "--output", type=Path, default="output.wav", help="Output file .wav file to write synthesized audio."
+    )
+    parser.add_argument(
+        "--zero_shot_quality", type=int, help="Required quality of output audio, ranges between 1-40.",
     )
     parser.add_argument(
         "--play-audio",
@@ -62,8 +63,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--sample-rate-hz", type=int, default=44100, help="Number of audio frames per second in synthesized audio."
     )
-    parser.add_argument("--encoding", default="LINEAR_PCM", choices={"LINEAR_PCM", "OGGOPUS"}, help="Output audio encoding.")
-    parser.add_argument("--custom-dictionary", type=str, help="A file path to a user dictionary with key-value pairs separated by double spaces.")
+    parser.add_argument(
+        "--encoding", default="LINEAR_PCM", choices={"LINEAR_PCM", "OGGOPUS"}, help="Output audio encoding."
+    )
+    parser.add_argument(
+        "--custom-dictionary",
+        type=str,
+        help="A file path to a user dictionary with key-value pairs separated by double spaces.",
+    )
     parser.add_argument(
         "--stream",
         action="store_true",
@@ -99,7 +106,9 @@ def main() -> None:
         riva.client.audio_io.list_output_devices()
         return
 
-    auth = riva.client.Auth(args.ssl_cert, args.use_ssl, args.server, args.metadata)
+    auth = riva.client.Auth(
+        args.ssl_cert, args.use_ssl, args.server, args.metadata, max_message_length=args.max_message_length
+    )
     service = riva.client.SpeechSynthesisService(auth)
     nchannels = 1
     sampwidth = 2
