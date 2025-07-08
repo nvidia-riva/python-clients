@@ -4,6 +4,22 @@
 import argparse
 
 
+def validate_grpc_message_size(value):
+    """Validate that the GRPC message size is within acceptable limits."""
+    min_size = 4 * 1024 * 1024  # 4MB
+    max_size = 1024 * 1024 * 1024  # 1GB
+
+    try:
+        size = int(value)
+        if size < min_size:
+            raise argparse.ArgumentTypeError(f"GRPC message size must be at least {min_size} bytes (4MB)")
+        if size > max_size:
+            raise argparse.ArgumentTypeError(f"GRPC message size must be at most {max_size} bytes (1GB)")
+        return size
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"'{value}' is not a valid integer")
+
+
 def add_asr_config_argparse_parameters(
     parser: argparse.ArgumentParser, max_alternatives: bool = False, profanity_filter: bool = False, word_time_offsets: bool = False
 ) -> argparse.ArgumentParser:
@@ -108,6 +124,9 @@ def add_connection_argparse_parameters(parser: argparse.ArgumentParser) -> argpa
     )
     parser.add_argument("--metadata", action='append', nargs='+', help="Send HTTP Header(s) to server")
     parser.add_argument(
-        "--max-message-length", type=int, default=64 * 1024 * 1024, help="Maximum message length for GRPC server."
+        "--max-grpc-message-size-bytes",
+        type=validate_grpc_message_size,
+        default=64 * 1024 * 1024,
+        help="Maximum message size in bytes for GRPC server (min: 4MB, max: 1GB)."
     )
     return parser
