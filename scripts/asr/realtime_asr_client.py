@@ -53,14 +53,13 @@ async def main() -> None:
             audio_chunk_iterator = MicrophoneStream(args.sample_rate_hz, args.file_streaming_chunk, device=args.input_device)
             args.num_channels = 1
         else:
-            audio_chunk_iterator = AudioChunkFileIterator(args.input_file, args.file_streaming_chunk, delay_callback=None)
             wav_parameters = get_wav_file_parameters(args.input_file)
             if wav_parameters is not None:
                 args.sample_rate_hz = wav_parameters['framerate']
                 args.num_channels = wav_parameters['nchannels']
+            audio_chunk_iterator = AudioChunkFileIterator(args.input_file, args.file_streaming_chunk, delay_callback=None)
               
         await client.connect()
-        
         send_task = asyncio.create_task(client.send_audio_chunks(audio_chunk_iterator))
         receive_task = asyncio.create_task(client.receive_responses())
         await asyncio.gather(send_task, receive_task)

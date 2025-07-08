@@ -26,9 +26,6 @@ class RealtimeASRClient:
         self.args = args
         self.websocket = None
         self.session_config = None
-        self.text_done = False
-        self.max_chunk_commit = 4
-
         # Input audio playback
         self.input_audio_queue = queue.Queue()
         self.input_playback_thread = None
@@ -201,39 +198,36 @@ class RealtimeASRClient:
 
     async def send_audio_chunks(self, audio_chunks):
         logger.info("Sending audio chunks...")
-        current_chunk_count = 0
-        
         for chunk in audio_chunks:
-            if self.text_done:
-                break
-
             chunk_base64 = base64.b64encode(chunk).decode("utf-8")
+            
+            # Send chunk to the server
             await self._send_message(
                 {
                     "type": "input_audio_buffer.append",
                     "audio": chunk_base64,
                 }
             )
-            current_chunk_count += 1
-            await asyncio.sleep(0.1)
-            
-            if current_chunk_count == self.max_chunk_commit:
-                await self._send_message(
-                    {
-                        "type": "input_audio_buffer.commit",
-                    }
-                )
-                print(f"Committed chunks")
-                current_chunk_count = 0
-
+            # Commit the chunk
+            await self._send_message(
+                {
+                    "type": "input_audio_buffer.commit",
+                }
+            )
+        
         logger.info("All chunks sent")
+           
+        # Tell the server that we are done sending chunks
+        await self._send_message(
+            {
+                "type": "input_audio_buffer.done",
+            }
+        )
 
     async def receive_responses(self):
         logger.info("Listening for responses...")
-
-        self.text_done = False
-
-        while not self.text_done:
+        received_final_response = False
+        while not received_final_response:
             try:
                 try:
                     response = await asyncio.wait_for(self.websocket.recv(), 10.0)
@@ -241,7 +235,6 @@ class RealtimeASRClient:
                     continue
                 
                 event = json.loads(response)
-                #print(f"event: {event}")
                 event_type = event.get("type", "")
 
                 if event_type == "conversation.item.input_audio_transcription.delta":
@@ -250,13 +243,13 @@ class RealtimeASRClient:
                     self.collected_text.append(delta)
                 elif event_type == "conversation.item.input_audio_transcription.completed":
                     logger.info("Transcription completed")
-                    self.text_done = True
+                    received_final_response = True
                     logger.info(f"Final Transcript: {event.get('transcript', '')}")
                     logger.info(f"Words Info: {event.get('words_info', '')}")
                     break
                 elif "error" in event_type.lower():
                     logger.error(f"Error: {event.get('error', {}).get('message', 'Unknown error')}")
-                    self.text_done = True
+                    received_final_response = True
                     break
 
             except (asyncio.TimeoutError, Exception) as e:
