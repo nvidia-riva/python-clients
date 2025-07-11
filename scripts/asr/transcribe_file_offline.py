@@ -33,7 +33,8 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
 
-    auth = riva.client.Auth(args.ssl_cert, args.use_ssl, args.server, args.metadata)
+    options = [('grpc.max_receive_message_length', args.max_message_length), ('grpc.max_send_message_length', args.max_message_length)]
+    auth = riva.client.Auth(args.ssl_cert, args.use_ssl, args.server, args.metadata, options=options)
     asr_service = riva.client.ASRService(auth)
 
     if args.list_models:

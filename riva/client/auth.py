@@ -12,12 +12,11 @@ def create_channel(
     use_ssl: bool = False,
     uri: str = "localhost:50051",
     metadata: Optional[List[Tuple[str, str]]] = None,
-    max_message_length: int = 64 * 1024 * 1024,
+    options: Optional[List[Tuple[str, str]]] = [],
 ) -> grpc.Channel:
     def metadata_callback(context, callback):
         callback(metadata, None)
 
-    options = [('grpc.max_receive_message_length', max_message_length), ('grpc.max_send_message_length', max_message_length)]
     if ssl_cert is not None or use_ssl:
         root_certificates = None
         if ssl_cert is not None:
@@ -41,7 +40,7 @@ class Auth:
         use_ssl: bool = False,
         uri: str = "localhost:50051",
         metadata_args: List[List[str]] = None,
-        max_message_length: int = 64 * 1024 * 1024,
+        options: Optional[List[Tuple[str, str]]] = [],
     ) -> None:
         """
         A class responsible for establishing connection with a server and providing security metadata.
@@ -65,7 +64,7 @@ class Auth:
                     )
                 self.metadata.append(tuple(meta))
         self.channel: grpc.Channel = create_channel(
-            self.ssl_cert, self.use_ssl, self.uri, self.metadata, max_message_length=max_message_length
+            self.ssl_cert, self.use_ssl, self.uri, self.metadata, options=options
         )
 
     def get_auth_metadata(self) -> List[Tuple[str, str]]:

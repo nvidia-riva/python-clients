@@ -99,8 +99,9 @@ def main() -> None:
         riva.client.audio_io.list_output_devices()
         return
 
+    options = [('grpc.max_receive_message_length', args.max_message_length), ('grpc.max_send_message_length', args.max_message_length)]
     auth = riva.client.Auth(
-        args.ssl_cert, args.use_ssl, args.server, args.metadata, max_message_length=args.max_message_length
+        args.ssl_cert, args.use_ssl, args.server, args.metadata, options=options
     )
     service = riva.client.SpeechSynthesisService(auth)
     nchannels = 1
