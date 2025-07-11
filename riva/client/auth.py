@@ -9,6 +9,8 @@ import grpc
 
 def create_channel(
     ssl_cert: Optional[Union[str, os.PathLike]] = None,
+    ssl_client_cert: Optional[Union[str, os.PathLike]] = None,
+    ssl_client_key: Optional[Union[str, os.PathLike]] = None,
     use_ssl: bool = False,
     uri: str = "localhost:50051",
     metadata: Optional[List[Tuple[str, str]]] = None,
@@ -17,13 +19,23 @@ def create_channel(
     def metadata_callback(context, callback):
         callback(metadata, None)
 
-    if ssl_cert is not None or use_ssl:
+    if ssl_cert is not None or ssl_client_cert is not None or ssl_client_key is not None or use_ssl:
         root_certificates = None
+        client_certificates = None
+        client_key = None
         if ssl_cert is not None:
             ssl_cert = Path(ssl_cert).expanduser()
             with open(ssl_cert, 'rb') as f:
                 root_certificates = f.read()
-        creds = grpc.ssl_channel_credentials(root_certificates)
+        if ssl_client_cert is not None:
+            ssl_client_cert = Path(ssl_client_cert).expanduser()
+            with open(ssl_client_cert, 'rb') as f:
+                client_certificates = f.read()
+        if ssl_client_key is not None:
+            ssl_client_key = Path(ssl_client_key).expanduser()
+            with open(ssl_client_key, 'rb') as f:
+                client_key = f.read()
+        creds = grpc.ssl_channel_credentials(root_certificates=root_certificates, private_key=client_key, certificate_chain=client_certificates)
         if metadata:
             auth_creds = grpc.metadata_call_credentials(metadata_callback)
             creds = grpc.composite_channel_credentials(creds, auth_creds)
@@ -40,6 +52,8 @@ class Auth:
         use_ssl: bool = False,
         uri: str = "localhost:50051",
         metadata_args: List[List[str]] = None,
+        ssl_client_cert: Optional[Union[str, os.PathLike]] = None,
+        ssl_client_key: Optional[Union[str, os.PathLike]] = None,
         options: Optional[List[Tuple[str, str]]] = [],
     ) -> None:
         """
@@ -53,6 +67,8 @@ class Auth:
             uri (:obj:`str`, defaults to :obj:`"localhost:50051"`): a Riva URI.
         """
         self.ssl_cert: Optional[Path] = None if ssl_cert is None else Path(ssl_cert).expanduser()
+        self.ssl_client_cert: Optional[Path] = None if ssl_client_cert is None else Path(ssl_client_cert).expanduser()
+        self.ssl_client_key: Optional[Path] = None if ssl_client_key is None else Path(ssl_client_key).expanduser()
         self.uri: str = uri
         self.use_ssl: bool = use_ssl
         self.metadata = []
@@ -64,7 +80,7 @@ class Auth:
                     )
                 self.metadata.append(tuple(meta))
         self.channel: grpc.Channel = create_channel(
-            self.ssl_cert, self.use_ssl, self.uri, self.metadata, options=options
+            self.ssl_cert, self.ssl_client_cert, self.ssl_client_key, self.use_ssl, self.uri, self.metadata, options=options
         )
 
     def get_auth_metadata(self) -> List[Tuple[str, str]]:

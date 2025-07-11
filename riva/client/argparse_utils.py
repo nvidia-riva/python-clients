@@ -116,11 +116,14 @@ def add_asr_config_argparse_parameters(
 
 def add_connection_argparse_parameters(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
     parser.add_argument("--server", default="localhost:50051", help="URI to GRPC server endpoint.")
-    parser.add_argument("--ssl-cert", help="Path to SSL client certificates file.")
+    parser.add_argument("--ssl-cert", help="Path to SSL root certificates file.")
+    parser.add_argument("--ssl-client-cert", help="Path to SSL client certificates file.")
+    parser.add_argument("--ssl-client-key", help="Path to SSL client key file.")
     parser.add_argument(
         "--use-ssl", action='store_true', help="Boolean to control if SSL/TLS encryption should be used."
     )
     parser.add_argument("--metadata", action='append', nargs='+', help="Send HTTP Header(s) to server")
+    parser.add_argument("--options", action='append', nargs='+', help="Send GRPC options to server")
     parser.add_argument(
         "--max-message-length", type=validate_grpc_message_size, default=64 * 1024 * 1024, help="Maximum message length for GRPC server."
     )
