@@ -20,6 +20,7 @@ def parse_args() -> argparse.Namespace:
     group.add_argument("--input-file", help="A path to a local file to stream.")
     group.add_argument("--list-models", action="store_true", help="List available models.")
     group.add_argument("--list-devices", action="store_true", help="List output devices indices")
+    parser.add_argument("--output-seglst", action="store_true", help="Output seglst file for speaker diarization.")
 
     parser.add_argument(
         "--show-intermediate", action="store_true", help="Show intermediate transcripts as they are available."
@@ -118,6 +119,10 @@ def main() -> None:
     )
     sound_callback = None
     try:
+        seglst_output_file = None
+        if args.output_seglst:
+            seglst_output_file = os.path.basename(args.input_file).split(".")[0]
+
         if args.play_audio or args.output_device is not None:
             wp = riva.client.get_wav_file_parameters(args.input_file)
             sound_callback = riva.client.audio_io.SoundCallBack(
@@ -138,7 +143,7 @@ def main() -> None:
                 additional_info="time" if (args.word_time_offsets or args.speaker_diarization) else ("confidence" if args.print_confidence else "no"),
                 word_time_offsets=args.word_time_offsets or args.speaker_diarization,
                 speaker_diarization=args.speaker_diarization,
-                seglst_output_file=os.path.basename(args.input_file).split(".")[0],
+                seglst_output_file=seglst_output_file,
             )
     finally:
         if sound_callback is not None and sound_callback.opened:
