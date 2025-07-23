@@ -6,7 +6,6 @@ import asyncio
 import signal
 import sys
 
-from riva.client.audio_io import MicrophoneStream
 from riva.client.asr import get_wav_file_parameters, AudioChunkFileIterator
 from riva.client.realtime import RealtimeASRClient
 from riva.client.argparse_utils import (
@@ -74,6 +73,11 @@ def parse_args() -> argparse.Namespace:
         type=str, 
         help="Output text file"
     )
+    parser.add_argument(
+        "--prompt", 
+        default="", 
+        help="Prompt to be used for transcription."
+    )
     
     # Add ASR and realtime configuration parameters
     parser = add_asr_config_argparse_parameters(
@@ -97,8 +101,16 @@ def setup_signal_handler():
 
 
 async def create_audio_iterator(args):
-    """Create appropriate audio iterator based on input type."""
+    """Create appropriate audio iterator based on input type.
+    
+    Args:
+        args: Command line arguments containing input configuration
+        
+    Returns:
+        Audio iterator for streaming audio data
+    """
     if args.mic:
+        from riva.client.audio_io import MicrophoneStream
         audio_chunk_iterator = MicrophoneStream(
             args.sample_rate_hz, 
             args.file_streaming_chunk, 
@@ -120,7 +132,11 @@ async def create_audio_iterator(args):
 
 
 async def run_transcription(args):
-    """Run the transcription process."""
+    """Run the transcription process.
+    
+    Args:
+        args: Command line arguments containing all configuration
+    """
     client = RealtimeASRClient(args=args)
     
     try:

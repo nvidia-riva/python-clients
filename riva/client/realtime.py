@@ -6,18 +6,11 @@ import base64
 import json
 import logging
 import queue
-import time
-import wave
-from pathlib import Path
-from typing import Optional, Dict, Any, List
+from typing import Dict, Any, List
 
-import numpy as np
-import pyaudio
 import requests
 import websockets
 from websockets.exceptions import WebSocketException
-
-import riva
 
 logging.basicConfig(
     level=logging.INFO, 
@@ -38,7 +31,6 @@ class RealtimeASRClient:
         self.args = args
         self.websocket = None
         self.session_config = None
-        self.model = "parakeet-1.1b-en-US-asr-streaming-silero-vad-asr-bls-ensemble"
         
         # Input audio playback
         self.input_audio_queue = queue.Queue()
@@ -145,9 +137,9 @@ class RealtimeASRClient:
         
         # Configure input audio transcription
         session_config["input_audio_transcription"] = {
-            "language": "en-US",
-            "model": self.model,
-            "prompt": ""
+            "language": self.args.language_code,
+            "model": self.args.model_name,
+            "prompt": self.args.prompt
         }
         
         # Configure input audio parameters
