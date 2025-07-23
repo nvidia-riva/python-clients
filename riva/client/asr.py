@@ -9,9 +9,11 @@ import copy
 import warnings
 import json
 import wave
+from itertools import groupby
 from pathlib import Path
 from typing import Callable, Dict, Generator, Iterable, List, Optional, TextIO, Union
 
+from google.protobuf.json_format import MessageToJson
 from grpc._channel import _MultiThreadedRendezvous
 
 import riva.client
@@ -327,7 +329,7 @@ def print_streaming(
             elif additional_info == 'time':
                 for f in output_file:
                     if partial_transcript:
-                        f.write(f">>>Time {time.time():.2f}s: {partial_transcript}\n")
+                        f.write(f">>>Time {time.time() - start_time:.2f}s: {partial_transcript}\n")
             else:
                 for f in output_file:
                     f.write('----\n')
@@ -337,49 +339,43 @@ def print_streaming(
                 elem.close()
 
     if speaker_diarization and len(words) > 0 and seglst_output_file is not None:
-        seglst_output = open(seglst_output_file + ".seglst.json", 'w')
-        seglst = []
-
+        write_seglst(words, seglst_output_file)
+        
+def write_seglst(words, seglst_output_file):
+    # Sort words by start_time to ensure chronological order
+    sorted_words = sorted(words, key=lambda word: word.start_time)
+    
+    seglst = []
+    for speaker_tag, group in groupby(sorted_words, key=lambda word: word.speaker_tag):
+        group_words = list(group)
         seg = {
             "session_id": seglst_output_file,
-            "words": words[0].word,
-            "start_time": words[0].start_time / 1000,
-            "end_time": words[0].end_time / 1000,
-            "speaker": "speaker" + str(int(words[0].speaker_tag) + 1),
+            "words": " ".join(word.word for word in group_words),
+            "start_time": str(group_words[0].start_time / 1000),
+            "end_time": str(group_words[-1].end_time / 1000),
+            "speaker": f"speaker{int(speaker_tag) + 1}",
         }
-        last_update = 0
-        
-        for i, word in enumerate(words[1:]):
-            curr_speaker = "speaker" + str(int(word.speaker_tag) + 1)
-            if curr_speaker != seg["speaker"]:
-                seg["start_time"] = str(seg["start_time"])
-                seg["end_time"] = str(seg["end_time"])
-                seglst.append(copy.deepcopy(seg))
-                last_update = i + 1
-                
-                seg["words"] = word.word
-                seg["start_time"] = word.start_time / 1000
-                seg["end_time"] = word.end_time / 1000
-                seg["speaker"] = curr_speaker
-            else:
-                seg["words"] += " " + word.word
-                seg["end_time"] = word.end_time / 1000
-
-        if last_update != len(words) - 1:
-            seg["start_time"] = str(seg["start_time"])
-            seg["end_time"] = str(seg["end_time"])
-            seglst.append(copy.deepcopy(seg))
-                
+        seglst.append(seg)
+            
+    with open(seglst_output_file + ".seglst.json", 'w') as seglst_output:
         json.dump(seglst, seglst_output)
 
 
-def print_offline(response: rasr.RecognizeResponse) -> None:
-    print(response)
+def print_offline(response: rasr.RecognizeResponse, speaker_diarization: bool = False, seglst_output_file: str = None) -> None:
+    print(MessageToJson(response, always_print_fields_with_no_presence=True))
     if len(response.results) > 0 and len(response.results[0].alternatives) > 0:
         final_transcript = ""
+        words = []
         for res in response.results:
             final_transcript += res.alternatives[0].transcript
+            if speaker_diarization:
+                for word_info in res.alternatives[0].words:
+                    words.append(word_info)
+
         print("Final transcript:", final_transcript)
+
+        if speaker_diarization and len(words) > 0 and seglst_output_file is not None:
+            write_seglst(words, seglst_output_file)
 
 
 def streaming_request_generator(
@@ -392,6 +388,7 @@ def streaming_request_generator(
 
 class ASRService:
     """Provides streaming and offline recognition services. Calls gRPC stubs with authentication metadata."""
+
     def __init__(self, auth: Auth) -> None:
         """
         Initializes an instance of the class.

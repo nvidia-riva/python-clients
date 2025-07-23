@@ -107,6 +107,9 @@ def add_connection_argparse_parameters(parser: argparse.ArgumentParser) -> argpa
         "--use-ssl", action='store_true', help="Boolean to control if SSL/TLS encryption should be used."
     )
     parser.add_argument("--metadata", action='append', nargs='+', help="Send HTTP Header(s) to server")
+    parser.add_argument(
+        "--max-message-length", type=int, default=64 * 1024 * 1024, help="Maximum message length for GRPC server."
+    )
     return parser
 
 def add_realtime_config_argparse_parameters(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
