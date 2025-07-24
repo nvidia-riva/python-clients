@@ -124,62 +124,117 @@ class RealtimeASRClient:
             logger.error(f"Unexpected error during session initialization: {e}")
             raise
 
+    def _safe_update_config(self, config: Dict[str, Any], key: str, value: Any, section: str = None):
+        """Safely update a configuration value, creating the section if it doesn't exist.
+        
+        Args:
+            config: The configuration dictionary to update
+            key: The key to update
+            value: The value to set
+            section: The section name (e.g., 'input_audio_transcription')
+        """
+        if section:
+            if section not in config:
+                config[section] = {}
+            config[section][key] = value
+            logger.debug(f"Updated {section}.{key} = {value}")
+        else:
+            config[key] = value
+            logger.debug(f"Updated {key} = {value}")
+
     async def _update_session(self) -> bool:
-        """Update session configuration.
+        """Update session configuration by selectively overriding server defaults.
         
         Returns:
             True if session was updated successfully, False otherwise
         """
-        logger.info("Updating session...")
+        logger.info("Updating session configuration...")
+        logger.info(f"Server default config: {self.session_config}")
         
-        # Create a copy of the session config
+        # Create a copy of the session config from server defaults
         session_config = self.session_config.copy()
         
-        # Configure input audio transcription
-        session_config["input_audio_transcription"] = {
-            "language": self.args.language_code,
-            "model": self.args.model_name,
-            "prompt": self.args.prompt
-        }
+        # Track what we're overriding
+        overrides = []
         
-        # Configure input audio parameters
-        session_config["input_audio_params"] = {
-            "sample_rate_hz": self.args.sample_rate_hz,
-            "num_channels": self.args.num_channels
-        }
+        # Update input audio transcription - only override if args are provided
+        if hasattr(self.args, 'language_code') and self.args.language_code:
+            self._safe_update_config(session_config, "language", self.args.language_code, "input_audio_transcription")
+            overrides.append("language")
+            
+        if hasattr(self.args, 'model_name') and self.args.model_name:
+            self._safe_update_config(session_config, "model", self.args.model_name, "input_audio_transcription")
+            overrides.append("model")
+            
+        if hasattr(self.args, 'prompt') and self.args.prompt:
+            self._safe_update_config(session_config, "prompt", self.args.prompt, "input_audio_transcription")
+            overrides.append("prompt")
         
-        # Configure recognition settings
-        session_config["recognition_config"] = {
-            "max_alternatives": self.args.max_alternatives,
-            "enable_automatic_punctuation": self.args.automatic_punctuation,
-            "enable_word_time_offsets": self.args.word_time_offsets,
-            "enable_profanity_filter": self.args.profanity_filter,
-            "enable_verbatim_transcripts": self.args.no_verbatim_transcripts
-        }
+        # Update input audio parameters - only override if args are provided
+        if hasattr(self.args, 'sample_rate_hz') and self.args.sample_rate_hz:
+            self._safe_update_config(session_config, "sample_rate_hz", self.args.sample_rate_hz, "input_audio_params")
+            overrides.append("sample_rate_hz")
+            
+        if hasattr(self.args, 'num_channels') and self.args.num_channels:
+            self._safe_update_config(session_config, "num_channels", self.args.num_channels, "input_audio_params")
+            overrides.append("num_channels")
+        
+        # Update recognition settings - only override if args are provided
+        if hasattr(self.args, 'max_alternatives') and self.args.max_alternatives is not None:
+            self._safe_update_config(session_config, "max_alternatives", self.args.max_alternatives, "recognition_config")
+            overrides.append("max_alternatives")
+            
+        if hasattr(self.args, 'automatic_punctuation') and self.args.automatic_punctuation is not None:
+            self._safe_update_config(session_config, "enable_automatic_punctuation", self.args.automatic_punctuation, "recognition_config")
+            overrides.append("automatic_punctuation")
+            
+        if hasattr(self.args, 'word_time_offsets') and self.args.word_time_offsets is not None:
+            self._safe_update_config(session_config, "enable_word_time_offsets", self.args.word_time_offsets, "recognition_config")
+            overrides.append("word_time_offsets")
+            
+        if hasattr(self.args, 'profanity_filter') and self.args.profanity_filter is not None:
+            self._safe_update_config(session_config, "enable_profanity_filter", self.args.profanity_filter, "recognition_config")
+            overrides.append("profanity_filter")
+            
+        if hasattr(self.args, 'no_verbatim_transcripts') and self.args.no_verbatim_transcripts is not None:
+            self._safe_update_config(session_config, "enable_verbatim_transcripts", self.args.no_verbatim_transcripts, "recognition_config")
+            overrides.append("verbatim_transcripts")
         
         # Configure speaker diarization if enabled
-        if self.args.speaker_diarization:
+        if hasattr(self.args, 'speaker_diarization') and self.args.speaker_diarization:
             session_config["speaker_diarization"] = {
                 "enable_speaker_diarization": True,
-                "max_speaker_count": self.args.diarization_max_speakers
+                "max_speaker_count": getattr(self.args, 'diarization_max_speakers', 2)
             }
+            overrides.append("speaker_diarization")
         
         # Configure word boosting if enabled
-        if self.args.boosted_lm_words and len(self.args.boosted_lm_words):
+        if (hasattr(self.args, 'boosted_lm_words') and 
+            self.args.boosted_lm_words and 
+            len(self.args.boosted_lm_words)):
             word_boosting_list = [
                 {
                     "phrases": self.args.boosted_lm_words,
-                    "boost": self.args.boosted_lm_score
+                    "boost": getattr(self.args, 'boosted_lm_score', 1.0)
                 }
             ]
             session_config["word_boosting"] = {
                 "enable_word_boosting": True,
                 "word_boosting_list": word_boosting_list
             }
+            overrides.append("word_boosting")
         
         # Configure endpointing if any parameters are set
         if self._has_endpointing_config():
             session_config["endpointing_config"] = self._build_endpointing_config()
+            overrides.append("endpointing_config")
+        
+        if overrides:
+            logger.info(f"Overriding server defaults for: {', '.join(overrides)}")
+        else:
+            logger.info("Using server default configuration (no overrides)")
+        
+        logger.info(f"Final session config: {session_config}")
         
         # Send update request
         update_session_request = {
