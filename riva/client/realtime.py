@@ -229,6 +229,13 @@ class RealtimeASRClient:
             session_config["endpointing_config"] = self._build_endpointing_config()
             overrides.append("endpointing_config")
         
+        # Configure custom configuration if provided
+        if hasattr(self.args, 'custom_configuration') and self.args.custom_configuration:
+            custom_config = self._parse_custom_configuration(self.args.custom_configuration)
+            if custom_config:
+                session_config["custom_configuration"] = custom_config
+                overrides.append("custom_configuration")
+        
         if overrides:
             logger.info(f"Overriding server defaults for: {', '.join(overrides)}")
         else:
@@ -267,6 +274,33 @@ class RealtimeASRClient:
             "stop_history_eou": self.args.stop_history_eou,
             "stop_threshold_eou": self.args.stop_threshold_eou
         }
+
+    def _parse_custom_configuration(self, custom_configuration: str) -> Dict[str, str]:
+        """Parse custom configuration string into a dictionary.
+        
+        Args:
+            custom_configuration: String in format "key1:value1,key2:value2"
+            
+        Returns:
+            Dictionary of custom configuration key-value pairs
+            
+        Raises:
+            ValueError: If the custom configuration format is invalid
+        """
+        custom_config = {}
+        custom_configuration = custom_configuration.strip().replace(" ", "")
+        
+        if not custom_configuration:
+            return custom_config
+            
+        for pair in custom_configuration.split(","):
+            key_value = pair.split(":")
+            if len(key_value) == 2:
+                custom_config[key_value[0]] = key_value[1]
+            else:
+                raise ValueError(f"Invalid key:value pair {key_value}")
+                
+        return custom_config
 
     async def _handle_session_update_response(self) -> bool:
         """Handle session update response.
