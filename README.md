@@ -17,7 +17,7 @@ case and deliver real-time performance. This repo provides performant client exa
     - `scripts/asr/transcribe_file.py` performs streaming transcription,
     - `scripts/asr/transcribe_file_offline.py` performs offline transcription,
     - `scripts/asr/transcribe_mic.py` performs streaming transcription of audio acquired through microphone.
-    - 
+    - `scripts/asr/realtime_asr_client.py` performs realtime transcription of audio.
 - **Speech Synthesis (TTS)**
     - `scripts/tts/talk.py` synthesizes audio for a text in streaming or offline mode.
 - **Natural Language Processing (NLP)**
