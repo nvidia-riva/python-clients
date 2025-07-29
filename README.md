@@ -17,7 +17,7 @@ case and deliver real-time performance. This repo provides performant client exa
     - `scripts/asr/transcribe_file.py` performs streaming transcription,
     - `scripts/asr/transcribe_file_offline.py` performs offline transcription,
     - `scripts/asr/transcribe_mic.py` performs streaming transcription of audio acquired through microphone.
-    - `scripts/asr/realtime_asr_client.py` performs realtime transcription of audio.
+    - `scripts/asr/realtime_asr_client.py` performs realtime transcription of audio via WebSocket connection.
 - **Speech Synthesis (TTS)**
     - `scripts/tts/talk.py` synthesizes audio for a text in streaming or offline mode.
 - **Natural Language Processing (NLP)**
@@ -132,9 +132,33 @@ python scripts/asr/transcribe_file_offline.py \
 ```
 
 For transcribing in realtime mode you may use `scripts/asr/realtime_asr_client.py`.
+
+**From audio file:**
 ```bash
 python scripts/asr/realtime_asr_client.py \
-  --input data/examples/en-US_AntiBERTa_for_word_boosting_testing.wav
+  --input-file data/examples/en-US_AntiBERTa_for_word_boosting_testing.wav
+```
+
+**From microphone:**
+```bash
+python scripts/asr/realtime_asr_client.py \
+  --mic \
+  --duration 30 \
+  --output-text transcript.txt
+```
+
+**List available audio devices:**
+```bash
+python scripts/asr/realtime_asr_client.py --list-devices
+```
+
+**Use specific audio device:**
+```bash
+python scripts/asr/realtime_asr_client.py \
+  --mic \
+  --input-device 1 \
+  --duration 30 \
+  --output-text transcript.txt
 ```
 
 For **WebSocket-based Realtime ASR** (using `riva.client.realtime.RealtimeASRClient`), you can transcribe audio files or microphone input with real-time results:
@@ -142,23 +166,56 @@ For **WebSocket-based Realtime ASR** (using `riva.client.realtime.RealtimeASRCli
 **From audio file:**
 ```python
 from riva.client.realtime import RealtimeASRClient
+from riva.client.asr import AudioChunkFileIterator
 import asyncio
+import argparse
 
 async def transcribe_file():
-    client = RealtimeASRClient(
-        server_url="ws://localhost:8080",
-        endpoint="/transcribe", 
-        query_params="model=en-US",
-        input_sample_rate=16000,
-        input_chunk_size_samples=1024
-    )
+    # Create arguments namespace
+    args = argparse.Namespace()
+    args.input_file = "path/to/audio.wav"  # Required for file input
+    args.mic = False  # Set to True for microphone input
+    args.server = "localhost:9090"
+    args.endpoint = "/v1/realtime"
+    args.query_params = "intent=transcription"
+    args.sample_rate_hz = 16000
+    args.num_channels = 1
+    args.file_streaming_chunk = 1600
+    args.output_text = "transcript.txt"
+    args.prompt = ""
+    args.language_code = "en-US"
+    args.model_name = ""
+    args.automatic_punctuation = False
+    args.no_verbatim_transcripts = False
+    args.profanity_filter = False
+    args.word_time_offsets = False
+    args.max_alternatives = 1
+    args.boosted_lm_words = []
+    args.boosted_lm_score = 4.0
+    args.speaker_diarization = False
+    args.diarization_max_speakers = 3
+    args.start_history = -1
+    args.start_threshold = -1.0
+    args.stop_history = -1
+    args.stop_threshold = -1.0
+    args.stop_history_eou = -1
+    args.stop_threshold_eou = -1.0
+    args.custom_configuration = ""
+    
+    client = RealtimeASRClient(args=args)
     
     await client.connect()
-    audio_chunks = client.get_audio_chunks("path/to/audio.wav")
+    
+    # Create audio iterator
+    audio_chunk_iterator = AudioChunkFileIterator(
+        args.input_file, 
+        args.file_streaming_chunk, 
+        delay_callback=None
+    )
     
     # Send audio and receive responses concurrently
     await asyncio.gather(
-        client.send_audio_chunks(audio_chunks),
+        client.send_audio_chunks(audio_chunk_iterator),
         client.receive_responses()
     )
     
@@ -170,17 +227,55 @@ asyncio.run(transcribe_file())
 
 **From microphone:**
 ```python
+from riva.client.realtime import RealtimeASRClient
+from riva.client.audio_io import MicrophoneStream
+import asyncio
+import argparse
+
 async def transcribe_microphone():
-    client = RealtimeASRClient(
-        server_url="ws://localhost:8080",
-        endpoint="/transcribe",
-        query_params="model=en-US", 
-        input_sample_rate=16000,
-        input_chunk_size_samples=1024
-    )
+    # Create arguments namespace
+    args = argparse.Namespace()
+    args.input_file = None  # Not needed for microphone input
+    args.mic = True
+    args.duration = 30  # 30 seconds
+    args.input_device = None  # Use default device
+    args.server = "localhost:9090"
+    args.endpoint = "/v1/realtime"
+    args.query_params = "intent=transcription"
+    args.sample_rate_hz = 16000
+    args.num_channels = 1
+    args.file_streaming_chunk = 1600
+    args.output_text = "transcript.txt"
+    args.prompt = ""
+    args.language_code = "en-US"
+    args.model_name = ""
+    args.automatic_punctuation = False
+    args.no_verbatim_transcripts = False
+    args.profanity_filter = False
+    args.word_time_offsets = False
+    args.max_alternatives = 1
+    args.boosted_lm_words = []
+    args.boosted_lm_score = 4.0
+    args.speaker_diarization = False
+    args.diarization_max_speakers = 3
+    args.start_history = -1
+    args.start_threshold = -1.0
+    args.stop_history = -1
+    args.stop_threshold = -1.0
+    args.stop_history_eou = -1
+    args.stop_threshold_eou = -1.0
+    args.custom_configuration = ""
+    
+    client = RealtimeASRClient(args=args)
     
     await client.connect()
-    mic_chunks = client.get_mic_chunks(duration=30)  # 30 seconds
+    
+    # Create microphone stream
+    mic_chunks = MicrophoneStream(
+        args.sample_rate_hz, 
+        args.file_streaming_chunk, 
+        device=None
+    )
     
     await asyncio.gather(
         client.send_audio_chunks(mic_chunks),

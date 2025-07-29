@@ -31,8 +31,8 @@ def parse_args() -> argparse.Namespace:
     # Input configuration
     parser.add_argument(
         "--input-file", 
-        required=True, 
-        help="Input audio file"
+        required=False, 
+        help="Input audio file (required when not using --mic)"
     )
     parser.add_argument(
         "--mic", 
@@ -45,6 +45,26 @@ def parse_args() -> argparse.Namespace:
         type=int, 
         help="Duration in seconds to record from microphone (only used with --mic)", 
         default=None
+    )
+    
+    # Audio device configuration
+    try:
+        import riva.client.audio_io
+        default_device_info = riva.client.audio_io.get_default_input_device_info()
+        default_device_index = None if default_device_info is None else default_device_info['index']
+    except ModuleNotFoundError:
+        default_device_index = None
+        
+    parser.add_argument(
+        "--input-device", 
+        type=int, 
+        default=default_device_index, 
+        help="Input audio device index to use (only used with --mic)"
+    )
+    parser.add_argument(
+        "--list-devices", 
+        action="store_true", 
+        help="List available input audio device indices"
     )
     
     # Audio parameters
@@ -79,6 +99,12 @@ def parse_args() -> argparse.Namespace:
         help="Prompt to be used for transcription."
     )
     
+    parser.add_argument(
+        "--server", 
+        default="localhost:9090", 
+        help="URI to WebSocket server endpoint."
+    )
+    
     # Add ASR and realtime configuration parameters
     parser = add_asr_config_argparse_parameters(
         parser, 
@@ -88,7 +114,16 @@ def parse_args() -> argparse.Namespace:
     )
     parser = add_realtime_config_argparse_parameters(parser)
     
-    return parser.parse_args()
+    args = parser.parse_args()
+    
+    # Validate input configuration
+    if not args.mic and not args.input_file:
+        parser.error("Either --input-file or --mic must be specified")
+    
+    if args.mic and args.input_file:
+        parser.error("Cannot specify both --input-file and --mic")
+    
+    return args
 
 
 def setup_signal_handler():
@@ -170,6 +205,16 @@ async def run_transcription(args):
 async def main() -> None:
     """Main entry point for the realtime ASR client."""
     args = parse_args()
+    
+    # Handle list devices option
+    if args.list_devices:
+        try:
+            import riva.client.audio_io
+            riva.client.audio_io.list_input_devices()
+        except ModuleNotFoundError:
+            print("PyAudio not available. Please install PyAudio to list audio devices.")
+        return
+    
     setup_signal_handler()
 
     try:
