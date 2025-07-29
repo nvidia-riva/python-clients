@@ -19,11 +19,11 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-class RealtimeASRClient:
-    """Client for real-time ASR transcription via WebSocket connection."""
+class RealtimeClient:
+    """Client for real-time transcription via WebSocket connection."""
     
     def __init__(self, args: argparse.Namespace):
-        """Initialize the RealtimeASRClient.
+        """Initialize the RealtimeClient.
         
         Args:
             args: Command line arguments containing configuration

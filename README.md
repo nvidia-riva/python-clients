@@ -161,11 +161,11 @@ python scripts/asr/realtime_asr_client.py \
   --output-text transcript.txt
 ```
 
-For **WebSocket-based Realtime ASR** (using `riva.client.realtime.RealtimeASRClient`), you can transcribe audio files or microphone input with real-time results:
+For **WebSocket-based Realtime Transcription** (using `riva.client.realtime.RealtimeClient`), you can transcribe audio files or microphone input with real-time results:
 
 **From audio file:**
 ```python
-from riva.client.realtime import RealtimeASRClient
+from riva.client.realtime import RealtimeClient
 from riva.client.asr import AudioChunkFileIterator
 import asyncio
 import argparse
@@ -202,7 +202,7 @@ async def transcribe_file():
     args.stop_threshold_eou = -1.0
     args.custom_configuration = ""
     
-    client = RealtimeASRClient(args=args)
+    client = RealtimeClient(args=args)
     
     await client.connect()
     
@@ -227,7 +227,7 @@ asyncio.run(transcribe_file())
 
 **From microphone:**
 ```python
-from riva.client.realtime import RealtimeASRClient
+from riva.client.realtime import RealtimeClient
 from riva.client.audio_io import MicrophoneStream
 import asyncio
 import argparse
@@ -266,7 +266,7 @@ async def transcribe_microphone():
     args.stop_threshold_eou = -1.0
     args.custom_configuration = ""
     
-    client = RealtimeASRClient(args=args)
+    client = RealtimeClient(args=args)
     
     await client.connect()
     

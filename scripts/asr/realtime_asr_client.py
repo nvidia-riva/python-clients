@@ -7,7 +7,7 @@ import signal
 import sys
 
 from riva.client.asr import get_wav_file_parameters, AudioChunkFileIterator
-from riva.client.realtime import RealtimeASRClient
+from riva.client.realtime import RealtimeClient
 from riva.client.argparse_utils import (
     add_asr_config_argparse_parameters,
     add_realtime_config_argparse_parameters,
@@ -172,7 +172,7 @@ async def run_transcription(args):
     Args:
         args: Command line arguments containing all configuration
     """
-    client = RealtimeASRClient(args=args)
+    client = RealtimeClient(args=args)
     
     try:
         # Create audio iterator
