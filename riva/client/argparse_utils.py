@@ -111,3 +111,8 @@ def add_connection_argparse_parameters(parser: argparse.ArgumentParser) -> argpa
         "--max-message-length", type=int, default=64 * 1024 * 1024, help="Maximum message length for GRPC server."
     )
     return parser
+
+def add_realtime_config_argparse_parameters(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
+    parser.add_argument("--endpoint", default="/v1/realtime", help="Endpoint to WebSocket server endpoint.")
+    parser.add_argument("--query-params", default="intent=transcription", help="Query parameters to WebSocket server endpoint.")
+    return parser

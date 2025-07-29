@@ -17,6 +17,7 @@ case and deliver real-time performance. This repo provides performant client exa
     - `scripts/asr/transcribe_file.py` performs streaming transcription,
     - `scripts/asr/transcribe_file_offline.py` performs offline transcription,
     - `scripts/asr/transcribe_mic.py` performs streaming transcription of audio acquired through microphone.
+    - `scripts/asr/realtime_asr_client.py` performs realtime transcription of audio via WebSocket connection.
 - **Speech Synthesis (TTS)**
     - `scripts/tts/talk.py` synthesizes audio for a text in streaming or offline mode.
 - **Natural Language Processing (NLP)**
@@ -49,10 +50,17 @@ pip install nvidia-riva-client
 ```
 
 If you would like to use output and input audio devices 
-(scripts `scripts/asr/transcribe_file_rt.py`, `scripts/asr/transcribe_mic.py`, `scripts/tts/talk.py` or module 
+(scripts `scripts/asr/transcribe_file_rt.py`, `scripts/asr/transcribe_mic.py`, `scripts/tts/talk.py`, `scripts/asr/realtime_asr_client.py` or module 
 `riva.client/audio_io.py`), you will need to install `PyAudio`.
 ```bash
 conda install -c anaconda pyaudio
+```
+
+If you would like to use Realtime ASR (WebSocket-based real-time transcription) script `scripts/asr/realtime_asr_client.py`, you will need the following dependencies:
+```bash
+conda install -c anaconda numpy 
+conda install -c anaconda requests
+conda install -c anaconda websockets
 ```
 
 For NLP evaluation you will need `transformers` and `sklearn` libraries.
@@ -121,6 +129,162 @@ python scripts/asr/transcribe_file_offline.py \
   --boosted-lm-words AntiBERTa \
   --boosted-lm-words ABlooper \
   --boosted-lm-score 20.0
+```
+
+For transcribing in realtime mode you may use `scripts/asr/realtime_asr_client.py`.
+
+**From audio file:**
+```bash
+python scripts/asr/realtime_asr_client.py \
+  --input-file data/examples/en-US_AntiBERTa_for_word_boosting_testing.wav
+```
+
+**From microphone:**
+```bash
+python scripts/asr/realtime_asr_client.py \
+  --mic \
+  --duration 30 \
+  --output-text transcript.txt
+```
+
+**List available audio devices:**
+```bash
+python scripts/asr/realtime_asr_client.py --list-devices
+```
+
+**Use specific audio device:**
+```bash
+python scripts/asr/realtime_asr_client.py \
+  --mic \
+  --input-device 1 \
+  --duration 30 \
+  --output-text transcript.txt
+```
+
+For **WebSocket-based Realtime Transcription** (using `riva.client.realtime.RealtimeClient`), you can transcribe audio files or microphone input with real-time results:
+
+**From audio file:**
+```python
+from riva.client.realtime import RealtimeClient
+from riva.client.asr import AudioChunkFileIterator
+import asyncio
+import argparse
+
+async def transcribe_file():
+    # Create arguments namespace
+    args = argparse.Namespace()
+    args.input_file = "path/to/audio.wav"  # Required for file input
+    args.mic = False  # Set to True for microphone input
+    args.server = "localhost:9090"
+    args.endpoint = "/v1/realtime"
+    args.query_params = "intent=transcription"
+    args.sample_rate_hz = 16000
+    args.num_channels = 1
+    args.file_streaming_chunk = 1600
+    args.output_text = "transcript.txt"
+    args.prompt = ""
+    args.language_code = "en-US"
+    args.model_name = ""
+    args.automatic_punctuation = False
+    args.no_verbatim_transcripts = False
+    args.profanity_filter = False
+    args.word_time_offsets = False
+    args.max_alternatives = 1
+    args.boosted_lm_words = []
+    args.boosted_lm_score = 4.0
+    args.speaker_diarization = False
+    args.diarization_max_speakers = 3
+    args.start_history = -1
+    args.start_threshold = -1.0
+    args.stop_history = -1
+    args.stop_threshold = -1.0
+    args.stop_history_eou = -1
+    args.stop_threshold_eou = -1.0
+    args.custom_configuration = ""
+    
+    client = RealtimeClient(args=args)
+    
+    await client.connect()
+    
+    # Create audio iterator
+    audio_chunk_iterator = AudioChunkFileIterator(
+        args.input_file, 
+        args.file_streaming_chunk, 
+        delay_callback=None
+    )
+    
+    # Send audio and receive responses concurrently
+    await asyncio.gather(
+        client.send_audio_chunks(audio_chunk_iterator),
+        client.receive_responses()
+    )
+    
+    client.save_responses("transcript.txt")
+    await client.disconnect()
+
+asyncio.run(transcribe_file())
+```
+
+**From microphone:**
+```python
+from riva.client.realtime import RealtimeClient
+from riva.client.audio_io import MicrophoneStream
+import asyncio
+import argparse
+
+async def transcribe_microphone():
+    # Create arguments namespace
+    args = argparse.Namespace()
+    args.input_file = None  # Not needed for microphone input
+    args.mic = True
+    args.duration = 30  # 30 seconds
+    args.input_device = None  # Use default device
+    args.server = "localhost:9090"
+    args.endpoint = "/v1/realtime"
+    args.query_params = "intent=transcription"
+    args.sample_rate_hz = 16000
+    args.num_channels = 1
+    args.file_streaming_chunk = 1600
+    args.output_text = "transcript.txt"
+    args.prompt = ""
+    args.language_code = "en-US"
+    args.model_name = ""
+    args.automatic_punctuation = False
+    args.no_verbatim_transcripts = False
+    args.profanity_filter = False
+    args.word_time_offsets = False
+    args.max_alternatives = 1
+    args.boosted_lm_words = []
+    args.boosted_lm_score = 4.0
+    args.speaker_diarization = False
+    args.diarization_max_speakers = 3
+    args.start_history = -1
+    args.start_threshold = -1.0
+    args.stop_history = -1
+    args.stop_threshold = -1.0
+    args.stop_history_eou = -1
+    args.stop_threshold_eou = -1.0
+    args.custom_configuration = ""
+    
+    client = RealtimeClient(args=args)
+    
+    await client.connect()
+    
+    # Create microphone stream
+    mic_chunks = MicrophoneStream(
+        args.sample_rate_hz, 
+        args.file_streaming_chunk, 
+        device=None
+    )
+    
+    await asyncio.gather(
+        client.send_audio_chunks(mic_chunks),
+        client.receive_responses()
+    )
+    
+    await client.disconnect()
+
+asyncio.run(transcribe_microphone())
 ```
 
 #### NLP
