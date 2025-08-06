@@ -46,9 +46,6 @@ def parse_args() -> argparse.Namespace:
         help="Duration in seconds to record from microphone (only used with --mic)", 
         default=None
     )
-    
-    # Audio device configuration - only initialize if needed
-    default_device_index = None
         
     parser.add_argument(
         "--input-device", 
