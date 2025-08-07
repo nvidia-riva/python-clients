@@ -116,7 +116,7 @@ def add_asr_config_argparse_parameters(
 
 def add_connection_argparse_parameters(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
     parser.add_argument("--server", default="localhost:50051", help="URI to GRPC server endpoint.")
-    parser.add_argument("--ssl-cert", help="Path to SSL root certificates file.")
+    parser.add_argument("--ssl-root-cert", help="Path to SSL root certificates file.")
     parser.add_argument("--ssl-client-cert", help="Path to SSL client certificates file.")
     parser.add_argument("--ssl-client-key", help="Path to SSL client key file.")
     parser.add_argument(
