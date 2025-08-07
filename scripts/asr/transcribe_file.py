@@ -67,7 +67,7 @@ def main() -> None:
         riva.client.audio_io.list_output_devices()
         return
     auth = riva.client.Auth(
-        ssl_cert=args.ssl_cert,
+        ssl_root_cert=args.ssl_root_cert,
         ssl_client_cert=args.ssl_client_cert,
         ssl_client_key=args.ssl_client_key,
         use_ssl=args.use_ssl,

@@ -51,7 +51,7 @@ def streaming_transcription_worker(
     output_file = Path(output_file).expanduser()
     try:
         auth = riva.client.Auth(
-            ssl_cert=args.ssl_cert,
+            ssl_root_cert=args.ssl_root_cert,
             ssl_client_cert=args.ssl_client_cert,
             ssl_client_key=args.ssl_client_key,
             use_ssl=args.use_ssl,

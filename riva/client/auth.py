@@ -8,7 +8,7 @@ import grpc
 
 
 def create_channel(
-    ssl_cert: Optional[Union[str, os.PathLike]] = None,
+    ssl_root_cert: Optional[Union[str, os.PathLike]] = None,
     ssl_client_cert: Optional[Union[str, os.PathLike]] = None,
     ssl_client_key: Optional[Union[str, os.PathLike]] = None,
     use_ssl: bool = False,
@@ -19,13 +19,13 @@ def create_channel(
     def metadata_callback(context, callback):
         callback(metadata, None)
 
-    if ssl_cert is not None or ssl_client_cert is not None or ssl_client_key is not None or use_ssl:
+    if ssl_root_cert is not None or ssl_client_cert is not None or ssl_client_key is not None or use_ssl:
         root_certificates = None
         client_certificates = None
         client_key = None
-        if ssl_cert is not None:
-            ssl_cert = Path(ssl_cert).expanduser()
-            with open(ssl_cert, 'rb') as f:
+        if ssl_root_cert is not None:
+            ssl_root_cert = Path(ssl_root_cert).expanduser()
+            with open(ssl_root_cert, 'rb') as f:
                 root_certificates = f.read()
         if ssl_client_cert is not None:
             ssl_client_cert = Path(ssl_client_cert).expanduser()
