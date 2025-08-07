@@ -111,7 +111,7 @@ class Auth:
                     )
                 self.metadata.append(tuple(meta))
         self.channel: grpc.Channel = create_channel(
-            self.ssl_cert, self.ssl_client_cert, self.ssl_client_key, self.use_ssl, self.uri, self.metadata, options=options
+            self.ssl_root_cert, self.ssl_client_cert, self.ssl_client_key, self.use_ssl, self.uri, self.metadata, options=options
         )
 
     def get_auth_metadata(self) -> List[Tuple[str, str]]:
