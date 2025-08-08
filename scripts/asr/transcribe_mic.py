@@ -45,7 +45,15 @@ def main() -> None:
     if args.list_devices:
         riva.client.audio_io.list_input_devices()
         return
-    auth = riva.client.Auth(args.ssl_cert, args.use_ssl, args.server, args.metadata)
+    auth = riva.client.Auth(
+        ssl_root_cert=args.ssl_root_cert,
+        ssl_client_cert=args.ssl_client_cert,
+        ssl_client_key=args.ssl_client_key,
+        use_ssl=args.use_ssl,
+        uri=args.server,
+        metadata_args=args.metadata,
+        options=args.options
+    )
     asr_service = riva.client.ASRService(auth)
     config = riva.client.StreamingRecognitionConfig(
         config=riva.client.RecognitionConfig(

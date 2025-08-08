@@ -39,7 +39,15 @@ def parse_args() -> argparse.Namespace:
 
 
 def run_punct_capit(args: argparse.Namespace) -> None:
-    auth = riva.client.Auth(args.ssl_cert, args.use_ssl, args.server, args.metadata)
+    auth = riva.client.Auth(
+        ssl_root_cert=args.ssl_root_cert,
+        ssl_client_cert=args.ssl_client_cert,
+        ssl_client_key=args.ssl_client_key,
+        use_ssl=args.use_ssl,
+        uri=args.server,
+        metadata_args=args.metadata,
+        options=args.options
+    )
     nlp_service = riva.client.NLPService(auth)
     if args.interactive:
         while True:
@@ -134,7 +142,15 @@ def run_tests(args: argparse.Namespace) -> int:
         ],
     }
 
-    auth = riva.client.Auth(args.ssl_cert, args.use_ssl, args.server, args.metadata)
+    auth = riva.client.Auth(
+        ssl_root_cert=args.ssl_root_cert,
+        ssl_client_cert=args.ssl_client_cert,
+        ssl_client_key=args.ssl_client_key,
+        use_ssl=args.use_ssl,
+        uri=args.server,
+        metadata_args=args.metadata,
+        options=args.options
+    )
     nlp_service = riva.client.NLPService(auth)
 
     fail_count = 0

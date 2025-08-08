@@ -46,20 +46,12 @@ def parse_args() -> argparse.Namespace:
         help="Duration in seconds to record from microphone (only used with --mic)", 
         default=None
     )
-    
-    # Audio device configuration
-    try:
-        import riva.client.audio_io
-        default_device_info = riva.client.audio_io.get_default_input_device_info()
-        default_device_index = None if default_device_info is None else default_device_info['index']
-    except ModuleNotFoundError:
-        default_device_index = None
         
     parser.add_argument(
         "--input-device", 
         type=int, 
-        default=default_device_index, 
-        help="Input audio device index to use (only used with --mic)"
+        default=None, 
+        help="Input audio device index to use (only used with --mic). If not specified, will use default device."
     )
     parser.add_argument(
         "--list-devices", 
@@ -126,6 +118,15 @@ def parse_args() -> argparse.Namespace:
     return args
 
 
+def get_default_device_index():
+    """Get default audio device index only when needed."""
+    try:
+        import riva.client.audio_io
+        default_device_info = riva.client.audio_io.get_default_input_device_info()
+        return None if default_device_info is None else default_device_info['index']
+    except ModuleNotFoundError:
+        return None
+
 def setup_signal_handler():
     """Set up signal handler for graceful shutdown."""
     def signal_handler(sig, frame):
@@ -145,11 +146,18 @@ async def create_audio_iterator(args):
         Audio iterator for streaming audio data
     """
     if args.mic:
+        # Only import when using microphone
         from riva.client.audio_io import MicrophoneStream
+        
+        # Get default device index if not specified
+        device_index = args.input_device
+        if device_index is None:
+            device_index = get_default_device_index()
+        
         audio_chunk_iterator = MicrophoneStream(
             args.sample_rate_hz, 
             args.file_streaming_chunk, 
-            device=args.input_device
+            device=device_index
         )
         args.num_channels = 1
     else:
