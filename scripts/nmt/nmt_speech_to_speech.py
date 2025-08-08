@@ -32,7 +32,15 @@ def main():
     if not os.path.exists(args.audio_file):
         raise FileNotFoundError(f"Input audio file not found: {args.audio_file}")
 
-    auth = riva.client.Auth(args.ssl_cert, args.use_ssl, args.server, args.metadata)
+    auth = riva.client.Auth(
+        ssl_root_cert=args.ssl_root_cert,
+        ssl_client_cert=args.ssl_client_cert,
+        ssl_client_key=args.ssl_client_key,
+        use_ssl=args.use_ssl,
+        uri=args.server,
+        metadata_args=args.metadata,
+        options=args.options
+    )
     nmt_client = riva.client.NeuralMachineTranslationClient(auth)
 
     if args.list_models:
