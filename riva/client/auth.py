@@ -15,6 +15,7 @@ def create_channel(
     uri: str = "localhost:50051",
     metadata: Optional[List[Tuple[str, str]]] = None,
     options: Optional[List[Tuple[str, str]]] = [],
+    use_aio: Optional[bool] = False,
 ) -> grpc.Channel:
     def metadata_callback(context, callback):
         callback(metadata, None)
@@ -39,9 +40,15 @@ def create_channel(
         if metadata:
             auth_creds = grpc.metadata_call_credentials(metadata_callback)
             creds = grpc.composite_channel_credentials(creds, auth_creds)
-        channel = grpc.secure_channel(uri, creds, options=options)
+        if use_aio:
+            channel = grpc.aio.secure_channel(uri, creds, options=options)
+        else:
+            channel = grpc.secure_channel(uri, creds, options=options)
     else:
-        channel = grpc.insecure_channel(uri, options=options)
+        if use_aio:
+            channel = grpc.aio.insecure_channel(uri, options=options)
+        else:
+            channel = grpc.insecure_channel(uri, options=options)
     return channel
 
 
@@ -55,6 +62,7 @@ class Auth:
         ssl_client_cert: Optional[Union[str, os.PathLike]] = None,
         ssl_client_key: Optional[Union[str, os.PathLike]] = None,
         options: Optional[List[Tuple[str, str]]] = [],
+        use_aio: bool = False,
     ) -> None:
         """
         Initialize the Auth class for establishing secure connections with a server.
@@ -76,6 +84,7 @@ class Auth:
                 Used for mutual TLS authentication. Defaults to None.
             options (Optional[List[Tuple[str, str]]], optional): Additional gRPC channel options.
                 Each tuple should contain (option_name, option_value). Defaults to [].
+            use_aio (bool, optional): Whether to use asyncio for the channel. Defaults to False.
 
         Raises:
             ValueError: If any metadata argument doesn't contain exactly 2 elements (key-value pair).
@@ -111,7 +120,14 @@ class Auth:
                     )
                 self.metadata.append(tuple(meta))
         self.channel: grpc.Channel = create_channel(
-            self.ssl_root_cert, self.ssl_client_cert, self.ssl_client_key, self.use_ssl, self.uri, self.metadata, options=options
+            self.ssl_root_cert,
+            self.ssl_client_cert,
+            self.ssl_client_key,
+            self.use_ssl,
+            self.uri,
+            self.metadata,
+            options=options,
+            use_aio=use_aio,
         )
 
     def get_auth_metadata(self) -> List[Tuple[str, str]]:
