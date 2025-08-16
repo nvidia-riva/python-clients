@@ -350,7 +350,7 @@ class RealtimeClient:
         """Send a JSON message to the WebSocket server."""
         await self.websocket.send(json.dumps(message))
 
-    async def send_audio_chunks(self, audio_chunks):
+    async def send_audio_chunks(self, audio_chunks, delay: float = 0.01):
         """Send audio chunks to the server for transcription."""
         logger.info("Sending audio chunks...")
 
@@ -368,6 +368,8 @@ class RealtimeClient:
                 "type": "input_audio_buffer.commit",
             })
 
+            # Sleep for delay to give time to receive responses, only incase of microphone input
+            await asyncio.sleep(delay)
         logger.info("All chunks sent")
 
         # Tell the server that we are done sending chunks

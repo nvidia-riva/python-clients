@@ -106,12 +106,12 @@ def parse_args() -> argparse.Namespace:
 
     args = parser.parse_args()
 
-    # Validate input configuration
-    if not args.mic and not args.input_file:
-        parser.error("Either --input-file or --mic must be specified")
-
-    if args.mic and args.input_file:
-        parser.error("Cannot specify both --input-file and --mic")
+    if not args.list_devices:
+        if not args.mic and not args.input_file:
+            parser.error("Either --input-file or --mic must be specified")
+        
+        if args.mic and args.input_file:
+            parser.error("Cannot specify both --input-file and --mic")
 
     return args
 
@@ -143,7 +143,9 @@ async def create_audio_iterator(args):
     Returns:
         Audio iterator for streaming audio data
     """
-    if args.mic:
+    delay = 0
+    if args.mic: 
+        delay = 0.01 # 10ms delay to give time to receive responses, only incase of microphone input
         # Only import when using microphone
         from riva.client.audio_io import MicrophoneStream
 
@@ -152,11 +154,49 @@ async def create_audio_iterator(args):
         if device_index is None:
             device_index = get_default_device_index()
 
-        audio_chunk_iterator = MicrophoneStream(
-            args.sample_rate_hz,
-            args.file_streaming_chunk,
+        mic_stream = MicrophoneStream(
+            args.sample_rate_hz, 
+            args.file_streaming_chunk, 
             device=device_index
         )
+        
+        # Initialize the stream (this starts the microphone)
+        audio_chunk_iterator = mic_stream.__enter__()
+        # Store the stream object for cleanup later
+        args._mic_stream = mic_stream
+        print("Recording indefinitely (press Ctrl+C to stop gracefully)...")
+        
+        class ImmediateAudioIterator:
+            def __init__(self, audio_iterator):
+                self.audio_iterator = audio_iterator
+                self._stop_requested = False
+                self.chunk_count = 0
+            
+            def __iter__(self):
+                return self
+            
+            def __next__(self):
+                if self._stop_requested:
+                    print("Stop requested, raising StopIteration")
+                    raise StopIteration
+                
+                try:
+                    chunk = next(self.audio_iterator)
+                    self.chunk_count += 1
+                    return chunk
+                except StopIteration:
+                    print(f"Audio iterator exhausted after {self.chunk_count} chunks")
+                    raise
+                except Exception as e:
+                    print(f"Error getting audio chunk #{self.chunk_count + 1}: {e}")
+                    raise
+            
+            def stop(self):
+                self._stop_requested = True
+        
+        audio_chunk_iterator = ImmediateAudioIterator(audio_chunk_iterator)
+        # Store reference for signal handler
+        args._interruptible_iterator = audio_chunk_iterator
         args.num_channels = 1
     else:
         wav_parameters = get_wav_file_parameters(args.input_file)
@@ -169,7 +209,7 @@ async def create_audio_iterator(args):
             delay_callback=None
         )
 
-    return audio_chunk_iterator
+    return audio_chunk_iterator, delay
 
 
 async def run_transcription(args):
@@ -179,17 +219,19 @@ async def run_transcription(args):
         args: Command line arguments containing all configuration
     """
     client = RealtimeClient(args=args)
+    send_task = None
+    receive_task = None
 
     try:
         # Create audio iterator
-        audio_chunk_iterator = await create_audio_iterator(args)
+        audio_chunk_iterator, delay = await create_audio_iterator(args)
 
         # Connect and start transcription
         await client.connect()
 
         # Run send and receive tasks concurrently
         send_task = asyncio.create_task(
-            client.send_audio_chunks(audio_chunk_iterator)
+            client.send_audio_chunks(audio_chunk_iterator, delay)
         )
         receive_task = asyncio.create_task(
             client.receive_responses()
@@ -200,11 +242,52 @@ async def run_transcription(args):
         # Save results if output file specified
         if args.output_text:
             client.save_responses(args.output_text)
-
+            
+    except KeyboardInterrupt:
+        if hasattr(args, '_interruptible_iterator'):
+            args._interruptible_iterator.stop()
+            print("Audio input stopped")
+        
+        # Cancel the send task and wait for it to finish
+        if send_task and not send_task.done():
+            print("Cancelling send task...")
+            send_task.cancel()
+            try:
+                await send_task
+            except asyncio.CancelledError:
+                pass
+            print("Send task cancelled")
+        
+        # Wait a bit for the receive task to process any remaining audio
+        if receive_task and not receive_task.done():
+            print("Processing remaining audio...")
+            try:
+                await asyncio.wait_for(receive_task, timeout=5.0)
+                print("Receive task completed")
+            except asyncio.TimeoutError:
+                print("Receive task timeout, cancelling...")
+                receive_task.cancel()
+                try:
+                    await receive_task
+                except asyncio.CancelledError:
+                    pass
+                print("Receive task cancelled")
+        
+        print("Transcription stopped gracefully.")
+        
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"Error during realtime transcription: {e}")
         raise
+        
     finally:
+        # Clean up microphone stream if it was created
+        if hasattr(args, '_mic_stream') and args._mic_stream is not None:
+            try:
+                args._mic_stream.close()
+                print("Microphone stream closed")
+            except Exception as e:
+                print(f"Warning: Error closing microphone stream: {e}")
+        
         await client.disconnect()
 
 
