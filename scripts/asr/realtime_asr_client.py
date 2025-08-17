@@ -95,6 +95,9 @@ def parse_args() -> argparse.Namespace:
     # Add connection parameters
     parser = add_connection_argparse_parameters(parser)
 
+    # Override default server for realtime ASR (WebSocket endpoint, not gRPC)
+    parser.set_defaults(server="localhost:9090")
+    
     # Add ASR and realtime configuration parameters
     parser = add_asr_config_argparse_parameters(
         parser,
