@@ -30,17 +30,22 @@ def parse_args() -> argparse.Namespace:
     )
 
     # Input configuration
-    parser.add_argument(
+    input_group = parser.add_mutually_exclusive_group(required=True)
+    input_group.add_argument(
         "--input-file",
-        required=False,
-        help="Input audio file (required when not using --mic)"
+        help="Input audio file"
     )
-    parser.add_argument(
+    input_group.add_argument(
         "--mic",
         action="store_true",
-        help="Use microphone input instead of file input",
-        default=False
+        help="Use microphone input instead of file input"
     )
+    input_group.add_argument(
+        "--list-devices",
+        action="store_true",
+        help="List available input audio device indices"
+    )
+    
     parser.add_argument(
         "--duration",
         type=int,
@@ -53,11 +58,6 @@ def parse_args() -> argparse.Namespace:
         type=int,
         default=None,
         help="Input audio device index to use (only used with --mic). If not specified, will use default device."
-    )
-    parser.add_argument(
-        "--list-devices",
-        action="store_true",
-        help="List available input audio device indices"
     )
 
     # Audio parameters
@@ -96,7 +96,7 @@ def parse_args() -> argparse.Namespace:
     parser = add_connection_argparse_parameters(parser)
 
     # Override default server for realtime ASR (WebSocket endpoint, not gRPC)
-    parser.set_defaults(server="localhost:9090")
+    parser.set_defaults(server="localhost:9000")
     
     # Add ASR and realtime configuration parameters
     parser = add_asr_config_argparse_parameters(
@@ -108,13 +108,6 @@ def parse_args() -> argparse.Namespace:
     parser = add_realtime_config_argparse_parameters(parser)
 
     args = parser.parse_args()
-
-    if not args.list_devices:
-        if not args.mic and not args.input_file:
-            parser.error("Either --input-file or --mic must be specified")
-        
-        if args.mic and args.input_file:
-            parser.error("Cannot specify both --input-file and --mic")
 
     return args
 
