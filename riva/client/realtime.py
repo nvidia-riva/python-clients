@@ -38,10 +38,6 @@ class RealtimeClient:
         self.input_playback_thread = None
         self.is_input_playing = False
         self.input_buffer_size = 1024  # Buffer size for input audio playback
-
-        # Transcription results
-        self.delta_transcripts: List[str] = []
-        self.interim_final_transcripts: List[str] = []
         self.final_transcript: str = ""
         self.is_config_updated = False
 
@@ -58,13 +54,13 @@ class RealtimeClient:
             await self._initialize_session()
 
         except requests.exceptions.RequestException as e:
-            logger.error(f"HTTP request failed: {e}")
+            logger.error("HTTP request failed: %s", e)
             raise
         except WebSocketException as e:
-            logger.error(f"WebSocket connection failed: {e}")
+            logger.error("WebSocket connection failed: %s", e)
             raise
         except Exception as e:
-            logger.error(f"Unexpected error during connection: {e}")
+            logger.error("Unexpected error during connection: %s", e)
             raise
 
     async def _initialize_http_session(self) -> Dict[str, Any]:
@@ -73,7 +69,7 @@ class RealtimeClient:
         uri = f"http://{self.args.server}/v1/realtime/transcription_sessions"
         if self.args.use_ssl:
             uri = f"https://{self.args.server}/v1/realtime/transcription_sessions"
-        logger.info(f"Initializing session via HTTP POST request to: {uri}")
+        logger.debug("Initializing session via HTTP POST request to: %s", uri)
         response = requests.post(
             uri,
             headers=headers,
@@ -89,7 +85,7 @@ class RealtimeClient:
             )
 
         session_data = response.json()
-        logger.info(f"Session initialized: {session_data}")
+        logger.debug("Session initialized: %s", session_data)
         return session_data
 
     async def _connect_websocket(self):
@@ -110,7 +106,7 @@ class RealtimeClient:
             ssl_context.check_hostname = False
             # ssl_context.verify_mode = ssl.CERT_REQUIRED
 
-        logger.info(f"Connecting to WebSocket: {ws_url}")
+        logger.debug("Connecting to WebSocket: %s", ws_url)
         self.websocket = await websockets.connect(ws_url, ssl=ssl_context)
 
     async def _initialize_session(self):
@@ -119,14 +115,14 @@ class RealtimeClient:
             # Handle first response: "conversation.created"
             response = await self.websocket.recv()
             response_data = json.loads(response)
-            logger.info("Session created: %s", response_data)
+            logger.debug("Session created: %s", response_data)
 
             event_type = response_data.get("type", "")
             if event_type == "conversation.created":
-                logger.info("Conversation created successfully")
+                logger.debug("Conversation created successfully")
                 logger.debug("Response structure: %s", list(response_data.keys()))
             else:
-                logger.warning(f"Unexpected first response type: {event_type}")
+                logger.warning("Unexpected first response type: %s", event_type)
                 logger.debug("Full response: %s", response_data)
 
             # Update session configuration
@@ -135,16 +131,16 @@ class RealtimeClient:
                 logger.error("Failed to update session")
                 raise Exception("Failed to update session")
 
-            logger.info("Session initialization complete")
+            logger.debug("Session initialization complete")
 
         except json.JSONDecodeError as e:
-            logger.error(f"Failed to parse JSON response: {e}")
+            logger.error("Failed to parse JSON response: %s", e)
             raise
         except KeyError as e:
-            logger.error(f"Missing expected key in response: {e}")
+            logger.error("Missing expected key in response: %s", e)
             raise
         except Exception as e:
-            logger.error(f"Unexpected error during session initialization: {e}")
+            logger.error("Unexpected error during session initialization: %s", e)
             raise
 
     def _safe_update_config(self, config: Dict[str, Any], key: str, value: Any, section: str = None):
@@ -160,10 +156,10 @@ class RealtimeClient:
             if section not in config:
                 config[section] = {}
             config[section][key] = value
-            logger.debug(f"Updated {section}.{key} = {value}")
+            logger.debug("Updated %s.%s = %s", section, key, value)
         else:
             config[key] = value
-            logger.debug(f"Updated {key} = {value}")
+            logger.debug("Updated %s = %s", key, value)
 
     async def _update_session(self) -> bool:
         """Update session configuration by selectively overriding server defaults.
@@ -171,8 +167,8 @@ class RealtimeClient:
         Returns:
             True if session was updated successfully, False otherwise
         """
-        logger.info("Updating session configuration...")
-        logger.info(f"Server default config: {self.session_config}")
+        logger.debug("Updating session configuration...")
+        logger.debug("Server default config: %s", self.session_config)
 
         # Create a copy of the session config from server defaults
         session_config = self.session_config.copy()
@@ -260,11 +256,11 @@ class RealtimeClient:
                 overrides.append("custom_configuration")
 
         if overrides:
-            logger.info(f"Overriding server defaults for: {', '.join(overrides)}")
+            logger.debug("Overriding server defaults for: %s", ', '.join(overrides))
         else:
-            logger.info("Using server default configuration (no overrides)")
+            logger.debug("Using server default configuration (no overrides)")
 
-        logger.info(f"Final session config: {session_config}")
+        logger.debug("Final session config: %s", session_config)
 
         # Send update request
         update_session_request = {
@@ -333,16 +329,16 @@ class RealtimeClient:
         """
         response = await self.websocket.recv()
         response_data = json.loads(response)
-        logger.info("Session updated: %s", response_data)
+        logger.info("Current Session Config: %s", response_data)
 
         event_type = response_data.get("type", "")
         if event_type == "transcription_session.updated":
-            logger.info("Transcription session updated successfully")
+            logger.debug("Transcription session updated successfully")
             logger.debug("Response structure: %s", list(response_data.keys()))
             self.session_config = response_data["session"]
             return True
         else:
-            logger.warning(f"Unexpected response type: {event_type}")
+            logger.warning("Unexpected response type: %s", event_type)
             logger.debug("Full response: %s", response_data)
             return False
 
@@ -352,7 +348,7 @@ class RealtimeClient:
 
     async def send_audio_chunks(self, audio_chunks, delay: float = 0.01):
         """Send audio chunks to the server for transcription."""
-        logger.info("Sending audio chunks...")
+        logger.debug("Sending audio chunks...")
 
         for chunk in audio_chunks:
             chunk_base64 = base64.b64encode(chunk).decode("utf-8")
@@ -370,7 +366,7 @@ class RealtimeClient:
 
             # Sleep for delay to give time to receive responses, only incase of microphone input
             await asyncio.sleep(delay)
-        logger.info("All chunks sent")
+        logger.debug("All chunks sent")
 
         # Tell the server that we are done sending chunks
         await self._send_message({
@@ -379,7 +375,7 @@ class RealtimeClient:
 
     async def receive_responses(self):
         """Receive and process transcription responses from the server."""
-        logger.info("Listening for responses...")
+        logger.debug("Listening for responses...")
         received_final_response = False
 
         while not received_final_response:
@@ -391,12 +387,10 @@ class RealtimeClient:
                 if event_type == "conversation.item.input_audio_transcription.delta":
                     delta = event.get("delta", "")
                     logger.info("Transcript: %s", delta)
-                    self.delta_transcripts.append(delta)
 
                 elif event_type == "conversation.item.input_audio_transcription.completed":
                     is_last_result = event.get("is_last_result", False)
                     interim_final_transcript = event.get("transcript", "")
-                    self.interim_final_transcripts.append(interim_final_transcript)
                     self.final_transcript = interim_final_transcript
 
                     if is_last_result:
@@ -419,7 +413,7 @@ class RealtimeClient:
             except asyncio.TimeoutError:
                 continue
             except Exception as e:
-                logger.error(f"Error: {e}")
+                logger.error("Error: %s", e)
                 break
 
     def save_responses(self, output_text_file: str):
@@ -433,7 +427,7 @@ class RealtimeClient:
                 with open(output_text_file, "w") as f:
                     f.write(self.final_transcript)
             except Exception as e:
-                logger.error(f"Error saving text: {e}")
+                logger.error("Error saving text: %s", e)
 
     async def disconnect(self):
         """Close the WebSocket connection."""
