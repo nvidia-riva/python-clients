@@ -139,10 +139,7 @@ async def create_audio_iterator(args):
     Returns:
         Audio iterator for streaming audio data
     """
-    delay = 0
     if args.mic: 
-        delay = 0.01 # 10ms delay to give time to receive responses, only incase of microphone input
-        # Only import when using microphone
         from riva.client.audio_io import MicrophoneStream
 
         # Get default device index if not specified
@@ -161,28 +158,35 @@ async def create_audio_iterator(args):
         # Store the stream object for cleanup later
         args._mic_stream = mic_stream
         print("Recording indefinitely (press Ctrl+C to stop gracefully)...")
-        
-        class ImmediateAudioIterator:
+
+        class AsyncAudioIterator:
+            """Async wrapper for blocking audio iterators to prevent event loop starvation."""
             def __init__(self, audio_iterator):
                 self.audio_iterator = audio_iterator
                 self._stop_requested = False
                 self.chunk_count = 0
             
-            def __iter__(self):
+            def __aiter__(self):
                 return self
             
-            def __next__(self):
+            async def __anext__(self):
                 if self._stop_requested:
-                    print("Stop requested, raising StopIteration")
-                    raise StopIteration
+                    raise StopAsyncIteration
                 
                 try:
-                    chunk = next(self.audio_iterator)
+                    # Add timeout to prevent hanging when no audio is available
+                    chunk = await asyncio.wait_for(
+                        asyncio.to_thread(lambda: next(self.audio_iterator)), 
+                        timeout=1.0  # 1 second timeout
+                    )
                     self.chunk_count += 1
                     return chunk
+                except asyncio.TimeoutError:
+                    # Return empty chunk or raise custom exception
+                    raise TimeoutError("No audio chunk available within timeout")
                 except StopIteration:
                     print(f"Audio iterator exhausted after {self.chunk_count} chunks")
-                    raise
+                    raise StopAsyncIteration
                 except Exception as e:
                     print(f"Error getting audio chunk #{self.chunk_count + 1}: {e}")
                     raise
@@ -190,9 +194,8 @@ async def create_audio_iterator(args):
             def stop(self):
                 self._stop_requested = True
         
-        audio_chunk_iterator = ImmediateAudioIterator(audio_chunk_iterator)
-        # Store reference for signal handler
-        args._interruptible_iterator = audio_chunk_iterator
+        # Use async iterator to prevent event loop starvation
+        audio_chunk_iterator = AsyncAudioIterator(audio_chunk_iterator)
         args.num_channels = 1
     else:
         wav_parameters = get_wav_file_parameters(args.input_file)
@@ -205,7 +208,7 @@ async def create_audio_iterator(args):
             delay_callback=None
         )
 
-    return audio_chunk_iterator, delay
+    return audio_chunk_iterator
 
 
 async def run_transcription(args):
@@ -220,14 +223,14 @@ async def run_transcription(args):
 
     try:
         # Create audio iterator
-        audio_chunk_iterator, delay = await create_audio_iterator(args)
+        audio_chunk_iterator = await create_audio_iterator(args)
 
         # Connect and start transcription
         await client.connect()
 
         # Run send and receive tasks concurrently
         send_task = asyncio.create_task(
-            client.send_audio_chunks(audio_chunk_iterator, delay)
+            client.send_audio_chunks(audio_chunk_iterator)
         )
         receive_task = asyncio.create_task(
             client.receive_responses()

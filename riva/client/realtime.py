@@ -175,6 +175,14 @@ class RealtimeClient:
 
         # Track what we're overriding
         overrides = []
+        
+        # Check if the input is microphone, then set the encoding to pcm16
+        if hasattr(self.args, 'mic') and self.args.mic:
+            self._safe_update_config(session_config, "input_audio_format", "pcm16")
+            overrides.append("input_audio_format")
+        else:
+            self._safe_update_config(session_config, "input_audio_format", "none")
+            overrides.append("input_audio_format")
 
         # Update input audio transcription - only override if args are provided
         if hasattr(self.args, 'language_code') and self.args.language_code:
@@ -346,26 +354,50 @@ class RealtimeClient:
         """Send a JSON message to the WebSocket server."""
         await self.websocket.send(json.dumps(message))
 
-    async def send_audio_chunks(self, audio_chunks, delay: float = 0.01):
+    async def send_audio_chunks(self, audio_chunks):
         """Send audio chunks to the server for transcription."""
         logger.debug("Sending audio chunks...")
 
-        for chunk in audio_chunks:
-            chunk_base64 = base64.b64encode(chunk).decode("utf-8")
+        # Check if the audio_chunks supports async iteration
+        if hasattr(audio_chunks, '__aiter__'):
+            # Use async for for async iterators - this allows proper task switching
+            async for chunk in audio_chunks:
+                try:
+                    chunk_base64 = base64.b64encode(chunk).decode("utf-8")
 
-            # Send chunk to the server
-            await self._send_message({
-                "type": "input_audio_buffer.append",
-                "audio": chunk_base64,
-            })
+                    # Send chunk to the server
+                    await self._send_message({
+                        "type": "input_audio_buffer.append",
+                        "audio": chunk_base64,
+                    })
 
-            # Commit the chunk
-            await self._send_message({
-                "type": "input_audio_buffer.commit",
-            })
+                    # Commit the chunk
+                    await self._send_message({
+                        "type": "input_audio_buffer.commit",
+                    })
+                except TimeoutError:
+                    # Handle timeout from AsyncAudioIterator - no audio available, continue
+                    logger.debug("No audio chunk available within timeout, continuing...")
+                    continue
+                except Exception as e:
+                    logger.error(f"Error processing audio chunk: {e}")
+                    continue
+        else:
+            # Fallback for regular iterators
+            for chunk in audio_chunks:
+                chunk_base64 = base64.b64encode(chunk).decode("utf-8")
 
-            # Sleep for delay to give time to receive responses, only incase of microphone input
-            await asyncio.sleep(delay)
+                # Send chunk to the server
+                await self._send_message({
+                    "type": "input_audio_buffer.append",
+                    "audio": chunk_base64,
+                })
+
+                # Commit the chunk
+                await self._send_message({
+                    "type": "input_audio_buffer.commit",
+                })
+            
         logger.debug("All chunks sent")
 
         # Tell the server that we are done sending chunks
@@ -401,7 +433,28 @@ class RealtimeClient:
                     else:
                         logger.info("Interim Transcript: %s", interim_final_transcript)
 
-                    logger.info("Words Info: %s", event.get("words_info", ""))
+                    # Format Words Info similar to print_streaming function
+                    words_info = event.get("words_info", {})
+                    if words_info and "words" in words_info:
+                        print("Words Info:")
+                        
+                        # Create header format similar to print_streaming
+                        header_format = '{: <40s}{: <16s}{: <16s}{: <16s}{: <16s}'
+                        header_values = ['Word', 'Start (ms)', 'End (ms)', 'Confidence', 'Speaker']
+                        print(header_format.format(*header_values))
+                        
+                        # Print each word with formatted information
+                        for word_data in words_info["words"]:
+                            word = word_data.get("word", "")
+                            start_time = word_data.get("start_time", 0)
+                            end_time = word_data.get("end_time", 0)
+                            confidence = word_data.get("confidence", 0.0)
+                            speaker_tag = word_data.get("speaker_tag", 0)
+                            
+                            # Format the word info line similar to print_streaming
+                            word_format = '{: <40s}{: <16.0f}{: <16.0f}{: <16.4f}{: <16d}'
+                            word_values = [word, start_time, end_time, confidence, speaker_tag]
+                            print(word_format.format(*word_values))
 
                 elif "error" in event_type.lower():
                     logger.error(
