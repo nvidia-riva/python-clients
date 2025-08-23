@@ -30,22 +30,17 @@ def parse_args() -> argparse.Namespace:
     )
 
     # Input configuration
-    input_group = parser.add_mutually_exclusive_group(required=True)
-    input_group.add_argument(
+    parser.add_argument(
         "--input-file",
-        help="Input audio file"
+        required=False,
+        help="Input audio file (required when not using --mic)"
     )
-    input_group.add_argument(
+    parser.add_argument(
         "--mic",
         action="store_true",
-        help="Use microphone input instead of file input"
+        help="Use microphone input instead of file input",
+        default=False
     )
-    input_group.add_argument(
-        "--list-devices",
-        action="store_true",
-        help="List available input audio device indices"
-    )
-    
     parser.add_argument(
         "--duration",
         type=int,
@@ -58,6 +53,11 @@ def parse_args() -> argparse.Namespace:
         type=int,
         default=None,
         help="Input audio device index to use (only used with --mic). If not specified, will use default device."
+    )
+    parser.add_argument(
+        "--list-devices",
+        action="store_true",
+        help="List available input audio device indices"
     )
 
     # Audio parameters
@@ -95,9 +95,6 @@ def parse_args() -> argparse.Namespace:
     # Add connection parameters
     parser = add_connection_argparse_parameters(parser)
 
-    # Override default server for realtime ASR (WebSocket endpoint, not gRPC)
-    parser.set_defaults(server="localhost:9000")
-    
     # Add ASR and realtime configuration parameters
     parser = add_asr_config_argparse_parameters(
         parser,
@@ -108,6 +105,13 @@ def parse_args() -> argparse.Namespace:
     parser = add_realtime_config_argparse_parameters(parser)
 
     args = parser.parse_args()
+
+    if not args.list_devices:
+        if not args.mic and not args.input_file:
+            parser.error("Either --input-file or --mic must be specified")
+        
+        if args.mic and args.input_file:
+            parser.error("Cannot specify both --input-file and --mic")
 
     return args
 
@@ -139,7 +143,10 @@ async def create_audio_iterator(args):
     Returns:
         Audio iterator for streaming audio data
     """
+    delay = 0
     if args.mic: 
+        delay = 0.01 # 10ms delay to give time to receive responses, only incase of microphone input
+        # Only import when using microphone
         from riva.client.audio_io import MicrophoneStream
 
         # Get default device index if not specified
@@ -158,35 +165,28 @@ async def create_audio_iterator(args):
         # Store the stream object for cleanup later
         args._mic_stream = mic_stream
         print("Recording indefinitely (press Ctrl+C to stop gracefully)...")
-
-        class AsyncAudioIterator:
-            """Async wrapper for blocking audio iterators to prevent event loop starvation."""
+        
+        class ImmediateAudioIterator:
             def __init__(self, audio_iterator):
                 self.audio_iterator = audio_iterator
                 self._stop_requested = False
                 self.chunk_count = 0
             
-            def __aiter__(self):
+            def __iter__(self):
                 return self
             
-            async def __anext__(self):
+            def __next__(self):
                 if self._stop_requested:
-                    raise StopAsyncIteration
+                    print("Stop requested, raising StopIteration")
+                    raise StopIteration
                 
                 try:
-                    # Add timeout to prevent hanging when no audio is available
-                    chunk = await asyncio.wait_for(
-                        asyncio.to_thread(lambda: next(self.audio_iterator)), 
-                        timeout=1.0  # 1 second timeout
-                    )
+                    chunk = next(self.audio_iterator)
                     self.chunk_count += 1
                     return chunk
-                except asyncio.TimeoutError:
-                    # Return empty chunk or raise custom exception
-                    raise TimeoutError("No audio chunk available within timeout")
                 except StopIteration:
                     print(f"Audio iterator exhausted after {self.chunk_count} chunks")
-                    raise StopAsyncIteration
+                    raise
                 except Exception as e:
                     print(f"Error getting audio chunk #{self.chunk_count + 1}: {e}")
                     raise
@@ -194,8 +194,9 @@ async def create_audio_iterator(args):
             def stop(self):
                 self._stop_requested = True
         
-        # Use async iterator to prevent event loop starvation
-        audio_chunk_iterator = AsyncAudioIterator(audio_chunk_iterator)
+        audio_chunk_iterator = ImmediateAudioIterator(audio_chunk_iterator)
+        # Store reference for signal handler
+        args._interruptible_iterator = audio_chunk_iterator
         args.num_channels = 1
     else:
         wav_parameters = get_wav_file_parameters(args.input_file)
@@ -208,7 +209,7 @@ async def create_audio_iterator(args):
             delay_callback=None
         )
 
-    return audio_chunk_iterator
+    return audio_chunk_iterator, delay
 
 
 async def run_transcription(args):
@@ -223,14 +224,14 @@ async def run_transcription(args):
 
     try:
         # Create audio iterator
-        audio_chunk_iterator = await create_audio_iterator(args)
+        audio_chunk_iterator, delay = await create_audio_iterator(args)
 
         # Connect and start transcription
         await client.connect()
 
         # Run send and receive tasks concurrently
         send_task = asyncio.create_task(
-            client.send_audio_chunks(audio_chunk_iterator)
+            client.send_audio_chunks(audio_chunk_iterator, delay)
         )
         receive_task = asyncio.create_task(
             client.receive_responses()
