@@ -275,7 +275,7 @@ async def run_transcription(args):
         print("Transcription stopped gracefully.")
         
     except Exception as e:
-        print(f"Error during realtime transcription: {e}")
+        print(f"Error during realtime transcription. Aborting transcription.")
         raise
         
     finally:
