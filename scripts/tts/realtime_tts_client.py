@@ -146,7 +146,7 @@ def parse_args() -> argparse.Namespace:
     parser = add_connection_argparse_parameters(parser)
 
     # Override default server for realtime TTS (WebSocket endpoint, not gRPC)
-    parser.set_defaults(server="localhost:9090")
+    parser.set_defaults(server="localhost:9000")
     parser.set_defaults(endpoint="/v1/realtime")
     parser.set_defaults(query_params="intent=synthesize")
 
@@ -185,6 +185,8 @@ async def get_text_input_generator(args):
                     line = line.strip()
                     if line:  # Only yield non-empty lines
                         yield line
+                    else: 
+                        yield None
         except Exception as e:
             logger.error("Error reading input text file: %s", e)
             raise
