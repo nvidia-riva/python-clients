@@ -133,13 +133,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "-o", "--output",
         type=Path,
-        default="output.wav",
-        help="Output file .wav file to write synthesized audio."
+        default="",
+        help="Output file to write synthesized audio. For single requests, uses the filename as-is. For parallel requests, uses as prefix (e.g., 'output.wav' becomes 'output_0.wav', 'output_1.wav', etc.). If not specified, no audio file will be saved."
     )
     parser.add_argument(
         "--play-audio",
         action="store_true",
-        help="Play audio output in real-time. If `--output` is specified, then audio is played in real-time."
+        help="Play audio output in real-time. Audio will be played regardless of whether an output file is specified."
     )
 
     # Add connection parameters
@@ -156,8 +156,21 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Enable debug logging"
     )
+    
+    # Parallel processing option
+    parser.add_argument(
+        "--num-parallel-requests",
+        type=int,
+        default=1,
+        help="Number of parallel requests to process simultaneously (default: 1)"
+    )
 
     args = parser.parse_args()
+    
+    # Validate num_parallel_requests
+    if args.num_parallel_requests < 1:
+        parser.error("--num-parallel-requests must be a positive integer")
+    
     return args
 
 def setup_signal_handler():
@@ -169,9 +182,16 @@ def setup_signal_handler():
     signal.signal(signal.SIGINT, signal_handler)
 
 
-async def get_text_input_generator(args):
+async def get_text_input_generator(args, text_lines=None):
     """Generator that yields text input line by line based on the specified mode."""
-    if args.text:
+    if text_lines is not None:
+        # For parallel processing, yield from provided text lines
+        for line in text_lines:
+            line = line.strip()
+            if line:  # Only yield non-empty lines
+                yield line
+                yield None
+    elif args.text:
         # Split text by lines and yield each line
         for line in args.text.split('\n'):
             line = line.strip()
@@ -192,6 +212,35 @@ async def get_text_input_generator(args):
             raise
     else:
         raise ValueError("No input method specified")
+
+def read_text_file(file_path: str) -> List[str]:
+    """Read text file and return list of non-empty lines.
+    
+    Supports two formats:
+    1. Plain text file: each line is text to synthesize
+    2. Pipe-separated file: each line is "id|text_to_synthesize"
+    """
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            lines = []
+            for line in f:
+                line = line.strip()
+                if line:
+                    # Check if line contains pipe separator (format: audio_path|text)
+                    if '|' in line:
+                        # Extract text part after the pipe
+                        text_part = line.split('|', 1)[1].strip()
+                        if text_part:  # Only add non-empty text
+                            lines.append(text_part)
+                    else:
+                        # Plain text line
+                        lines.append(line)
+        
+        logger.info(f"Read {len(lines)} text lines from {file_path}")
+        return lines
+    except Exception as e:
+        logger.error(f"Error reading text file {file_path}: {e}")
+        raise
 
 def init_wav_file(output_file: str, sample_rate_hz: int):
     if not output_file:
@@ -270,6 +319,116 @@ def play_audio(audio_chunks, sample_rate_hz, nchannels=1, sampwidth=2):
             logger.warning("PyAudio not available for real-time playback")
         except Exception as e:
             logger.error("Error playing audio: %s", e)
+
+async def run_single_synthesis(client_id: int, args, text_lines: List[str], output_file: str = None):
+    """Run a single TTS synthesis task."""
+    client = RealtimeClientTTS(args=args)
+    send_task = None
+    receive_task = None
+    text_generator = get_text_input_generator(args, text_lines)
+    audio_chunks = []
+    
+    await client.connect()
+    
+    try:
+        out_f = None
+        
+        if output_file:
+            out_f = init_wav_file(output_file, args.sample_rate_hz)
+
+        # Run send and receive tasks concurrently
+        send_task = asyncio.create_task(
+            client.send_text(text_generator)
+        )
+        receive_task = asyncio.create_task(
+            client.receive_audio(audio_chunks)
+        )
+
+        await asyncio.gather(send_task, receive_task)
+
+        if out_f:
+            write_audio_chunk(out_f, audio_chunks)
+        if args.play_audio:
+            play_audio(audio_chunks, args.sample_rate_hz)
+        
+        audio_chunks = None
+        
+        logger.info(f"Client {client_id}: Synthesis completed successfully")
+        
+    except KeyboardInterrupt:
+        logger.info(f"Client {client_id}: Synthesis interrupted by user")
+
+        # Cancel the receive task
+        if receive_task and not receive_task.done():
+            receive_task.cancel()
+            try:
+                await receive_task
+            except asyncio.CancelledError:
+                pass
+
+        # Save partial audio if available
+        if output_file and client.audio_data:
+            logger.info(f"Client {client_id}: Saving partial audio due to interruption")
+
+    except Exception as e:
+        logger.error(f"Client {client_id}: Error during synthesis: %s", e)
+        raise
+
+    finally:
+        close_wav_file(out_f)
+        await client.disconnect()
+
+async def run_parallel_synthesis(args):
+    """Run multiple parallel TTS synthesis tasks."""
+    logger.info(f"Starting parallel synthesis with {args.num_parallel_requests} requests")
+    
+    # Read input text
+    if args.input_file:
+        text_lines = read_text_file(args.input_file)
+    elif args.text:
+        text_lines = [line.strip() for line in args.text.split('\n') if line.strip()]
+    else:
+        raise ValueError("No input method specified for parallel processing")
+    
+    if not text_lines:
+        raise ValueError("No text lines found for parallel processing")
+    
+    # Create tasks for all parallel requests
+    tasks = []
+    for i in range(args.num_parallel_requests):
+        # Create output file for each parallel request
+        output_file = None
+        if args.output and str(args.output).strip():
+            output_path = Path(args.output)
+            output_file = str(output_path.parent / f"{output_path.stem}_{i}{output_path.suffix}")
+        
+        # Distribute text lines among parallel requests
+        lines_per_request = len(text_lines) // args.num_parallel_requests
+        start_idx = i * lines_per_request
+        if i == args.num_parallel_requests - 1:
+            # Last request gets remaining lines
+            end_idx = len(text_lines)
+        else:
+            end_idx = start_idx + lines_per_request
+        
+        request_text_lines = text_lines[start_idx:end_idx]
+        
+        task = asyncio.create_task(
+            run_single_synthesis(i + 1, args, request_text_lines, output_file)
+        )
+        tasks.append(task)
+    
+    # Run all tasks concurrently
+    logger.info(f"Launching {args.num_parallel_requests} parallel synthesis tasks...")
+    start_time = asyncio.get_event_loop().time()
+    
+    try:
+        await asyncio.gather(*tasks)
+        total_time = asyncio.get_event_loop().time() - start_time
+        logger.info(f"All parallel synthesis tasks completed in {total_time:.2f}s")
+    except Exception as e:
+        logger.error(f"Error in parallel synthesis: %s", e)
+        raise
             
 async def run_synthesis(args):
     """Run the text-to-speech synthesis process."""
@@ -284,7 +443,7 @@ async def run_synthesis(args):
     try:
         out_f = None
         
-        if args.output:
+        if args.output and str(args.output).strip():
             out_f = init_wav_file(str(args.output), args.sample_rate_hz)
 
         # Run send and receive tasks concurrently
@@ -299,7 +458,7 @@ async def run_synthesis(args):
 
         if out_f:
             write_audio_chunk(out_f, audio_chunks)
-        elif args.play_audio:
+        if args.play_audio:
             play_audio(audio_chunks, args.sample_rate_hz)
         
         audio_chunks = None
@@ -342,7 +501,13 @@ async def main() -> None:
             import riva.client.audio_io
             riva.client.audio_io.list_output_devices()
         else:
-            await run_synthesis(args)
+            # Use parallel processing if num_parallel_requests > 1
+            if args.num_parallel_requests > 1:
+                logger.info(f"Using parallel processing mode with {args.num_parallel_requests} concurrent requests")
+                await run_parallel_synthesis(args)
+            else:
+                logger.info("Using single request mode")
+                await run_synthesis(args)
     except Exception as e:
         logger.error("Fatal error: %s", e)
 
