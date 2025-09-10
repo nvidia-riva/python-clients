@@ -108,7 +108,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--custom-dictionary",
         default="",
-        help="A string containing comma-separated key-value pairs of "
+        help="Path to a file containing custom dictionary entries. Each line should contain "
              "grapheme and corresponding phoneme separated by double spaces."
     )
 
@@ -243,8 +243,13 @@ def read_text_file(file_path: str) -> List[str]:
         raise
 
 def init_wav_file(output_file: str, sample_rate_hz: int):
-    if not output_file:
+    if not output_file or not output_file.strip():
         return
+        
+    # Validate that output_file is not a directory
+    if os.path.isdir(output_file):
+        logger.error("Output file path is a directory: %s", output_file)
+        raise ValueError(f"Output file path is a directory: {output_file}")
         
     try:
         # Ensure the output directory exists
@@ -322,6 +327,16 @@ def play_audio(audio_chunks, sample_rate_hz, nchannels=1, sampwidth=2):
 
 async def run_single_synthesis(client_id: int, args, text_lines: List[str], output_file: str = None):
     """Run a single TTS synthesis task."""
+    # Process custom dictionary if provided
+    if args.custom_dictionary and str(args.custom_dictionary).strip():
+        try:
+            custom_dict = read_file_to_dict(args.custom_dictionary)
+            custom_dict_string = ','.join([f"{key}  {value}" for key, value in custom_dict.items()])
+            args.custom_dictionary = custom_dict_string
+        except Exception as e:
+            logger.error(f"Error reading custom dictionary file {args.custom_dictionary}: {e}")
+            args.custom_dictionary = ""
+    
     client = RealtimeClientTTS(args=args)
     send_task = None
     receive_task = None
@@ -398,7 +413,7 @@ async def run_parallel_synthesis(args):
     for i in range(args.num_parallel_requests):
         # Create output file for each parallel request
         output_file = None
-        if args.output and str(args.output).strip():
+        if args.output and str(args.output).strip() and not os.path.isdir(str(args.output)):
             output_path = Path(args.output)
             output_file = str(output_path.parent / f"{output_path.stem}_{i}{output_path.suffix}")
         
@@ -432,6 +447,17 @@ async def run_parallel_synthesis(args):
             
 async def run_synthesis(args):
     """Run the text-to-speech synthesis process."""
+    # Process custom dictionary if provided
+    if args.custom_dictionary and str(args.custom_dictionary).strip():
+        try:
+            custom_dict = read_file_to_dict(args.custom_dictionary)
+            # Convert dict to comma-separated string format expected by the server
+            custom_dict_string = ','.join([f"{key}  {value}" for key, value in custom_dict.items()])
+            args.custom_dictionary = custom_dict_string
+        except Exception as e:
+            logger.error(f"Error reading custom dictionary file {args.custom_dictionary}: {e}")
+            args.custom_dictionary = ""
+    
     client = RealtimeClientTTS(args=args)
     send_task = None
     receive_task = None
@@ -443,7 +469,7 @@ async def run_synthesis(args):
     try:
         out_f = None
         
-        if args.output and str(args.output).strip():
+        if args.output and str(args.output).strip() and not os.path.isdir(str(args.output)):
             out_f = init_wav_file(str(args.output), args.sample_rate_hz)
 
         # Run send and receive tasks concurrently
