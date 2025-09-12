@@ -394,8 +394,8 @@ async def run_single_synthesis(client_id: int, args, text_lines: List[str], outp
         await client.disconnect()
 
 async def run_parallel_synthesis(args):
-    """Run multiple parallel TTS synthesis tasks."""
-    logger.info(f"Starting parallel synthesis with {args.num_parallel_requests} requests")
+    """Run multiple parallel TTS synthesis tasks - one WAV file per text line."""
+    logger.info(f"Starting parallel synthesis with {args.num_parallel_requests} concurrent workers")
     
     # Read input text
     if args.input_file:
@@ -408,39 +408,37 @@ async def run_parallel_synthesis(args):
     if not text_lines:
         raise ValueError("No text lines found for parallel processing")
     
-    # Create tasks for all parallel requests
+    logger.info(f"Processing {len(text_lines)} text lines into {len(text_lines)} WAV files")
+    
+    # Create a semaphore to limit concurrent requests
+    semaphore = asyncio.Semaphore(args.num_parallel_requests)
+    
+    async def process_single_text(text_idx, text_line):
+        """Process a single text line with concurrency control."""
+        async with semaphore:
+            # Create output file for this specific text line
+            output_file = None
+            if args.output and str(args.output).strip() and not os.path.isdir(str(args.output)):
+                output_path = Path(args.output)
+                output_file = str(output_path.parent / f"{output_path.stem}{text_idx}{output_path.suffix}")
+            
+            logger.info(f"Processing text {text_idx + 1}/{len(text_lines)}: {text_line[:50]}...")
+            await run_single_synthesis(text_idx + 1, args, [text_line], output_file)
+    
+    # Create tasks for each text line
     tasks = []
-    for i in range(args.num_parallel_requests):
-        # Create output file for each parallel request
-        output_file = None
-        if args.output and str(args.output).strip() and not os.path.isdir(str(args.output)):
-            output_path = Path(args.output)
-            output_file = str(output_path.parent / f"{output_path.stem}_{i}{output_path.suffix}")
-        
-        # Distribute text lines among parallel requests
-        lines_per_request = len(text_lines) // args.num_parallel_requests
-        start_idx = i * lines_per_request
-        if i == args.num_parallel_requests - 1:
-            # Last request gets remaining lines
-            end_idx = len(text_lines)
-        else:
-            end_idx = start_idx + lines_per_request
-        
-        request_text_lines = text_lines[start_idx:end_idx]
-        
-        task = asyncio.create_task(
-            run_single_synthesis(i + 1, args, request_text_lines, output_file)
-        )
+    for i, text_line in enumerate(text_lines):
+        task = asyncio.create_task(process_single_text(i, text_line))
         tasks.append(task)
     
-    # Run all tasks concurrently
-    logger.info(f"Launching {args.num_parallel_requests} parallel synthesis tasks...")
+    # Run all tasks concurrently (limited by semaphore)
+    logger.info(f"Launching {len(text_lines)} synthesis tasks with {args.num_parallel_requests} concurrent workers...")
     start_time = asyncio.get_event_loop().time()
     
     try:
         await asyncio.gather(*tasks)
         total_time = asyncio.get_event_loop().time() - start_time
-        logger.info(f"All parallel synthesis tasks completed in {total_time:.2f}s")
+        logger.info(f"All {len(text_lines)} synthesis tasks completed in {total_time:.2f}s")
     except Exception as e:
         logger.error(f"Error in parallel synthesis: %s", e)
         raise
