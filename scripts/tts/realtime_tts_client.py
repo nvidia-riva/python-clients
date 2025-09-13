@@ -7,6 +7,7 @@ import base64
 import json
 import logging
 import os
+import sys
 import signal
 import sys
 from types import NoneType
@@ -532,9 +533,11 @@ async def main() -> None:
             else:
                 logger.info("Using single request mode")
                 await run_synthesis(args)
+        return 0
     except Exception as e:
         logger.error("Fatal error: %s", e)
+        return -1
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    asyncio.run(sys.exit(main()))
