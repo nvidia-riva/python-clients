@@ -503,6 +503,7 @@ class RealtimeClientTTS:
         self.audio_data = []
         self.is_synthesis_complete = False
         self.wav_file = None  # WAV file handle for streaming write
+        self.error_occurred = False
 
     def list_voices(self):
         """List available voices."""
@@ -783,8 +784,9 @@ class RealtimeClientTTS:
     async def receive_audio(self, audio_chunks, timeout=10.0):
         """Receive and process audio responses from the server."""
         logger.info("Listening for audio responses...")
+        self.error_occurred = False
         
-        while not self.is_synthesis_complete:
+        while not self.is_synthesis_complete and not self.error_occurred:
             try:
                 response = await asyncio.wait_for(self.websocket.recv(), timeout)
                 event = json.loads(response)
@@ -818,7 +820,7 @@ class RealtimeClientTTS:
                     error_info = event.get("error", {})
                     logger.error("Error: %s", error_info.get("message", "Unknown error"))
                     self.is_synthesis_complete = True
-                    break
+                    self.error_occurred = True
 
             except asyncio.TimeoutError:
                 continue

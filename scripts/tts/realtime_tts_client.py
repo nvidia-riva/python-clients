@@ -328,8 +328,8 @@ def play_audio(audio_chunks, sample_rate_hz, nchannels=1, sampwidth=2):
         except Exception as e:
             logger.error("Error playing audio: %s", e)
 
-async def run_single_synthesis(client_id: int, args, text_lines: List[str], output_file: str = None):
-    """Run a single TTS synthesis task."""
+async def run_synthesis(args, client_id: int = None, text_lines: List[str] = None, output_file: str = None):
+    """Run the text-to-speech synthesis process."""
     # Process custom dictionary if provided
     if args.custom_dictionary and str(args.custom_dictionary).strip():
         try:
@@ -345,14 +345,18 @@ async def run_single_synthesis(client_id: int, args, text_lines: List[str], outp
     receive_task = None
     text_generator = get_text_input_generator(args, text_lines)
     audio_chunks = []
+    success = False
     
     await client.connect()
     
     try:
         out_f = None
         
+        # Determine output file
         if output_file:
             out_f = init_wav_file(output_file, args.sample_rate_hz)
+        elif args.output and str(args.output).strip() and not os.path.isdir(str(args.output)):
+            out_f = init_wav_file(str(args.output), args.sample_rate_hz)
 
         # Run send and receive tasks concurrently
         send_task = asyncio.create_task(
@@ -363,6 +367,7 @@ async def run_single_synthesis(client_id: int, args, text_lines: List[str], outp
         )
 
         await asyncio.gather(send_task, receive_task)
+        success = not client.error_occurred
 
         if out_f:
             write_audio_chunk(out_f, audio_chunks)
@@ -371,10 +376,17 @@ async def run_single_synthesis(client_id: int, args, text_lines: List[str], outp
         
         audio_chunks = None
         
-        logger.info(f"Client {client_id}: Synthesis completed successfully")
+        if client_id:
+            logger.info(f"Client {client_id}: Synthesis completed successfully")
+        else:
+            logger.info("Synthesis completed successfully")
         
     except KeyboardInterrupt:
-        logger.info(f"Client {client_id}: Synthesis interrupted by user")
+        if client_id:
+            logger.info(f"Client {client_id}: Synthesis interrupted by user")
+        else:
+            logger.info("Synthesis interrupted by user")
+        success = False
 
         # Cancel the receive task
         if receive_task and not receive_task.done():
@@ -385,17 +397,26 @@ async def run_single_synthesis(client_id: int, args, text_lines: List[str], outp
                 pass
 
         # Save partial audio if available
-        if output_file and audio_chunks:
-            logger.info(f"Client {client_id}: Saving partial audio due to interruption")
+        if (output_file or args.output) and audio_chunks:
+            if client_id:
+                logger.info(f"Client {client_id}: Saving partial audio due to interruption")
+            else:
+                logger.info("Saving partial audio due to interruption")
             write_audio_chunk(out_f, audio_chunks)
 
     except Exception as e:
-        logger.error(f"Client {client_id}: Error during synthesis: %s", e)
+        if client_id:
+            logger.error(f"Client {client_id}: Error during synthesis: %s", e)
+        else:
+            logger.error("Error during synthesis: %s", e)
+        success = False
         raise
 
     finally:
         close_wav_file(out_f)
         await client.disconnect()
+    
+    return success
 
 async def run_parallel_synthesis(args):
     """Run multiple parallel TTS synthesis tasks - one WAV file per text line."""
@@ -427,7 +448,7 @@ async def run_parallel_synthesis(args):
                 output_file = str(output_path.parent / f"{output_path.stem}{text_idx}{output_path.suffix}")
             
             logger.info(f"Processing text {text_idx + 1}/{len(text_lines)}: {text_line[:50]}...")
-            await run_single_synthesis(text_idx + 1, args, [text_line], output_file)
+            return await run_synthesis(args, client_id=text_idx + 1, text_lines=[text_line], output_file=output_file)
     
     # Create tasks for each text line
     tasks = []
@@ -440,86 +461,19 @@ async def run_parallel_synthesis(args):
     start_time = asyncio.get_event_loop().time()
     
     try:
-        await asyncio.gather(*tasks)
+        results = await asyncio.gather(*tasks)
         total_time = asyncio.get_event_loop().time() - start_time
         logger.info(f"All {len(text_lines)} synthesis tasks completed in {total_time:.2f}s")
+        return all(results)  # Return True if all tasks succeeded
     except Exception as e:
         logger.error(f"Error in parallel synthesis: %s", e)
-        raise
-            
-async def run_synthesis(args):
-    """Run the text-to-speech synthesis process."""
-    # Process custom dictionary if provided
-    if args.custom_dictionary and str(args.custom_dictionary).strip():
-        try:
-            custom_dict = read_file_to_dict(args.custom_dictionary)
-            # Convert dict to comma-separated string format expected by the server
-            custom_dict_string = ','.join([f"{key}  {value}" for key, value in custom_dict.items()])
-            args.custom_dictionary = custom_dict_string
-        except Exception as e:
-            logger.error(f"Error reading custom dictionary file {args.custom_dictionary}: {e}")
-            args.custom_dictionary = ""
-    
-    client = RealtimeClientTTS(args=args)
-    send_task = None
-    receive_task = None
-    text_generator = get_text_input_generator(args)
-    audio_chunks = []
-    
-    await client.connect()
-    
-    try:
-        out_f = None
-        
-        if args.output and str(args.output).strip() and not os.path.isdir(str(args.output)):
-            out_f = init_wav_file(str(args.output), args.sample_rate_hz)
-
-        # Run send and receive tasks concurrently
-        send_task = asyncio.create_task(
-            client.send_text(text_generator)
-        )
-        receive_task = asyncio.create_task(
-            client.receive_audio(audio_chunks)
-        )
-
-        await asyncio.gather(send_task, receive_task)
-
-        if out_f:
-            write_audio_chunk(out_f, audio_chunks)
-        if args.play_audio:
-            play_audio(audio_chunks, args.sample_rate_hz)
-        
-        audio_chunks = None
-        
-    except KeyboardInterrupt:
-        logger.info("Synthesis interrupted by user")
-
-        # Cancel the receive task
-        if receive_task and not receive_task.done():
-            receive_task.cancel()
-            try:
-                await receive_task
-            except asyncio.CancelledError:
-                pass
-
-        # Save partial audio if available
-        if args.output and audio_chunks:
-            logger.info("Saving partial audio due to interruption")
-            write_audio_chunk(out_f, audio_chunks)
-
-    except Exception as e:
-        logger.error("Error during synthesis: %s", e)
-        raise
-
-    finally:
-        close_wav_file(out_f)
-        await client.disconnect()
+        return False
 
 
-async def main() -> None:
+async def main() -> int:
     """Main entry point for the realtime TTS client."""
     args = parse_args()
-
+    success = False
     setup_signal_handler()
 
     try:
@@ -533,11 +487,11 @@ async def main() -> None:
             # Use parallel processing if num_parallel_requests > 1
             if args.num_parallel_requests > 1:
                 logger.info(f"Using parallel processing mode with {args.num_parallel_requests} concurrent requests")
-                await run_parallel_synthesis(args)
+                success = await run_parallel_synthesis(args)
             else:
                 logger.info("Using single request mode")
-                await run_synthesis(args)
-        return 0
+                success = await run_synthesis(args)
+        return 0 if success else 1
     except Exception as e:
         logger.error("Fatal error: %s", e)
         return 1
