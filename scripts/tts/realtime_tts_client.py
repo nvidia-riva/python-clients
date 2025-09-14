@@ -540,7 +540,7 @@ async def main() -> None:
         return 0
     except Exception as e:
         logger.error("Fatal error: %s", e)
-        return -1
+        return 1
 
 
 if __name__ == "__main__":
