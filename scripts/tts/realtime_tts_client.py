@@ -9,7 +9,6 @@ import logging
 import os
 import sys
 import signal
-import sys
 from types import NoneType
 import uuid
 import wave
@@ -297,8 +296,8 @@ def close_wav_file(out_f):
             logger.error("Error closing WAV file: %s", e)
 
 def play_audio(audio_chunks, sample_rate_hz, nchannels=1, sampwidth=2):
+    """Play audio chunk in real-time."""
     if audio_chunks is not None:
-        """Play audio chunk in real-time."""
         try:
             import pyaudio
             
@@ -313,8 +312,11 @@ def play_audio(audio_chunks, sample_rate_hz, nchannels=1, sampwidth=2):
                 output=True
             )
             
+            # Concatenate all audio chunks into a single byte string
+            audio_data = b''.join(audio_chunks)
+            
             # Play audio data
-            stream.write(audio_chunks)
+            stream.write(audio_data)
             
             # Clean up
             stream.stop_stream()
@@ -383,8 +385,9 @@ async def run_single_synthesis(client_id: int, args, text_lines: List[str], outp
                 pass
 
         # Save partial audio if available
-        if output_file and client.audio_data:
+        if output_file and audio_chunks:
             logger.info(f"Client {client_id}: Saving partial audio due to interruption")
+            write_audio_chunk(out_f, audio_chunks)
 
     except Exception as e:
         logger.error(f"Client {client_id}: Error during synthesis: %s", e)
@@ -500,8 +503,9 @@ async def run_synthesis(args):
                 pass
 
         # Save partial audio if available
-        if args.output and client.audio_data:
+        if args.output and audio_chunks:
             logger.info("Saving partial audio due to interruption")
+            write_audio_chunk(out_f, audio_chunks)
 
     except Exception as e:
         logger.error("Error during synthesis: %s", e)
@@ -540,4 +544,5 @@ async def main() -> None:
 
 
 if __name__ == "__main__":
-    asyncio.run(sys.exit(main()))
+    exit_code = asyncio.run(main())
+    sys.exit(exit_code)
