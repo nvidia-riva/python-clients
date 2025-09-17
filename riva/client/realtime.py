@@ -6,7 +6,8 @@ import base64
 import json
 import logging
 import queue
-from typing import Dict, Any, List
+import uuid
+from typing import Dict, Any, Generator
 
 import requests
 import websockets
@@ -20,11 +21,11 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-class RealtimeClient:
+class RealtimeClientASR:
     """Client for real-time transcription via WebSocket connection."""
 
     def __init__(self, args: argparse.Namespace):
-        """Initialize the RealtimeClient.
+        """Initialize the RealtimeClientASR.
 
         Args:
             args: Command line arguments containing configuration
@@ -487,3 +488,347 @@ class RealtimeClient:
         if self.websocket:
             await self.websocket.close()
 
+class RealtimeClientTTS:
+    """Client for real-time text-to-speech synthesis via WebSocket connection."""
+
+    def __init__(self, args: argparse.Namespace):
+        """Initialize the RealtimeClientTTS.
+
+        Args:
+            args: Command line arguments containing configuration
+        """
+        self.args = args
+        self.websocket = None
+        self.session_config = None
+        self.audio_data = []
+        self.is_synthesis_complete = False
+        self.wav_file = None  # WAV file handle for streaming write
+        self.error_occurred = False
+
+    def list_voices(self):
+        """List available voices."""
+        headers = {"Content-Type": "application/json"}
+        uri = f"http://{self.args.server}/v1/audio/list_voices"
+        if self.args.use_ssl:
+            uri = f"https://{self.args.server}/v1/audio/list_voices"
+        
+        logger.info("Listing voices via HTTP GET request to: %s", uri)
+        response = requests.get(uri, headers=headers)
+        response.raise_for_status()
+        return response.json()
+
+
+
+    async def connect(self):
+        """Establish connection to the TTS server."""
+        try:
+            logger.info("Starting connection to TTS server...")
+            
+            # Initialize session via HTTP POST
+            logger.info("Initializing HTTP session...")
+            session_data = await self._initialize_http_session()
+            self.session_config = session_data
+            logger.info("HTTP session initialized successfully")
+
+            # Connect to WebSocket
+            logger.info("Connecting to WebSocket...")
+            await self._connect_websocket()
+            logger.info("WebSocket connected successfully")
+            
+            # Initialize WebSocket session
+            logger.info("Initializing WebSocket session...")
+            session_updated = await self._update_session()
+            if not session_updated:
+                logger.error("Failed to update session")
+                raise Exception("Failed to update session")
+            logger.info("WebSocket session initialized successfully")
+            
+            logger.info("Connection established successfully!")
+
+        except requests.exceptions.RequestException as e:
+            logger.error("HTTP request failed: %s", e)
+            raise
+        except WebSocketException as e:
+            logger.error("WebSocket connection failed: %s", e)
+            raise
+        except Exception as e:
+            logger.error("Unexpected error during connection: %s", e)
+            raise
+
+    async def _initialize_http_session(self) -> Dict[str, Any]:
+        """Initialize session via HTTP POST request."""
+        headers = {"Content-Type": "application/json"}
+        uri = f"http://{self.args.server}/v1/realtime/synthesis_sessions"
+        if self.args.use_ssl:
+            uri = f"https://{self.args.server}/v1/realtime/synthesis_sessions"
+        
+        logger.info("Initializing session via HTTP POST request to: %s", uri)
+
+        # Make HTTP request with proper error handling
+        try:
+            # Handle SSL parameters safely
+            cert_params = None
+            if hasattr(self.args, 'ssl_client_cert') and hasattr(self.args, 'ssl_client_key'):
+                if self.args.ssl_client_cert and self.args.ssl_client_key:
+                    cert_params = (self.args.ssl_client_cert, self.args.ssl_client_key)
+            
+            verify_param = True
+            if hasattr(self.args, 'ssl_root_cert') and self.args.ssl_root_cert:
+                verify_param = self.args.ssl_root_cert
+            
+            response = requests.post(
+                uri,
+                headers=headers,
+                json={},
+                cert=cert_params,
+                verify=verify_param,
+                timeout=30  # Add timeout to prevent hanging
+            )
+            
+        except requests.exceptions.Timeout:
+            logger.error("Request timeout - server not responding")
+            raise Exception("Server timeout - check if TTS server is running")
+        except requests.exceptions.ConnectionError:
+            logger.error("Connection error - cannot reach server")
+            raise Exception("Connection failed - check server address and port")
+        except Exception as e:
+            logger.error("HTTP request failed: %s", e)
+            raise
+
+        if response.status_code != 200:
+            raise Exception(
+                f"Failed to initialize session. Status: {response.status_code}, "
+                f"Error: {response.text}"
+            )
+
+        session_data = response.json()
+        logger.info("Session initialized: %s", session_data)
+        return session_data
+
+    async def _connect_websocket(self):
+        """Connect to WebSocket endpoint."""
+        ssl_context = None
+        ws_url = f"ws://{self.args.server}{self.args.endpoint}?{self.args.query_params}"
+        if self.args.use_ssl:
+            ws_url = f"wss://{self.args.server}{self.args.endpoint}?{self.args.query_params}"
+
+            ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+            if self.args.ssl_root_cert:
+                ssl_context.load_verify_locations(self.args.ssl_root_cert)
+            if self.args.ssl_client_cert and self.args.ssl_client_key:
+                ssl_context.load_cert_chain(self.args.ssl_client_cert, self.args.ssl_client_key)
+            ssl_context.check_hostname = False
+
+        logger.info("Connecting to WebSocket: %s", ws_url)
+        self.websocket = await websockets.connect(ws_url, ssl=ssl_context)
+
+    async def _initialize_session(self):
+        """Initialize the WebSocket session."""
+        try:
+            # Handle first response: "conversation.created"
+            response = await self.websocket.recv()
+            response_data = json.loads(response)
+            logger.info("Session created: %s", response_data)
+
+            event_type = response_data.get("type", "")
+            if event_type == "conversation.created":
+                logger.info("Conversation created successfully")
+            else:
+                logger.warning("Unexpected first response type: %s", event_type)
+
+            # Update session configuration
+            await self._update_session()
+
+        except json.JSONDecodeError as e:
+            logger.error("Failed to parse JSON response: %s", e)
+            raise
+        except Exception as e:
+            logger.error("Unexpected error during session initialization: %s", e)
+            raise
+
+    def _safe_update_config(self, config: Dict[str, Any], key: str, value: Any, section: str = None):
+        """Safely update a configuration value, creating the section if it doesn't exist.
+
+        Args:
+            config: The configuration dictionary to update
+            key: The key to update
+            value: The value to set
+            section: The section name (e.g., 'input_text_synthesis')
+        """
+        if section:
+            if section not in config:
+                config[section] = {}
+            config[section][key] = value
+        else:
+            config[key] = value
+        logger.debug("Updated %s = %s", key, value)
+
+    async def _update_session(self, timeout=1):
+        """Update session configuration by selectively overriding server defaults."""
+        logger.info("Updating session configuration...")
+        logger.debug("Server default config: %s", self.session_config)
+
+        # Create a copy of the session config from server defaults
+        session_config = self.session_config.copy()
+
+        # Track what we're overriding
+        overrides = []
+
+        # Update input text synthesis - only override if args are provided
+        if hasattr(self.args, 'language_code') and self.args.language_code:
+            self._safe_update_config(session_config, "language_code", self.args.language_code, "input_text_synthesis")
+            overrides.append("language_code")
+
+        if hasattr(self.args, 'voice') and self.args.voice:
+            self._safe_update_config(session_config, "voice_name", self.args.voice, "input_text_synthesis")
+            overrides.append("voice_name")
+
+        # Update output audio parameters - only override if args are provided
+        if hasattr(self.args, 'sample_rate_hz') and self.args.sample_rate_hz:
+            self._safe_update_config(session_config, "sample_rate_hz", self.args.sample_rate_hz, "output_audio_params")
+            overrides.append("sample_rate_hz")
+
+        if hasattr(self.args, 'encoding') and self.args.encoding:
+            self._safe_update_config(session_config, "audio_format", self.args.encoding, "output_audio_params")
+            overrides.append("audio_format")
+
+        # Update custom dictionary - only override if args are provided
+        if hasattr(self.args, 'custom_dictionary') and self.args.custom_dictionary:
+            self._safe_update_config(session_config, "custom_dictionary", self.args.custom_dictionary)
+            overrides.append("custom_dictionary")
+
+        # Update zero-shot config - only override if args are provided
+        if (hasattr(self.args, 'zero_shot_audio_prompt_file') and self.args.zero_shot_audio_prompt_file):
+            try:
+                with open(self.args.zero_shot_audio_prompt_file, 'rb') as f:
+                    audio_data = f.read()
+                    base64_audio_data = base64.b64encode(audio_data).decode('utf-8')
+                    self._safe_update_config(session_config["zero_shot_config"], "audio_prompt_bytes", base64_audio_data)
+                    logger.info("Zero-shot audio prompt bytes: %s", len(base64_audio_data))
+                overrides.append("zero_shot_audio_prompt_file")
+            except Exception as e:
+                logger.warning("Failed to load zero-shot audio prompt: %s", e)
+            
+            if hasattr(self.args, 'zero_shot_audio_prompt_transcript') and self.args.zero_shot_audio_prompt_transcript:
+                self._safe_update_config(session_config["zero_shot_config"], "audio_prompt_transcript", self.args.zero_shot_audio_prompt_transcript)
+                logger.info("Zero-shot audio prompt transcript: %s", self.args.zero_shot_audio_prompt_transcript)
+                overrides.append("zero_shot_transcript")
+            
+            if hasattr(self.args, 'zero_shot_prompt_quality') and self.args.zero_shot_prompt_quality:
+                self._safe_update_config(session_config["zero_shot_config"], "prompt_quality", self.args.zero_shot_prompt_quality)
+                logger.info("Zero-shot quality: %s", self.args.zero_shot_prompt_quality)
+                overrides.append("zero_shot_prompt_quality")
+                
+        logger.debug("Overriding parameters: %s", overrides)
+
+        update_request = {
+            "event_id": f"event_{uuid.uuid4()}",
+            "type": "synthesize_session.update",
+            "session": session_config
+        }
+
+        await self._send_message(update_request)
+
+        session_created = False
+        session_updated = False
+        
+        while not session_created or not session_updated:
+            response = await asyncio.wait_for(
+                self.websocket.recv(), timeout
+            )
+            response_data = json.loads(response)
+            event_type = response_data.get("type", "")
+            if event_type == "conversation.created":
+                logger.info("Synthesis session created successfully")
+                session_created = True
+            elif event_type == "synthesize_session.updated":
+                logger.info("Synthesis session updated successfully")
+                self.session_config = response_data["session"]
+                session_updated = True
+            elif event_type == "error":
+                error_info = response_data.get("error", {})
+                logger.error("Error: %s", error_info.get("message", "Unknown error"))
+                self.is_synthesis_complete = True
+                return False
+            else:
+                logger.warning("Unexpected response type: %s", event_type)
+
+        return True
+    
+    async def _send_message(self, message: Dict[str, Any]):
+        """Send a JSON message to the WebSocket server."""
+        await self.websocket.send(json.dumps(message))
+
+    async def send_text(self, text_generator: Generator[str, None, None]):
+        """Send text to the server for synthesis."""
+        logger.info("Sending text for synthesis...")
+
+        async for text in text_generator:
+            if text is not None:
+                await self._send_message({
+                    "event_id": f"event_{uuid.uuid4()}",
+                            "type": "input_text.append",
+                            "text": text
+                        })
+            else:
+                await self._send_message({
+                    "event_id": f"event_{uuid.uuid4()}",
+                    "type": "input_text.commit"
+                })
+        await self._send_message({
+            "event_id": f"event_{uuid.uuid4()}",
+            "type": "input_text.done"
+        })
+        logger.info("Text input marked as done")
+        
+    async def receive_audio(self, audio_chunks, timeout=10.0):
+        """Receive and process audio responses from the server."""
+        logger.info("Listening for audio responses...")
+        self.error_occurred = False
+        
+        while not self.is_synthesis_complete and not self.error_occurred:
+            try:
+                response = await asyncio.wait_for(self.websocket.recv(), timeout)
+                event = json.loads(response)
+                event_type = event.get("type", "")
+
+                if event_type == "conversation.item.speech.data":
+                    # Handle audio data
+                    import base64
+                    audio_data_b64 = event.get("audio", "")
+                    if audio_data_b64:
+                        audio_data = base64.b64decode(audio_data_b64)
+                        audio_chunks.append(audio_data)
+                        
+                        logger.info("Received audio chunk: %d bytes", len(audio_data))
+
+                elif event_type == "conversation.item.speech.completed":
+                    # Handle synthesis completion
+                    is_last_result = event.get("is_last_result", False)
+                    synthesis_metadata = event.get("synthesis_metadata", {})
+                    
+                    logger.info("Speech synthesis completed")
+                    if synthesis_metadata:
+                        logger.info("Synthesis metadata: %s", synthesis_metadata)
+                    
+                    if is_last_result:
+                        self.is_synthesis_complete = True
+                        logger.info("All synthesis completed")
+                        break
+
+                elif event_type == "error":
+                    error_info = event.get("error", {})
+                    logger.error("Error: %s", error_info.get("message", "Unknown error"))
+                    self.is_synthesis_complete = True
+                    self.error_occurred = True
+
+            except asyncio.TimeoutError:
+                continue
+            except Exception as e:
+                logger.error("Error receiving audio: %s", e)
+                break
+    
+    async def disconnect(self):
+        """Close the WebSocket connection."""
+        if self.websocket:
+            await self.websocket.close()
