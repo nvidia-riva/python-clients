@@ -602,7 +602,7 @@ class RealtimeClientTTS:
             )
 
         session_data = response.json()
-        logger.info("Session initialized: %s", session_data)
+        logger.debug("Session initialized: %s", session_data)
         return session_data
 
     async def _connect_websocket(self):
@@ -683,10 +683,9 @@ class RealtimeClientTTS:
             self._safe_update_config(session_config, "voice_name", self.args.voice, "input_text_synthesis")
             overrides.append("voice_name")
 
-        # Update output audio parameters - only override if args are provided
-        if hasattr(self.args, 'sample_rate_hz') and self.args.sample_rate_hz:
-            self._safe_update_config(session_config, "sample_rate_hz", self.args.sample_rate_hz, "output_audio_params")
-            overrides.append("sample_rate_hz")
+        # Update output audio parameters - even without args provided, we need to set the sample rate
+        self._safe_update_config(session_config, "sample_rate_hz", self.args.sample_rate_hz, "output_audio_params")
+        overrides.append("sample_rate_hz")
 
         if hasattr(self.args, 'encoding') and self.args.encoding:
             self._safe_update_config(session_config, "audio_format", self.args.encoding, "output_audio_params")
