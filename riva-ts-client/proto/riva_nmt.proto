@@ -1,0 +1,69 @@
+syntax = "proto3";
+
+package nvidia.riva;
+
+import "riva_services.proto";
+
+service RivaNMTService {
+  rpc TranslateText(TranslateTextRequest) returns (TranslateTextResponse);
+  rpc StreamingTranslateSpeechToSpeech(stream StreamingS2SRequest) returns (stream StreamingS2SResponse);
+  rpc StreamingTranslateSpeechToText(stream StreamingS2TRequest) returns (stream StreamingS2TResponse);
+  rpc ListSupportedLanguagePairs(AvailableLanguageRequest) returns (AvailableLanguageResponse);
+}
+
+message TranslateTextRequest {
+  string text = 1;
+  string source_language = 2;
+  string target_language = 3;
+  repeated string do_not_translate_phrases = 4;
+}
+
+message TranslateTextResponse {
+  string text = 1;
+  repeated string translations = 2;
+}
+
+message StreamingS2SRequest {
+  oneof streaming_request {
+    AudioConfig config = 1;
+    bytes audio_content = 2;
+  }
+}
+
+message StreamingS2SResponse {
+  message Result {
+    string transcript = 1;
+    string translation = 2;
+    bool is_partial = 3;
+    bytes audio_content = 4;
+  }
+  Result result = 1;
+}
+
+message StreamingS2TRequest {
+  oneof streaming_request {
+    AudioConfig config = 1;
+    bytes audio_content = 2;
+  }
+}
+
+message StreamingS2TResponse {
+  message Result {
+    string transcript = 1;
+    string translation = 2;
+    bool is_partial = 3;
+  }
+  Result result = 1;
+}
+
+message AvailableLanguageRequest {
+  string model = 1;
+}
+
+message AvailableLanguageResponse {
+  message LanguagePair {
+    string source_language_code = 1;
+    string target_language_code = 2;
+  }
+  repeated LanguagePair supported_language_pairs = 1;
+}
