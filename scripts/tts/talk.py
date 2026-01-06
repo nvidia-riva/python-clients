@@ -35,6 +35,7 @@ def parse_args() -> argparse.Namespace:
     group.add_argument("--text", type=str, help="Text input to synthesize.")
     group.add_argument("--list-devices", action="store_true", help="List output audio devices indices.")
     group.add_argument("--list-voices", action="store_true", help="List available voices.")
+    group.add_argument("--text_file", type=Path, default=None, help="A file path to a list of texts to synthesize.")
     parser.add_argument(
         "--voice",
         help="A voice name to use. If this parameter is missing, then the server will try a first available model "
@@ -64,6 +65,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--encoding", default="LINEAR_PCM", choices={"LINEAR_PCM", "OGGOPUS"}, help="Output audio encoding.")
     parser.add_argument("--custom-dictionary", type=str, help="A file path to a user dictionary with key-value pairs separated by double spaces.")
+
     parser.add_argument(
         "--stream",
         action="store_true",
@@ -138,10 +140,12 @@ def main() -> None:
         print(json.dumps(tts_models, indent=4))
         return
 
-    if not args.text:
+    if not args.text and not args.text_file:
         print("No input text provided")
         return
-
+    if args.text_file is not None and not args.stream:
+        print("Streaming synthesis is required when using a text list")
+        return
     try:
         if args.output_device is not None or args.play_audio:
             sound_stream = riva.client.audio_io.SoundCallBack(
@@ -153,6 +157,17 @@ def main() -> None:
             out_f.setsampwidth(sampwidth)
             out_f.setframerate(args.sample_rate_hz)
 
+        if args.text_file is not None:
+            with open(args.text_file, 'r') as file:
+                text_list = []
+                for line in file.readlines():
+                    if "|" in line:
+                        text_list.append(line.split("|")[1].strip())
+                    else:
+                        text_list.append(line.strip())
+        else:
+            text_list = [args.text]
+
         custom_dictionary_input = {}
         if args.custom_dictionary is not None:
             custom_dictionary_input = read_file_to_dict(args.custom_dictionary)
@@ -161,7 +176,7 @@ def main() -> None:
         start = time.time()
         if args.stream:
             responses = service.synthesize_online(
-                args.text, args.voice, args.language_code, sample_rate_hz=args.sample_rate_hz,
+                text_list, args.voice, args.language_code, sample_rate_hz=args.sample_rate_hz,
                 encoding=(AudioEncoding.OGGOPUS if args.encoding == "OGGOPUS" else AudioEncoding.LINEAR_PCM),
                 zero_shot_audio_prompt_file=args.zero_shot_audio_prompt_file,
                 zero_shot_quality=(20 if args.zero_shot_quality is None else args.zero_shot_quality),
@@ -179,7 +194,7 @@ def main() -> None:
                     out_f.writeframesraw(resp.audio)
         else:
             resp = service.synthesize(
-                args.text, args.voice, args.language_code, sample_rate_hz=args.sample_rate_hz,
+                text_list, args.voice, args.language_code, sample_rate_hz=args.sample_rate_hz,
                 encoding=(AudioEncoding.OGGOPUS if args.encoding == "OGGOPUS" else AudioEncoding.LINEAR_PCM),
                 zero_shot_audio_prompt_file=args.zero_shot_audio_prompt_file,
                 zero_shot_quality=(20 if args.zero_shot_quality is None else args.zero_shot_quality),

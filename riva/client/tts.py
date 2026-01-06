@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: MIT
 
-from typing import Generator, Optional, Union
+from typing import Generator, Optional, Union, Iterable
 
 from grpc._channel import _MultiThreadedRendezvous
 
@@ -97,7 +97,7 @@ class SpeechSynthesisService:
 
     def synthesize_online(
         self,
-        text: str,
+        text: Union[str, list[str], Iterable[str]],
         voice_name: Optional[str] = None,
         language_code: str = 'en-US',
         encoding: AudioEncoding = AudioEncoding.LINEAR_PCM,
@@ -112,7 +112,10 @@ class SpeechSynthesisService:
         becoming available.
 
         Args:
-            text (:obj:`str`): An input text.
+            text (:obj:`Union[str, list[str], Iterable[str]]`): An input text.
+                If a string, it will be synthesized as a single text.
+                If a list of strings, it will be synthesized as a list of texts.
+                If an iterable of strings, it will be synthesized as an iterable of texts.
             voice_name (:obj:`str`, `optional`): A name of the voice, e.g. ``"English-US-Female-1"``. You may find
                 available voices in server logs or in server model directory. If this parameter is :obj:`None`, then
                 a server will select the first available model with correct :param:`language_code` value.
@@ -132,7 +135,7 @@ class SpeechSynthesisService:
             future object by calling ``result()`` method.
         """
         req = rtts.SynthesizeSpeechRequest(
-            text=text,
+            text="",
             language_code=language_code,
             sample_rate_hz=sample_rate_hz,
             encoding=encoding,
@@ -147,6 +150,21 @@ class SpeechSynthesisService:
             req.zero_shot_data.encoding = audio_prompt_encoding
             req.zero_shot_data.quality = zero_shot_quality
 
-        add_custom_dictionary_to_config(req, custom_dictionary)                   
+        add_custom_dictionary_to_config(req, custom_dictionary)
+        
+        def request_generator(text):
+            if isinstance(text, str):
+                req.text = text
+                yield req
+            elif isinstance(text, list):
+                for t in text:
+                    req.text = t
+                    yield req
+            elif isinstance(text, Iterable[str]):
+                for t in text:
+                    req.text = t
+                    yield req
+            else:
+                raise ValueError(f"Invalid text type: {type(text)}")
 
-        return self.stub.SynthesizeOnline(req, metadata=self.auth.get_auth_metadata())
+        return self.stub.SynthesizeOnline(request_generator(text), metadata=self.auth.get_auth_metadata())
