@@ -146,6 +146,9 @@ def main() -> None:
     if args.text and args.text_file:
         print("Cannot provide both text and text_file at the same time.")
         return
+    if args.text_file is not None and not args.stream:
+        print("Streaming synthesis is required when using a text list")
+        return
     try:
         if args.output_device is not None or args.play_audio:
             sound_stream = riva.client.audio_io.SoundCallBack(
@@ -194,7 +197,7 @@ def main() -> None:
                     out_f.writeframesraw(resp.audio)
         else:
             resp = service.synthesize(
-                ' '.join(text_list), args.voice, args.language_code, sample_rate_hz=args.sample_rate_hz,
+                text_list, args.voice, args.language_code, sample_rate_hz=args.sample_rate_hz,
                 encoding=(AudioEncoding.OGGOPUS if args.encoding == "OGGOPUS" else AudioEncoding.LINEAR_PCM),
                 zero_shot_audio_prompt_file=args.zero_shot_audio_prompt_file,
                 zero_shot_quality=(20 if args.zero_shot_quality is None else args.zero_shot_quality),
