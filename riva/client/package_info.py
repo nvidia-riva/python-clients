@@ -22,5 +22,5 @@ __description__ = "Python implementation of the Riva Client API"
 __license__ = 'MIT'
 __keywords__ = 'deep learning, machine learning, gpu, NLP, ASR, TTS, NMT, nvidia, speech, language, Riva, client'
 __riva_version__ = "2.25.0"
-__riva_release__ = "26.02"
+__riva_release__ = "25.12"
 __riva_models_version__ = "2.25.0"
