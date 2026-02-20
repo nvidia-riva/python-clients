@@ -197,7 +197,7 @@ def main() -> None:
                     out_f.writeframesraw(resp.audio)
         else:
             resp = service.synthesize(
-                text_list, args.voice, args.language_code, sample_rate_hz=args.sample_rate_hz,
+                text_list[0], args.voice, args.language_code, sample_rate_hz=args.sample_rate_hz,
                 encoding=(AudioEncoding.OGGOPUS if args.encoding == "OGGOPUS" else AudioEncoding.LINEAR_PCM),
                 zero_shot_audio_prompt_file=args.zero_shot_audio_prompt_file,
                 zero_shot_quality=(20 if args.zero_shot_quality is None else args.zero_shot_quality),
