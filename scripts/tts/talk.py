@@ -143,8 +143,8 @@ def main() -> None:
     if not args.text and not args.text_file:
         print("No input text provided")
         return
-    if args.text_file is not None and not args.stream:
-        print("Streaming synthesis is required when using a text list")
+    if args.text and args.text_file:
+        print("Cannot provide both text and text_file at the same time.")
         return
     try:
         if args.output_device is not None or args.play_audio:
@@ -194,7 +194,7 @@ def main() -> None:
                     out_f.writeframesraw(resp.audio)
         else:
             resp = service.synthesize(
-                text_list, args.voice, args.language_code, sample_rate_hz=args.sample_rate_hz,
+                ' '.join(text_list), args.voice, args.language_code, sample_rate_hz=args.sample_rate_hz,
                 encoding=(AudioEncoding.OGGOPUS if args.encoding == "OGGOPUS" else AudioEncoding.LINEAR_PCM),
                 zero_shot_audio_prompt_file=args.zero_shot_audio_prompt_file,
                 zero_shot_quality=(20 if args.zero_shot_quality is None else args.zero_shot_quality),
@@ -208,7 +208,10 @@ def main() -> None:
             if out_f is not None:
                 out_f.writeframesraw(resp.audio)
     except Exception as e:
-        print(e.details())
+        if callable(getattr(e, "details", None)):
+            print(e.details())
+        else:
+            print(e)
     finally:
         if out_f is not None:
             out_f.close()
