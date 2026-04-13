@@ -428,15 +428,12 @@ class RealtimeClientASR:
 
                     if is_last_result:
                         logger.info("Final Transcript: %s", self.final_transcript)
-                        logger.info("Transcription completed")
-                        received_final_response = True
-                        break
                     else:
                         logger.info("Interim Transcript: %s", interim_final_transcript)
 
                     # Format Words Info similar to print_streaming function
                     words_info = event.get("words_info", {})
-                    if words_info and "words" in words_info:
+                    if self.args.word_time_offsets and words_info and words_info.get("words"):
                         print("Words Info:")
                         
                         # Create header format similar to print_streaming
@@ -456,6 +453,11 @@ class RealtimeClientASR:
                             word_format = '{: <40s}{: <16.0f}{: <16.0f}{: <16.4f}{: <16d}'
                             word_values = [word, start_time, end_time, confidence, speaker_tag]
                             print(word_format.format(*word_values))
+
+                    if is_last_result:
+                        logger.info("Transcription completed")
+                        received_final_response = True
+                        break
 
                 elif "error" in event_type.lower():
                     logger.error(
