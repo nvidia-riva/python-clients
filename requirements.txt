@@ -1,3 +1,4 @@
 grpcio>=1.67.1,<2
 grpcio-tools>=1.67.1,<2
 websockets>=15.0.1,<16
+protobuf==6.33.5
