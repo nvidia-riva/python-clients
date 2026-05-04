@@ -205,7 +205,6 @@ async def get_text_input_generator(args, text_lines=None):
                     line = line.strip()
                     if line:  # Only yield non-empty lines
                         yield line
-                    else: 
                         yield None
         except Exception as e:
             logger.error("Error reading input text file: %s", e)
