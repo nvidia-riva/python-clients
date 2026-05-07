@@ -48,6 +48,7 @@ class SpeechSynthesisService:
         future: bool = False,
         custom_dictionary: Optional[dict] = None,
         zero_shot_transcript: Optional[str] = None,
+        exaggeration_factor: float = 1.0,
     ) -> Union[rtts.SynthesizeSpeechResponse, _MultiThreadedRendezvous]:
         """
         Synthesizes an entire audio for text :param:`text`.
@@ -67,6 +68,7 @@ class SpeechSynthesisService:
                 response. You can get a response by calling ``result()`` method of the future object.
             custom_dictionary (:obj:`dict`, `optional`): Dictionary with key-value pair containing grapheme and corresponding phoneme
             zero_shot_transcript (:obj:`str`, `optional`): Transcript corresponding to Zero shot audio prompt.
+            exaggeration_factor (:obj:`float`, defaults to 1.0): Exaggeration factor for generated voice.
         Returns:
             :obj:`Union[riva.client.proto.riva_tts_pb2.SynthesizeSpeechResponse, grpc._channel._MultiThreadedRendezvous]`:
             a response with output. You may find :class:`riva.client.proto.riva_tts_pb2.SynthesizeSpeechResponse` fields
@@ -89,6 +91,7 @@ class SpeechSynthesisService:
             req.zero_shot_data.quality = zero_shot_quality
             if zero_shot_transcript is not None:
                 req.zero_shot_data.transcript = zero_shot_transcript
+            req.zero_shot_data.exaggeration_factor = exaggeration_factor
 
         add_custom_dictionary_to_config(req, custom_dictionary)
 
@@ -106,6 +109,7 @@ class SpeechSynthesisService:
         audio_prompt_encoding: AudioEncoding = AudioEncoding.ENCODING_UNSPECIFIED,
         zero_shot_quality: int = 20,
         custom_dictionary: Optional[dict] = None,
+        exaggeration_factor: float = 1.0,
     ) -> Generator[rtts.SynthesizeSpeechResponse, None, None]:
         """
         Synthesizes and yields output audio chunks for text :param:`text` as the chunks
@@ -126,7 +130,7 @@ class SpeechSynthesisService:
             audio_prompt_encoding: (:obj:`AudioEncoding`): Encoding of audio prompt file, e.g. ``AudioEncoding.LINEAR_PCM``.
             zero_shot_quality: (:obj:`int`): Required quality of output audio, ranges between 1-40.
             custom_dictionary (:obj:`dict`, `optional`): Dictionary with key-value pair containing grapheme and corresponding phoneme
-
+            exaggeration_factor (:obj:`float`, defaults to 1.0): Exaggeration factor for generated voice.
         Yields:
             :obj:`riva.client.proto.riva_tts_pb2.SynthesizeSpeechResponse`: a response with output. You may find
             :class:`riva.client.proto.riva_tts_pb2.SynthesizeSpeechResponse` fields description `here
@@ -149,9 +153,10 @@ class SpeechSynthesisService:
                 req.zero_shot_data.audio_prompt = audio_data
             req.zero_shot_data.encoding = audio_prompt_encoding
             req.zero_shot_data.quality = zero_shot_quality
+            req.zero_shot_data.exaggeration_factor = exaggeration_factor
 
         add_custom_dictionary_to_config(req, custom_dictionary)
-        
+
         def request_generator(text):
             if isinstance(text, str):
                 req.text = text

@@ -1,4 +1,4 @@
 [submodule "common"]
 	path = common
-	url = https://github.com/nvidia-riva/common.git
-	branch = main
+	url = https://github.com/atomer-nvidia/common.git
+	branch = chatterbox

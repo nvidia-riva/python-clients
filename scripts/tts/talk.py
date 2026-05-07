@@ -78,6 +78,11 @@ def parse_args() -> argparse.Namespace:
         type=str,
         help="Transcript corresponding to Zero shot audio prompt.",
     )
+    parser.add_argument(
+        "--exaggeration_factor",
+        type=float,
+        help="Exaggeration factor for generated voice.",
+    )
     parser = add_connection_argparse_parameters(parser)
     args = parser.parse_args()
     if args.output is not None:
@@ -181,6 +186,7 @@ def main() -> None:
                 zero_shot_audio_prompt_file=args.zero_shot_audio_prompt_file,
                 zero_shot_quality=(20 if args.zero_shot_quality is None else args.zero_shot_quality),
                 custom_dictionary=custom_dictionary_input,
+                exaggeration_factor=args.exaggeration_factor,
             )
             first = True
             for resp in responses:
@@ -200,6 +206,7 @@ def main() -> None:
                 zero_shot_quality=(20 if args.zero_shot_quality is None else args.zero_shot_quality),
                 custom_dictionary=custom_dictionary_input,
                 zero_shot_transcript=args.zero_shot_transcript,
+                exaggeration_factor=args.exaggeration_factor,
             )
             stop = time.time()
             print(f"Time spent: {(stop - start):.3f}s")

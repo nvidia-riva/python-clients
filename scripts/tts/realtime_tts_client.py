@@ -129,6 +129,12 @@ def parse_args() -> argparse.Namespace:
         help="Quality setting for zero-shot (1-40)"
     )
 
+    parser.add_argument(
+        "--exaggeration-factor",
+        type=float,
+        default=1.0,
+        help="Exaggeration factor for generated voice."
+    )
     # Output configuration
     parser.add_argument(
         "-o", "--output",

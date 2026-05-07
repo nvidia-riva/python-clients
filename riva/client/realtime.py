@@ -720,6 +720,11 @@ class RealtimeClientTTS:
                 self._safe_update_config(session_config["zero_shot_config"], "prompt_quality", self.args.zero_shot_prompt_quality)
                 logger.info("Zero-shot quality: %s", self.args.zero_shot_prompt_quality)
                 overrides.append("zero_shot_prompt_quality")
+            
+            if hasattr(self.args, 'exaggeration_factor') and self.args.exaggeration_factor:
+                self._safe_update_config(session_config["zero_shot_config"], "exaggeration_factor", self.args.exaggeration_factor)
+                logger.info("Exaggeration factor: %s", self.args.exaggeration_factor)
+                overrides.append("exaggeration_factor")
                 
         logger.debug("Overriding parameters: %s", overrides)
 
