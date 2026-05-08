@@ -91,7 +91,7 @@ class SpeechSynthesisService:
             req.zero_shot_data.quality = zero_shot_quality
             if zero_shot_transcript is not None:
                 req.zero_shot_data.transcript = zero_shot_transcript
-            req.zero_shot_data.exaggeration_factor = exaggeration_factor
+            req.custom_configuration["exaggeration_factor"] = str(exaggeration_factor)
 
         add_custom_dictionary_to_config(req, custom_dictionary)
 
@@ -153,7 +153,7 @@ class SpeechSynthesisService:
                 req.zero_shot_data.audio_prompt = audio_data
             req.zero_shot_data.encoding = audio_prompt_encoding
             req.zero_shot_data.quality = zero_shot_quality
-            req.zero_shot_data.exaggeration_factor = exaggeration_factor
+            req.custom_configuration["exaggeration_factor"] = str(exaggeration_factor)
 
         add_custom_dictionary_to_config(req, custom_dictionary)
 
