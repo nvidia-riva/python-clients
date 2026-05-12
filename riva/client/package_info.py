@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: MIT
 
 MAJOR = 2
-MINOR = 25
-PATCH = 1
+MINOR = 26
+PATCH = 0
 PRE_RELEASE = 'rc0'
 
 # Use the following formatting: (major, minor, patch, pre-release)
