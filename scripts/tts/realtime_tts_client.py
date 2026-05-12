@@ -130,10 +130,10 @@ def parse_args() -> argparse.Namespace:
     )
 
     parser.add_argument(
-        "--exaggeration-factor",
-        type=float,
-        default=1.0,
-        help="Exaggeration factor for generated voice."
+        "--custom-configuration",
+        type=str,
+        default="",
+        help="Custom configurations to be sent to the server as key value pairs <key:value,key:value,...>"
     )
     # Output configuration
     parser.add_argument(

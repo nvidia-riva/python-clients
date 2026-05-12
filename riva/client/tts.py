@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: MIT
 
-from typing import Generator, Optional, Union, Iterable
+from typing import Dict, Generator, Optional, Union, Iterable
 
 from grpc._channel import _MultiThreadedRendezvous
 
@@ -10,6 +10,31 @@ import riva.client.proto.riva_tts_pb2_grpc as rtts_srv
 from riva.client import Auth
 from riva.client.proto.riva_audio_pb2 import AudioEncoding
 import wave
+
+def parse_custom_configuration(custom_configuration: str) -> Dict[str, str]:
+    """Parse a comma-separated ``key:value`` string into a dictionary.
+
+    Args:
+        custom_configuration: String in format ``"key1:value1,key2:value2"``.
+
+    Returns:
+        Dictionary of parsed key/value pairs (empty if the input is empty).
+
+    Raises:
+        ValueError: If any pair is not in ``key:value`` form.
+    """
+    result: Dict[str, str] = {}
+    custom_configuration = custom_configuration.strip().replace(" ", "")
+    if not custom_configuration:
+        return result
+    for pair in custom_configuration.split(","):
+        key_value = pair.split(":")
+        if len(key_value) == 2:
+            result[key_value[0]] = key_value[1]
+        else:
+            raise ValueError(f"Invalid key:value pair {key_value}")
+    return result
+
 
 def add_custom_dictionary_to_config(req, custom_dictionary):
     result_list = None
@@ -48,7 +73,7 @@ class SpeechSynthesisService:
         future: bool = False,
         custom_dictionary: Optional[dict] = None,
         zero_shot_transcript: Optional[str] = None,
-        exaggeration_factor: float = 1.0,
+        custom_configuration: Optional[Dict[str, str]] = None,
     ) -> Union[rtts.SynthesizeSpeechResponse, _MultiThreadedRendezvous]:
         """
         Synthesizes an entire audio for text :param:`text`.
@@ -68,7 +93,8 @@ class SpeechSynthesisService:
                 response. You can get a response by calling ``result()`` method of the future object.
             custom_dictionary (:obj:`dict`, `optional`): Dictionary with key-value pair containing grapheme and corresponding phoneme
             zero_shot_transcript (:obj:`str`, `optional`): Transcript corresponding to Zero shot audio prompt.
-            exaggeration_factor (:obj:`float`, defaults to 1.0): Exaggeration factor for generated voice.
+            custom_configuration (:obj:`Dict[str, str]`, `optional`): Free-form key/value parameters forwarded
+                to the synthesizer (e.g. ``{"exaggeration_factor": "1.5"}``). Model-specific.
         Returns:
             :obj:`Union[riva.client.proto.riva_tts_pb2.SynthesizeSpeechResponse, grpc._channel._MultiThreadedRendezvous]`:
             a response with output. You may find :class:`riva.client.proto.riva_tts_pb2.SynthesizeSpeechResponse` fields
@@ -91,7 +117,10 @@ class SpeechSynthesisService:
             req.zero_shot_data.quality = zero_shot_quality
             if zero_shot_transcript is not None:
                 req.zero_shot_data.transcript = zero_shot_transcript
-            req.custom_configuration["exaggeration_factor"] = str(exaggeration_factor)
+
+        if custom_configuration:
+            for key, value in custom_configuration.items():
+                req.custom_configuration[key] = str(value)
 
         add_custom_dictionary_to_config(req, custom_dictionary)
 
@@ -109,7 +138,7 @@ class SpeechSynthesisService:
         audio_prompt_encoding: AudioEncoding = AudioEncoding.ENCODING_UNSPECIFIED,
         zero_shot_quality: int = 20,
         custom_dictionary: Optional[dict] = None,
-        exaggeration_factor: float = 1.0,
+        custom_configuration: Optional[Dict[str, str]] = None,
     ) -> Generator[rtts.SynthesizeSpeechResponse, None, None]:
         """
         Synthesizes and yields output audio chunks for text :param:`text` as the chunks
@@ -130,7 +159,8 @@ class SpeechSynthesisService:
             audio_prompt_encoding: (:obj:`AudioEncoding`): Encoding of audio prompt file, e.g. ``AudioEncoding.LINEAR_PCM``.
             zero_shot_quality: (:obj:`int`): Required quality of output audio, ranges between 1-40.
             custom_dictionary (:obj:`dict`, `optional`): Dictionary with key-value pair containing grapheme and corresponding phoneme
-            exaggeration_factor (:obj:`float`, defaults to 1.0): Exaggeration factor for generated voice.
+            custom_configuration (:obj:`Dict[str, str]`, `optional`): Free-form key/value parameters forwarded
+                to the synthesizer (e.g. ``{"exaggeration_factor": "1.5"}``). Model-specific.
         Yields:
             :obj:`riva.client.proto.riva_tts_pb2.SynthesizeSpeechResponse`: a response with output. You may find
             :class:`riva.client.proto.riva_tts_pb2.SynthesizeSpeechResponse` fields description `here
@@ -153,7 +183,10 @@ class SpeechSynthesisService:
                 req.zero_shot_data.audio_prompt = audio_data
             req.zero_shot_data.encoding = audio_prompt_encoding
             req.zero_shot_data.quality = zero_shot_quality
-            req.custom_configuration["exaggeration_factor"] = str(exaggeration_factor)
+
+        if custom_configuration:
+            for key, value in custom_configuration.items():
+                req.custom_configuration[key] = str(value)
 
         add_custom_dictionary_to_config(req, custom_dictionary)
 
