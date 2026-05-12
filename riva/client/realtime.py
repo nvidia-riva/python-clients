@@ -293,15 +293,26 @@ class RealtimeClientASR:
         )
 
     def _build_endpointing_config(self) -> Dict[str, Any]:
-        """Build endpointing configuration dictionary."""
-        return {
-            "start_history": self.args.start_history,
-            "start_threshold": self.args.start_threshold,
-            "stop_history": self.args.stop_history,
-            "stop_threshold": self.args.stop_threshold,
-            "stop_history_eou": self.args.stop_history_eou,
-            "stop_threshold_eou": self.args.stop_threshold_eou
-        }
+        """Build endpointing configuration dictionary.
+
+        Only fields the user actually set (i.e., not the -1 / -1.0 sentinel
+        defaults from argparse) are included, so the server doesn't reject the
+        request for out-of-range values on fields the caller never touched.
+        """
+        config: Dict[str, Any] = {}
+        if self.args.start_history > 0:
+            config["start_history"] = self.args.start_history
+        if self.args.start_threshold > 0:
+            config["start_threshold"] = self.args.start_threshold
+        if self.args.stop_history > 0:
+            config["stop_history"] = self.args.stop_history
+        if self.args.stop_threshold > 0:
+            config["stop_threshold"] = self.args.stop_threshold
+        if self.args.stop_history_eou > 0:
+            config["stop_history_eou"] = self.args.stop_history_eou
+        if self.args.stop_threshold_eou > 0:
+            config["stop_threshold_eou"] = self.args.stop_threshold_eou
+        return config
 
     def _parse_custom_configuration(self, custom_configuration: str) -> Dict[str, str]:
         """Parse custom configuration string into a dictionary.
