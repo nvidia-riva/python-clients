@@ -20,12 +20,7 @@ import ssl
 import websockets
 from websockets.exceptions import WebSocketException
 
-from riva.client.argparse_utils import add_connection_argparse_parameters
-try:
-    from riva.client.argparse_utils import cli_main
-except ImportError:
-    def cli_main(func):
-        return func
+from riva.client.argparse_utils import add_connection_argparse_parameters, cli_main
 
 from riva.client.realtime import RealtimeClientTTS
 

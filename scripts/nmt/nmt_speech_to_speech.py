@@ -7,12 +7,7 @@ from typing import Iterator
 import riva.client
 import riva.client.proto.riva_asr_pb2 as riva_asr_pb2
 import riva.client.proto.riva_nmt_pb2 as riva_nmt_pb2
-from riva.client.argparse_utils import add_connection_argparse_parameters
-try:
-    from riva.client.argparse_utils import cli_main
-except ImportError:
-    def cli_main(func):
-        return func
+from riva.client.argparse_utils import add_connection_argparse_parameters, cli_main
 
 
 def parse_arguments():
