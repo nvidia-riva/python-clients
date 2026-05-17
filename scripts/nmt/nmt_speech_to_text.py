@@ -1,5 +1,9 @@
 import argparse
 import os
+import sys
+
+import grpc
+
 import riva.client
 import riva.client.proto.riva_asr_pb2 as riva_asr_pb2
 import riva.client.proto.riva_nmt_pb2 as riva_nmt_pb2
@@ -41,7 +45,8 @@ def main():
 
     # Validate input file
     if not os.path.exists(args.audio_file):
-        raise FileNotFoundError(f"Input audio file not found: {args.audio_file}")
+        print(f"Input audio file not found: {args.audio_file}", file=sys.stderr)
+        sys.exit(2)
 
     auth = riva.client.Auth(
         ssl_root_cert=args.ssl_root_cert,
@@ -55,7 +60,11 @@ def main():
     nmt_client = riva.client.NeuralMachineTranslationClient(auth)
 
     if args.list_models:
-        response = nmt_client.get_config(args.model)
+        try:
+            response = nmt_client.get_config(args.model)
+        except grpc.RpcError as e:
+            print(f"Failed to list models: {e.code()} : {e.details()}", file=sys.stderr)
+            sys.exit(1)
         print(response)
         return
 
@@ -101,7 +110,8 @@ def main():
         print(f"Final translation: {final_translation}")
 
     except Exception as e:
-        print(f"Error during translation: {e}")
+        print(f"Error during translation: {e}", file=sys.stderr)
+        sys.exit(1)
 
 
 if __name__ == "__main__":

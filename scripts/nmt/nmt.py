@@ -94,10 +94,13 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
-    def request(inputs,args):
+    server_error = False
+
+    def request(inputs, args):
+        nonlocal server_error
         try:
             dnt_phrases_input = {}
-            if args.dnt_phrases_file != None:
+            if args.dnt_phrases_file is not None:
                 dnt_phrases_input = read_dnt_phrases_file(args.dnt_phrases_file)
             response = nmt_client.translate(
                 texts=inputs,
@@ -112,14 +115,15 @@ def main() -> None:
                 print(translation.text)
         except grpc.RpcError as e:
             if e.code() == grpc.StatusCode.INVALID_ARGUMENT:
-                result = {'msg': 'invalid arg error'}
+                msg = 'invalid arg error'
             elif e.code() == grpc.StatusCode.ALREADY_EXISTS:
-                result = {'msg': 'already exists error'}
+                msg = 'already exists error'
             elif e.code() == grpc.StatusCode.UNAVAILABLE:
-                result = {'msg': 'server unavailable check network'}
+                msg = 'server unavailable check network'
             else:
-                result = {'msg': 'error code:{}'.format(e.code())}
-            print(f"{result['msg']} : {e.details()}")
+                msg = f'error code:{e.code()}'
+            print(f"{msg} : {e.details()}", file=sys.stderr)
+            server_error = True
 
     args = parse_args()
 
@@ -135,12 +139,19 @@ def main() -> None:
     nmt_client = riva.client.NeuralMachineTranslationClient(auth)
 
     if args.list_models:
-
-        response = nmt_client.get_config(args.model_name)
+        try:
+            response = nmt_client.get_config(args.model_name)
+        except grpc.RpcError as e:
+            print(f"Failed to list models: {e.code()} : {e.details()}", file=sys.stderr)
+            sys.exit(1)
         print(response)
         return
 
-    if args.text_file != None and os.path.exists(args.text_file):
+    if args.text_file is not None:
+        if not os.path.exists(args.text_file):
+            print(f"--text-file path does not exist: {args.text_file}", file=sys.stderr)
+            sys.exit(2)
+        translated_any = False
         with open(args.text_file, "r") as f:
             batch = []
             for line in f:
@@ -149,13 +160,24 @@ def main() -> None:
                     batch.append(line)
                 if len(batch) == args.batch_size:
                     request(batch, args)
+                    translated_any = True
                     batch = []
             if len(batch) > 0:
                 request(batch, args)
+                translated_any = True
+        if not translated_any:
+            print(f"--text-file {args.text_file} contained no non-empty lines", file=sys.stderr)
+            sys.exit(2)
+        if server_error:
+            sys.exit(1)
         return
 
-    if args.text != "":
-        request([args.text], args)
+    if args.text == "":
+        print("--text must not be empty (or provide --text-file)", file=sys.stderr)
+        sys.exit(2)
+    request([args.text], args)
+    if server_error:
+        sys.exit(1)
 
 
 if __name__ == '__main__':
