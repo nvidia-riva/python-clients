@@ -146,6 +146,7 @@ def main() -> int:
         if not os.path.exists(args.text_file):
             print(f"Invalid input file path: {args.text_file}", file=sys.stderr)
             return EXIT_BAD_INPUT
+        translated_any = False
         with open(args.text_file, "r") as f:
             batch = []
             for line in f:
@@ -154,9 +155,14 @@ def main() -> int:
                     batch.append(line)
                 if len(batch) == args.batch_size:
                     request(batch)
+                    translated_any = True
                     batch = []
             if len(batch) > 0:
                 request(batch)
+                translated_any = True
+        if not translated_any:
+            print(f"{args.text_file} contained no non-empty lines", file=sys.stderr)
+            return EXIT_BAD_INPUT
         return
 
     if not args.text or not args.text.strip():
