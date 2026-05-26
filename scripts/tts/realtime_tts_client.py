@@ -21,7 +21,11 @@ import websockets
 from websockets.exceptions import WebSocketException
 
 from riva.client.argparse_utils import add_connection_argparse_parameters
-from riva.client.audio_io import SoundCallBack
+try:
+    from riva.client.argparse_utils import cli_main
+except ImportError:
+    def cli_main(func):
+        return func
 
 from riva.client.realtime import RealtimeClientTTS
 
@@ -478,30 +482,30 @@ async def run_parallel_synthesis(args):
 async def main() -> int:
     """Main entry point for the realtime TTS client."""
     args = parse_args()
-    success = False
+    success = True
     setup_signal_handler()
 
-    try:
-        if args.list_voices:
-            voices = RealtimeClientTTS(args=args).list_voices()
-            print(json.dumps(voices, indent=4))
-        elif args.list_devices:
-            import riva.client.audio_io
-            riva.client.audio_io.list_output_devices()
+    if args.list_voices:
+        voices = RealtimeClientTTS(args=args).list_voices()
+        print(json.dumps(voices, indent=4))
+    elif args.list_devices:
+        import riva.client.audio_io
+        riva.client.audio_io.list_output_devices()
+    else:
+        # Use parallel processing if num_parallel_requests > 1
+        if args.num_parallel_requests > 1:
+            logger.info(f"Using parallel processing mode with {args.num_parallel_requests} concurrent requests")
+            success = await run_parallel_synthesis(args)
         else:
-            # Use parallel processing if num_parallel_requests > 1
-            if args.num_parallel_requests > 1:
-                logger.info(f"Using parallel processing mode with {args.num_parallel_requests} concurrent requests")
-                success = await run_parallel_synthesis(args)
-            else:
-                logger.info("Using single request mode")
-                success = await run_synthesis(args)
-        return 0 if success else 1
-    except Exception as e:
-        logger.error("Fatal error: %s", e)
-        return 1
+            logger.info("Using single request mode")
+            success = await run_synthesis(args)
+    return 0 if success else 1
+
+
+@cli_main
+def _entry() -> int:
+    return asyncio.run(main())
 
 
 if __name__ == "__main__":
-    exit_code = asyncio.run(main())
-    sys.exit(exit_code)
+    sys.exit(_entry())

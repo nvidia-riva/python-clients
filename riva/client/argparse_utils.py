@@ -2,6 +2,59 @@
 # SPDX-License-Identifier: MIT
 
 import argparse
+import functools
+import sys
+
+import grpc
+
+# Exit codes shared by the CLI scripts. Pipelines that compose these scripts
+# rely on a non-zero status to detect failure; see also `cli_main` below.
+EXIT_OK = 0
+EXIT_GENERIC_ERROR = 1
+EXIT_BAD_INPUT = 2          # malformed args, missing file, empty/whitespace text, ...
+EXIT_UNAVAILABLE = 3        # gRPC UNAVAILABLE (server down, wrong port, ...)
+EXIT_INVALID_ARGUMENT = 4   # gRPC INVALID_ARGUMENT or NOT_FOUND (bad model/lang/voice)
+EXIT_INTERRUPTED = 130      # SIGINT
+
+
+def _grpc_exit_code(error: grpc.RpcError) -> int:
+    code = error.code() if callable(getattr(error, "code", None)) else None
+    if code == grpc.StatusCode.UNAVAILABLE:
+        return EXIT_UNAVAILABLE
+    if code in (grpc.StatusCode.INVALID_ARGUMENT, grpc.StatusCode.NOT_FOUND):
+        return EXIT_INVALID_ARGUMENT
+    return EXIT_GENERIC_ERROR
+
+
+def cli_main(func):
+    """Translate exceptions raised by a CLI ``main`` into consistent exit codes.
+
+    Wrapped function may return an int exit code or ``None`` (treated as
+    ``EXIT_OK``). Unhandled exceptions are caught and mapped: gRPC ``RpcError``
+    via status code, ``FileNotFoundError`` / ``ValueError`` → ``EXIT_BAD_INPUT``,
+    anything else → ``EXIT_GENERIC_ERROR``. The error is also printed to stderr
+    so CI logs surface the cause.
+    """
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            result = func(*args, **kwargs)
+            return EXIT_OK if result is None else int(result)
+        except KeyboardInterrupt:
+            return EXIT_INTERRUPTED
+        except grpc.RpcError as e:
+            details = e.details() if callable(getattr(e, "details", None)) else str(e)
+            print(f"Error: {details}", file=sys.stderr)
+            return _grpc_exit_code(e)
+        except (FileNotFoundError, IsADirectoryError, ValueError) as e:
+            print(f"Error: {e}", file=sys.stderr)
+            return EXIT_BAD_INPUT
+        except Exception as e:
+            print(f"Error: {e}", file=sys.stderr)
+            return EXIT_GENERIC_ERROR
+
+    return wrapper
+
 
 def validate_grpc_message_size(value):
     """Validate that the GRPC message size is within acceptable limits."""

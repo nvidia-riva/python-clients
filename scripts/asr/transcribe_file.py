@@ -2,10 +2,20 @@
 # SPDX-License-Identifier: MIT
 
 import argparse
-
 import os
+import sys
+
 import riva.client
-from riva.client.argparse_utils import add_asr_config_argparse_parameters, add_connection_argparse_parameters
+from riva.client.argparse_utils import (
+    add_asr_config_argparse_parameters,
+    add_connection_argparse_parameters,
+)
+try:
+    from riva.client.argparse_utils import cli_main, EXIT_BAD_INPUT
+except ImportError:
+    EXIT_BAD_INPUT = 2
+    def cli_main(func):
+        return func
 
 
 def parse_args() -> argparse.Namespace:
@@ -61,7 +71,8 @@ def parse_args() -> argparse.Namespace:
     return args
 
 
-def main() -> None:
+@cli_main
+def main() -> int:
     args = parse_args()
     if args.list_devices:
         riva.client.audio_io.list_output_devices()
@@ -95,8 +106,8 @@ def main() -> None:
         return
 
     if not os.path.isfile(args.input_file):
-        print(f"Invalid input file path: {args.input_file}")
-        return
+        print(f"Invalid input file path: {args.input_file}", file=sys.stderr)
+        return EXIT_BAD_INPUT
 
     config = riva.client.StreamingRecognitionConfig(
         config=riva.client.RecognitionConfig(
@@ -159,4 +170,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

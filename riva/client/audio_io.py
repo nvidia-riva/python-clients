@@ -4,7 +4,17 @@
 import queue
 from typing import Dict, Union, Optional
 
-import pyaudio
+
+def _require_pyaudio():
+    try:
+        import pyaudio
+        return pyaudio
+    except ImportError as e:
+        raise ImportError(
+            "pyaudio is required for audio device I/O. Install the system PortAudio "
+            "headers first (e.g. `apt-get install -y portaudio19-dev` on Debian/Ubuntu, "
+            "`brew install portaudio` on macOS), then `pip install pyaudio`."
+        ) from e
 
 
 class MicrophoneStream:
@@ -20,6 +30,8 @@ class MicrophoneStream:
         self.closed = True
 
     def __enter__(self):
+        pyaudio = _require_pyaudio()
+        self._pa_module = pyaudio
         self._audio_interface = pyaudio.PyAudio()
         self._audio_stream = self._audio_interface.open(
             format=pyaudio.paInt16,
@@ -50,7 +62,7 @@ class MicrophoneStream:
     def _fill_buffer(self, in_data, frame_count, time_info, status_flags):
         """Continuously collect data from the audio stream into the buffer."""
         self._buff.put(in_data)
-        return None, pyaudio.paContinue
+        return None, self._pa_module.paContinue
 
     def __next__(self) -> bytes:
         if self.closed:
@@ -76,6 +88,7 @@ class MicrophoneStream:
 
 
 def get_audio_device_info(device_id: int) -> Dict[str, Union[int, float, str]]:
+    pyaudio = _require_pyaudio()
     p = pyaudio.PyAudio()
     info = p.get_device_info_by_index(device_id)
     p.terminate()
@@ -83,6 +96,7 @@ def get_audio_device_info(device_id: int) -> Dict[str, Union[int, float, str]]:
 
 
 def get_default_input_device_info() -> Optional[Dict[str, Union[int, float, str]]]:
+    pyaudio = _require_pyaudio()
     p = pyaudio.PyAudio()
     try:
         info = p.get_default_input_device_info()
@@ -93,6 +107,7 @@ def get_default_input_device_info() -> Optional[Dict[str, Union[int, float, str]
 
 
 def list_output_devices() -> None:
+    pyaudio = _require_pyaudio()
     p = pyaudio.PyAudio()
     print("Output audio devices:")
     for i in range(p.get_device_count()):
@@ -104,6 +119,7 @@ def list_output_devices() -> None:
 
 
 def list_input_devices() -> None:
+    pyaudio = _require_pyaudio()
     p = pyaudio.PyAudio()
     print("Input audio devices:")
     for i in range(p.get_device_count()):
@@ -118,6 +134,7 @@ class SoundCallBack:
     def __init__(
         self, output_device_index: Optional[int], sampwidth: int, nchannels: int, framerate: int,
     ) -> None:
+        pyaudio = _require_pyaudio()
         self.pa = pyaudio.PyAudio()
         self.stream = self.pa.open(
             output_device_index=output_device_index,
