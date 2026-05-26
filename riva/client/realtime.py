@@ -176,7 +176,7 @@ class RealtimeClientASR:
 
         # Track what we're overriding
         overrides = []
-        
+
         # Check if the input is microphone, then set the encoding to pcm16
         if hasattr(self.args, 'mic') and self.args.mic:
             self._safe_update_config(session_config, "input_audio_format", "pcm16")
@@ -409,7 +409,7 @@ class RealtimeClientASR:
                 await self._send_message({
                     "type": "input_audio_buffer.commit",
                 })
-            
+
         logger.debug("All chunks sent")
 
         # Tell the server that we are done sending chunks
@@ -446,12 +446,12 @@ class RealtimeClientASR:
                     words_info = event.get("words_info", {})
                     if self.args.word_time_offsets and words_info and words_info.get("words"):
                         print("Words Info:")
-                        
+
                         # Create header format similar to print_streaming
                         header_format = '{: <40s}{: <16s}{: <16s}{: <16s}{: <16s}'
                         header_values = ['Word', 'Start (ms)', 'End (ms)', 'Confidence', 'Speaker']
                         print(header_format.format(*header_values))
-                        
+
                         # Print each word with formatted information
                         for word_data in words_info["words"]:
                             word = word_data.get("word", "")
@@ -459,7 +459,7 @@ class RealtimeClientASR:
                             end_time = word_data.get("end_time", 0)
                             confidence = word_data.get("confidence", 0.0)
                             speaker_tag = word_data.get("speaker_tag", 0)
-                            
+
                             # Format the word info line similar to print_streaming
                             word_format = '{: <40s}{: <16.0f}{: <16.0f}{: <16.4f}{: <16d}'
                             word_values = [word, start_time, end_time, confidence, speaker_tag]
@@ -524,7 +524,7 @@ class RealtimeClientTTS:
         uri = f"http://{self.args.server}/v1/audio/list_voices"
         if self.args.use_ssl:
             uri = f"https://{self.args.server}/v1/audio/list_voices"
-        
+
         logger.info("Listing voices via HTTP GET request to: %s", uri)
         response = requests.get(uri, headers=headers)
         response.raise_for_status()
@@ -536,7 +536,7 @@ class RealtimeClientTTS:
         """Establish connection to the TTS server."""
         try:
             logger.info("Starting connection to TTS server...")
-            
+
             # Initialize session via HTTP POST
             logger.info("Initializing HTTP session...")
             session_data = await self._initialize_http_session()
@@ -547,7 +547,7 @@ class RealtimeClientTTS:
             logger.info("Connecting to WebSocket...")
             await self._connect_websocket()
             logger.info("WebSocket connected successfully")
-            
+
             # Initialize WebSocket session
             logger.info("Initializing WebSocket session...")
             session_updated = await self._update_session()
@@ -555,7 +555,7 @@ class RealtimeClientTTS:
                 logger.error("Failed to update session")
                 raise Exception("Failed to update session")
             logger.info("WebSocket session initialized successfully")
-            
+
             logger.info("Connection established successfully!")
 
         except requests.exceptions.RequestException as e:
@@ -574,7 +574,7 @@ class RealtimeClientTTS:
         uri = f"http://{self.args.server}/v1/realtime/synthesis_sessions"
         if self.args.use_ssl:
             uri = f"https://{self.args.server}/v1/realtime/synthesis_sessions"
-        
+
         logger.info("Initializing session via HTTP POST request to: %s", uri)
 
         # Make HTTP request with proper error handling
@@ -584,11 +584,11 @@ class RealtimeClientTTS:
             if hasattr(self.args, 'ssl_client_cert') and hasattr(self.args, 'ssl_client_key'):
                 if self.args.ssl_client_cert and self.args.ssl_client_key:
                     cert_params = (self.args.ssl_client_cert, self.args.ssl_client_key)
-            
+
             verify_param = True
             if hasattr(self.args, 'ssl_root_cert') and self.args.ssl_root_cert:
                 verify_param = self.args.ssl_root_cert
-            
+
             response = requests.post(
                 uri,
                 headers=headers,
@@ -597,7 +597,7 @@ class RealtimeClientTTS:
                 verify=verify_param,
                 timeout=30  # Add timeout to prevent hanging
             )
-            
+
         except requests.exceptions.Timeout:
             logger.error("Request timeout - server not responding")
             raise Exception("Server timeout - check if TTS server is running")
@@ -681,13 +681,7 @@ class RealtimeClientTTS:
 
         Builds the synthesize_session.update payload directly from CLI args
         instead of round-tripping through self.session_config (the response
-        from POST /v1/realtime/synthesis_sessions). The HTTP response is an
-        InitialSynthesisSessionConfig and includes id/object/client_secret
-        fields that are not part of BaseSynthesisSessionConfig (the type the
-        server expects on the update). Carrying those into the override
-        payload — and the resulting deep-mutation through _safe_update_config
-        — was the root cause of --voice silently failing to take effect
-        against published 26.02 NIMs.
+        from POST /v1/realtime/synthesis_sessions).
         """
         logger.info("Updating session configuration...")
         logger.debug("Server default config: %s", self.session_config)
@@ -771,7 +765,7 @@ class RealtimeClientTTS:
 
         session_created = False
         session_updated = False
-        
+
         while not session_created or not session_updated:
             response = await asyncio.wait_for(
                 self.websocket.recv(), timeout
@@ -810,7 +804,7 @@ class RealtimeClientTTS:
                 logger.warning("Unexpected response type: %s", event_type)
 
         return True
-    
+
     async def _send_message(self, message: Dict[str, Any]):
         """Send a JSON message to the WebSocket server."""
         await self.websocket.send(json.dumps(message))
@@ -836,12 +830,12 @@ class RealtimeClientTTS:
             "type": "input_text.done"
         })
         logger.info("Text input marked as done")
-        
+
     async def receive_audio(self, audio_chunks, timeout=10.0):
         """Receive and process audio responses from the server."""
         logger.info("Listening for audio responses...")
         self.error_occurred = False
-        
+
         while not self.is_synthesis_complete and not self.error_occurred:
             try:
                 response = await asyncio.wait_for(self.websocket.recv(), timeout)
@@ -855,18 +849,18 @@ class RealtimeClientTTS:
                     if audio_data_b64:
                         audio_data = base64.b64decode(audio_data_b64)
                         audio_chunks.append(audio_data)
-                        
+
                         logger.info("Received audio chunk: %d bytes", len(audio_data))
 
                 elif event_type == "conversation.item.speech.completed":
                     # Handle synthesis completion
                     is_last_result = event.get("is_last_result", False)
                     synthesis_metadata = event.get("synthesis_metadata", {})
-                    
+
                     logger.info("Speech synthesis completed")
                     if synthesis_metadata:
                         logger.info("Synthesis metadata: %s", synthesis_metadata)
-                    
+
                     if is_last_result:
                         self.is_synthesis_complete = True
                         logger.info("All synthesis completed")
@@ -883,7 +877,7 @@ class RealtimeClientTTS:
             except Exception as e:
                 logger.error("Error receiving audio: %s", e)
                 break
-    
+
     async def disconnect(self):
         """Close the WebSocket connection."""
         if self.websocket:
