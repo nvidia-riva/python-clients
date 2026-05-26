@@ -68,7 +68,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output-device", type=int, help="Output device to use.")
     parser.add_argument("--language-code", default='en-US', help="A language of input text.")
     parser.add_argument(
-        "--sample-rate-hz", type=int, default=44100, help="Number of audio frames per second in synthesized audio."
+        "--sample-rate-hz", type=int, default=22050, help="Number of audio frames per second in synthesized audio."
     )
     parser.add_argument("--encoding", default="LINEAR_PCM", choices={"LINEAR_PCM", "OGGOPUS"}, help="Output audio encoding.")
     parser.add_argument("--custom-dictionary", type=str, help="A file path to a user dictionary with key-value pairs separated by double spaces.")
