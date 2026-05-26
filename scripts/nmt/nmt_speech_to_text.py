@@ -1,9 +1,16 @@
 import argparse
 import os
+import sys
+
 import riva.client
 import riva.client.proto.riva_asr_pb2 as riva_asr_pb2
 import riva.client.proto.riva_nmt_pb2 as riva_nmt_pb2
 from riva.client.argparse_utils import add_connection_argparse_parameters
+try:
+    from riva.client.argparse_utils import cli_main
+except ImportError:
+    def cli_main(func):
+        return func
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description='Riva Speech-to-Text Translation Client')
@@ -36,6 +43,7 @@ def parse_arguments():
 
     return parser.parse_args()
 
+@cli_main
 def main():
     args = parse_arguments()
 
@@ -59,50 +67,46 @@ def main():
         print(response)
         return
 
-    try:
-        print(f"Translating speech from {args.source_language} to {args.target_language}")
-        print(f"Using audio file: {args.audio_file}")
-        print(f"Server address: {args.server}")
+    print(f"Translating speech from {args.source_language} to {args.target_language}")
+    print(f"Using audio file: {args.audio_file}")
+    print(f"Server address: {args.server}")
 
-        # Create ASR config
-        asr_config = riva_asr_pb2.StreamingRecognitionConfig(
-            config=riva_asr_pb2.RecognitionConfig(
-                language_code=args.source_language,
-                max_alternatives=1,
-                enable_automatic_punctuation=True
-            ),
-            interim_results=True
-        )
+    # Create ASR config
+    asr_config = riva_asr_pb2.StreamingRecognitionConfig(
+        config=riva_asr_pb2.RecognitionConfig(
+            language_code=args.source_language,
+            max_alternatives=1,
+            enable_automatic_punctuation=True
+        ),
+        interim_results=True
+    )
 
-        # Create translation config
-        translation_config = riva_nmt_pb2.TranslationConfig(
-            source_language_code=args.source_language,
-            target_language_code=args.target_language,
-            model_name=args.model
-        )
+    # Create translation config
+    translation_config = riva_nmt_pb2.TranslationConfig(
+        source_language_code=args.source_language,
+        target_language_code=args.target_language,
+        model_name=args.model
+    )
 
-        # Create streaming config
-        streaming_config = riva_nmt_pb2.StreamingTranslateSpeechToTextConfig(
-            asr_config=asr_config,
-            translation_config=translation_config
-        )
+    # Create streaming config
+    streaming_config = riva_nmt_pb2.StreamingTranslateSpeechToTextConfig(
+        asr_config=asr_config,
+        translation_config=translation_config
+    )
 
-        responses = nmt_client.streaming_s2t_response_generator(
-            audio_chunks=riva.client.AudioChunkFileIterator(args.audio_file, 100),
-            streaming_config=streaming_config
-        )
+    responses = nmt_client.streaming_s2t_response_generator(
+        audio_chunks=riva.client.AudioChunkFileIterator(args.audio_file, 100),
+        streaming_config=streaming_config
+    )
 
-        final_translation = ""
-        for response in responses:
-            for result in response.results:
-                if result.is_final:
-                    final_translation += result.alternatives[0].transcript
+    final_translation = ""
+    for response in responses:
+        for result in response.results:
+            if result.is_final:
+                final_translation += result.alternatives[0].transcript
 
-        print(f"Final translation: {final_translation}")
-
-    except Exception as e:
-        print(f"Error during translation: {e}")
+    print(f"Final translation: {final_translation}")
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

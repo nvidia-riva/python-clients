@@ -7,7 +7,7 @@ import json
 import logging
 import queue
 import uuid
-from typing import Dict, Any, Generator
+from typing import Any, Dict, Generator, List, Optional
 
 import requests
 import websockets
@@ -176,7 +176,7 @@ class RealtimeClientASR:
 
         # Track what we're overriding
         overrides = []
-        
+
         # Check if the input is microphone, then set the encoding to pcm16
         if hasattr(self.args, 'mic') and self.args.mic:
             self._safe_update_config(session_config, "input_audio_format", "pcm16")
@@ -409,7 +409,7 @@ class RealtimeClientASR:
                 await self._send_message({
                     "type": "input_audio_buffer.commit",
                 })
-            
+
         logger.debug("All chunks sent")
 
         # Tell the server that we are done sending chunks
@@ -446,12 +446,12 @@ class RealtimeClientASR:
                     words_info = event.get("words_info", {})
                     if self.args.word_time_offsets and words_info and words_info.get("words"):
                         print("Words Info:")
-                        
+
                         # Create header format similar to print_streaming
                         header_format = '{: <40s}{: <16s}{: <16s}{: <16s}{: <16s}'
                         header_values = ['Word', 'Start (ms)', 'End (ms)', 'Confidence', 'Speaker']
                         print(header_format.format(*header_values))
-                        
+
                         # Print each word with formatted information
                         for word_data in words_info["words"]:
                             word = word_data.get("word", "")
@@ -459,7 +459,7 @@ class RealtimeClientASR:
                             end_time = word_data.get("end_time", 0)
                             confidence = word_data.get("confidence", 0.0)
                             speaker_tag = word_data.get("speaker_tag", 0)
-                            
+
                             # Format the word info line similar to print_streaming
                             word_format = '{: <40s}{: <16.0f}{: <16.0f}{: <16.4f}{: <16d}'
                             word_values = [word, start_time, end_time, confidence, speaker_tag]
@@ -524,7 +524,7 @@ class RealtimeClientTTS:
         uri = f"http://{self.args.server}/v1/audio/list_voices"
         if self.args.use_ssl:
             uri = f"https://{self.args.server}/v1/audio/list_voices"
-        
+
         logger.info("Listing voices via HTTP GET request to: %s", uri)
         response = requests.get(uri, headers=headers)
         response.raise_for_status()
@@ -536,7 +536,7 @@ class RealtimeClientTTS:
         """Establish connection to the TTS server."""
         try:
             logger.info("Starting connection to TTS server...")
-            
+
             # Initialize session via HTTP POST
             logger.info("Initializing HTTP session...")
             session_data = await self._initialize_http_session()
@@ -547,7 +547,7 @@ class RealtimeClientTTS:
             logger.info("Connecting to WebSocket...")
             await self._connect_websocket()
             logger.info("WebSocket connected successfully")
-            
+
             # Initialize WebSocket session
             logger.info("Initializing WebSocket session...")
             session_updated = await self._update_session()
@@ -555,7 +555,7 @@ class RealtimeClientTTS:
                 logger.error("Failed to update session")
                 raise Exception("Failed to update session")
             logger.info("WebSocket session initialized successfully")
-            
+
             logger.info("Connection established successfully!")
 
         except requests.exceptions.RequestException as e:
@@ -574,7 +574,7 @@ class RealtimeClientTTS:
         uri = f"http://{self.args.server}/v1/realtime/synthesis_sessions"
         if self.args.use_ssl:
             uri = f"https://{self.args.server}/v1/realtime/synthesis_sessions"
-        
+
         logger.info("Initializing session via HTTP POST request to: %s", uri)
 
         # Make HTTP request with proper error handling
@@ -584,11 +584,11 @@ class RealtimeClientTTS:
             if hasattr(self.args, 'ssl_client_cert') and hasattr(self.args, 'ssl_client_key'):
                 if self.args.ssl_client_cert and self.args.ssl_client_key:
                     cert_params = (self.args.ssl_client_cert, self.args.ssl_client_key)
-            
+
             verify_param = True
             if hasattr(self.args, 'ssl_root_cert') and self.args.ssl_root_cert:
                 verify_param = self.args.ssl_root_cert
-            
+
             response = requests.post(
                 uri,
                 headers=headers,
@@ -597,7 +597,7 @@ class RealtimeClientTTS:
                 verify=verify_param,
                 timeout=30  # Add timeout to prevent hanging
             )
-            
+
         except requests.exceptions.Timeout:
             logger.error("Request timeout - server not responding")
             raise Exception("Server timeout - check if TTS server is running")
@@ -677,80 +677,95 @@ class RealtimeClientTTS:
         logger.debug("Updated %s = %s", key, value)
 
     async def _update_session(self, timeout=1):
-        """Update session configuration by selectively overriding server defaults."""
+        """Update session configuration by sending an override-only payload.
+
+        Builds the synthesize_session.update payload directly from CLI args
+        instead of round-tripping through self.session_config (the response
+        from POST /v1/realtime/synthesis_sessions).
+        """
         logger.info("Updating session configuration...")
         logger.debug("Server default config: %s", self.session_config)
 
-        # Create a copy of the session config from server defaults
-        session_config = self.session_config.copy()
+        session_payload: Dict[str, Any] = {}
+        overrides: List[str] = []
+        requested_voice: Optional[str] = None
+        requested_language: Optional[str] = None
 
-        # Track what we're overriding
-        overrides = []
-
-        # Update input text synthesis - only override if args are provided
-        if hasattr(self.args, 'language_code') and self.args.language_code:
-            self._safe_update_config(session_config, "language_code", self.args.language_code, "input_text_synthesis")
+        # input_text_synthesis: language_code + voice_name
+        input_text_synthesis: Dict[str, Any] = {}
+        if getattr(self.args, "language_code", None):
+            requested_language = self.args.language_code
+            input_text_synthesis["language_code"] = requested_language
             overrides.append("language_code")
-
-        if hasattr(self.args, 'voice') and self.args.voice:
-            self._safe_update_config(session_config, "voice_name", self.args.voice, "input_text_synthesis")
+        if getattr(self.args, "voice", None):
+            requested_voice = self.args.voice
+            input_text_synthesis["voice_name"] = requested_voice
             overrides.append("voice_name")
+        if input_text_synthesis:
+            session_payload["input_text_synthesis"] = input_text_synthesis
 
-        # Update output audio parameters - only override if args are provided
-        if hasattr(self.args, 'sample_rate_hz') and self.args.sample_rate_hz:
-            self._safe_update_config(session_config, "sample_rate_hz", self.args.sample_rate_hz, "output_audio_params")
+        # output_audio_params: sample_rate_hz + audio_format
+        output_audio_params: Dict[str, Any] = {}
+        if getattr(self.args, "sample_rate_hz", None):
+            output_audio_params["sample_rate_hz"] = self.args.sample_rate_hz
             overrides.append("sample_rate_hz")
-
-        if hasattr(self.args, 'encoding') and self.args.encoding:
-            self._safe_update_config(session_config, "audio_format", self.args.encoding, "output_audio_params")
+        if getattr(self.args, "encoding", None):
+            output_audio_params["audio_format"] = self.args.encoding
             overrides.append("audio_format")
+        if output_audio_params:
+            session_payload["output_audio_params"] = output_audio_params
 
-        # Update custom dictionary - only override if args are provided
-        if hasattr(self.args, 'custom_dictionary') and self.args.custom_dictionary:
-            self._safe_update_config(session_config, "custom_dictionary", self.args.custom_dictionary)
+        if getattr(self.args, "custom_dictionary", None):
+            session_payload["custom_dictionary"] = self.args.custom_dictionary
             overrides.append("custom_dictionary")
 
-        # Update zero-shot config - only override if args are provided
-        if (hasattr(self.args, 'zero_shot_audio_prompt_file') and self.args.zero_shot_audio_prompt_file):
+        # zero_shot_config: audio bytes + transcript + quality
+        if getattr(self.args, "zero_shot_audio_prompt_file", None):
+            zero_shot_config: Dict[str, Any] = {}
             try:
-                with open(self.args.zero_shot_audio_prompt_file, 'rb') as f:
+                with open(self.args.zero_shot_audio_prompt_file, "rb") as f:
                     audio_data = f.read()
-                    base64_audio_data = base64.b64encode(audio_data).decode('utf-8')
-                    self._safe_update_config(session_config["zero_shot_config"], "audio_prompt_bytes", base64_audio_data)
-                    logger.info("Zero-shot audio prompt bytes: %s", len(base64_audio_data))
+                base64_audio_data = base64.b64encode(audio_data).decode("utf-8")
+                zero_shot_config["audio_prompt_bytes"] = base64_audio_data
+                logger.info("Zero-shot audio prompt bytes: %s", len(base64_audio_data))
                 overrides.append("zero_shot_audio_prompt_file")
             except Exception as e:
                 logger.warning("Failed to load zero-shot audio prompt: %s", e)
-            
-            if hasattr(self.args, 'zero_shot_audio_prompt_transcript') and self.args.zero_shot_audio_prompt_transcript:
-                self._safe_update_config(session_config["zero_shot_config"], "audio_prompt_transcript", self.args.zero_shot_audio_prompt_transcript)
+
+            if getattr(self.args, "zero_shot_audio_prompt_transcript", None):
+                zero_shot_config["audio_prompt_transcript"] = self.args.zero_shot_audio_prompt_transcript
                 logger.info("Zero-shot audio prompt transcript: %s", self.args.zero_shot_audio_prompt_transcript)
                 overrides.append("zero_shot_transcript")
-            
-            if hasattr(self.args, 'zero_shot_prompt_quality') and self.args.zero_shot_prompt_quality:
-                self._safe_update_config(session_config["zero_shot_config"], "prompt_quality", self.args.zero_shot_prompt_quality)
+
+            if getattr(self.args, "zero_shot_prompt_quality", None):
+                zero_shot_config["prompt_quality"] = self.args.zero_shot_prompt_quality
                 logger.info("Zero-shot quality: %s", self.args.zero_shot_prompt_quality)
                 overrides.append("zero_shot_prompt_quality")
 
-        if hasattr(self.args, 'custom_configuration') and self.args.custom_configuration:
+            if zero_shot_config:
+                session_payload["zero_shot_config"] = zero_shot_config
+
+        if getattr(self.args, "custom_configuration", None):
             custom_config = self._parse_custom_configuration(self.args.custom_configuration)
             if custom_config:
-                session_config["custom_configuration"] = custom_config
+                session_payload["custom_configuration"] = custom_config
                 overrides.append("custom_configuration")
 
-        logger.debug("Overriding parameters: %s", overrides)
+        logger.info("Overriding session parameters: %s", overrides)
+        if requested_voice:
+            logger.info("Requested voice_name=%r", requested_voice)
 
         update_request = {
             "event_id": f"event_{uuid.uuid4()}",
             "type": "synthesize_session.update",
-            "session": session_config
+            "session": session_payload,
         }
 
         await self._send_message(update_request)
 
         session_created = False
         session_updated = False
-        
+
         while not session_created or not session_updated:
             response = await asyncio.wait_for(
                 self.websocket.recv(), timeout
@@ -764,6 +779,22 @@ class RealtimeClientTTS:
                 logger.info("Synthesis session updated successfully")
                 self.session_config = response_data["session"]
                 session_updated = True
+                acked = self.session_config.get("input_text_synthesis", {}) if isinstance(self.session_config, dict) else {}
+                acked_voice = acked.get("voice_name")
+                acked_language = acked.get("language_code")
+                if requested_voice and acked_voice and acked_voice != requested_voice:
+                    logger.warning(
+                        "Server applied voice_name=%r, but --voice requested %r. "
+                        "Synthesis will use the server-applied voice.",
+                        acked_voice, requested_voice,
+                    )
+                elif requested_voice:
+                    logger.info("Server confirmed voice_name=%r", acked_voice)
+                if requested_language and acked_language and acked_language != requested_language:
+                    logger.warning(
+                        "Server applied language_code=%r, but --language-code requested %r.",
+                        acked_language, requested_language,
+                    )
             elif event_type == "error":
                 error_info = response_data.get("error", {})
                 logger.error("Error: %s", error_info.get("message", "Unknown error"))
@@ -773,7 +804,7 @@ class RealtimeClientTTS:
                 logger.warning("Unexpected response type: %s", event_type)
 
         return True
-    
+
     async def _send_message(self, message: Dict[str, Any]):
         """Send a JSON message to the WebSocket server."""
         await self.websocket.send(json.dumps(message))
@@ -799,12 +830,12 @@ class RealtimeClientTTS:
             "type": "input_text.done"
         })
         logger.info("Text input marked as done")
-        
+
     async def receive_audio(self, audio_chunks, timeout=10.0):
         """Receive and process audio responses from the server."""
         logger.info("Listening for audio responses...")
         self.error_occurred = False
-        
+
         while not self.is_synthesis_complete and not self.error_occurred:
             try:
                 response = await asyncio.wait_for(self.websocket.recv(), timeout)
@@ -818,18 +849,18 @@ class RealtimeClientTTS:
                     if audio_data_b64:
                         audio_data = base64.b64decode(audio_data_b64)
                         audio_chunks.append(audio_data)
-                        
+
                         logger.info("Received audio chunk: %d bytes", len(audio_data))
 
                 elif event_type == "conversation.item.speech.completed":
                     # Handle synthesis completion
                     is_last_result = event.get("is_last_result", False)
                     synthesis_metadata = event.get("synthesis_metadata", {})
-                    
+
                     logger.info("Speech synthesis completed")
                     if synthesis_metadata:
                         logger.info("Synthesis metadata: %s", synthesis_metadata)
-                    
+
                     if is_last_result:
                         self.is_synthesis_complete = True
                         logger.info("All synthesis completed")
@@ -846,7 +877,7 @@ class RealtimeClientTTS:
             except Exception as e:
                 logger.error("Error receiving audio: %s", e)
                 break
-    
+
     async def disconnect(self):
         """Close the WebSocket connection."""
         if self.websocket:

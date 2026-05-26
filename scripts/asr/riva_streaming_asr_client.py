@@ -4,6 +4,7 @@
 import argparse
 import os
 import queue
+import sys
 import time
 from pathlib import Path
 from threading import Thread
@@ -11,7 +12,15 @@ from typing import Union
 
 import riva.client
 from riva.client.asr import get_wav_file_parameters
-from riva.client.argparse_utils import add_asr_config_argparse_parameters, add_connection_argparse_parameters
+from riva.client.argparse_utils import (
+    add_asr_config_argparse_parameters,
+    add_connection_argparse_parameters,
+)
+try:
+    from riva.client.argparse_utils import cli_main
+except ImportError:
+    def cli_main(func):
+        return func
 
 
 def parse_args() -> argparse.Namespace:
@@ -109,7 +118,8 @@ def streaming_transcription_worker(
         raise
 
 
-def main() -> None:
+@cli_main
+def main() -> int:
     args = parse_args()
     print("Number of clients:", args.num_clients)
     print("Number of iteration:", args.num_iterations)
@@ -140,4 +150,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

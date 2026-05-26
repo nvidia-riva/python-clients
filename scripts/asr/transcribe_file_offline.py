@@ -2,12 +2,21 @@
 # SPDX-License-Identifier: MIT
 
 import os
+import sys
 import argparse
 from pathlib import Path
 
-import grpc
 import riva.client
-from riva.client.argparse_utils import add_asr_config_argparse_parameters, add_connection_argparse_parameters
+from riva.client.argparse_utils import (
+    add_asr_config_argparse_parameters,
+    add_connection_argparse_parameters,
+)
+try:
+    from riva.client.argparse_utils import cli_main, EXIT_BAD_INPUT
+except ImportError:
+    EXIT_BAD_INPUT = 2
+    def cli_main(func):
+        return func
 
 
 def parse_args() -> argparse.Namespace:
@@ -30,7 +39,8 @@ def parse_args() -> argparse.Namespace:
     return args
 
 
-def main() -> None:
+@cli_main
+def main() -> int:
     args = parse_args()
 
     options = [('grpc.max_receive_message_length', args.max_message_length), ('grpc.max_send_message_length', args.max_message_length)]
@@ -62,8 +72,8 @@ def main() -> None:
         return
 
     if not os.path.isfile(args.input_file):
-        print(f"Invalid input file path: {args.input_file}")
-        return
+        print(f"Invalid input file path: {args.input_file}", file=sys.stderr)
+        return EXIT_BAD_INPUT
 
     config = riva.client.RecognitionConfig(
         language_code=args.language_code,
@@ -91,14 +101,15 @@ def main() -> None:
     )
     with args.input_file.open('rb') as fh:
         data = fh.read()
-    try:
-        seglst_output_file = None
-        if args.output_seglst:
-            seglst_output_file = os.path.basename(args.input_file).split(".")[0]
-        riva.client.print_offline(response=asr_service.offline_recognize(data, config), speaker_diarization=args.speaker_diarization, seglst_output_file=seglst_output_file)
-    except grpc.RpcError as e:
-        print(e.details())
+    seglst_output_file = None
+    if args.output_seglst:
+        seglst_output_file = os.path.basename(args.input_file).split(".")[0]
+    riva.client.print_offline(
+        response=asr_service.offline_recognize(data, config),
+        speaker_diarization=args.speaker_diarization,
+        seglst_output_file=seglst_output_file,
+    )
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

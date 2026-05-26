@@ -30,12 +30,17 @@ import argparse
 import os
 import sys
 
-import grpc
 import riva.client.proto.riva_nmt_pb2 as riva_nmt
 import riva.client.proto.riva_nmt_pb2_grpc as riva_nmt_srv
 
 import riva.client
 from riva.client.argparse_utils import add_connection_argparse_parameters
+try:
+    from riva.client.argparse_utils import cli_main, EXIT_BAD_INPUT
+except ImportError:
+    EXIT_BAD_INPUT = 2
+    def cli_main(func):
+        return func
 
 
 def read_dnt_phrases_file(file_path):
@@ -78,7 +83,15 @@ def parse_args() -> argparse.Namespace:
     )
     inputs.add_argument("--text-file", type=str, help="Path to file for translation")
     parser.add_argument("--dnt-phrases-file", type=str, help="Path to file which contains dnt phrases and custom translations")
-    parser.add_argument("--max-len-variation", type=str, help="Parameter to control the maximum variation between the length of source and translated text in terms of tokens")
+    parser.add_argument(
+        "--max-len-variation",
+        type=str,
+        help="Maximum allowed difference (in decoder SentencePiece tokens, not characters) "
+        "between the source and translated text length. Valid range: [0, 256]. Server-side "
+        "default is 20. Increase this for long inputs that get truncated; high-aspect-ratio "
+        "languages like Arabic may need additional client-side chunking when the source "
+        "exceeds ~200 characters even at 256.",
+    )
     parser.add_argument("--model-name", default="", type=str, help="model to use to translate")
     parser.add_argument(
         "--source-language-code", type=str, default="en-US", help="Source language code (according to BCP-47 standard)"
@@ -93,34 +106,8 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def main() -> None:
-    def request(inputs,args):
-        try:
-            dnt_phrases_input = {}
-            if args.dnt_phrases_file != None:
-                dnt_phrases_input = read_dnt_phrases_file(args.dnt_phrases_file)
-            response = nmt_client.translate(
-                texts=inputs,
-                model=args.model_name,
-                source_language=args.source_language_code,
-                target_language=args.target_language_code,
-                future=False,
-                dnt_phrases_dict=dnt_phrases_input,
-                max_len_variation=args.max_len_variation,
-            )
-            for translation in response.translations:
-                print(translation.text)
-        except grpc.RpcError as e:
-            if e.code() == grpc.StatusCode.INVALID_ARGUMENT:
-                result = {'msg': 'invalid arg error'}
-            elif e.code() == grpc.StatusCode.ALREADY_EXISTS:
-                result = {'msg': 'already exists error'}
-            elif e.code() == grpc.StatusCode.UNAVAILABLE:
-                result = {'msg': 'server unavailable check network'}
-            else:
-                result = {'msg': 'error code:{}'.format(e.code())}
-            print(f"{result['msg']} : {e.details()}")
-
+@cli_main
+def main() -> int:
     args = parse_args()
 
     auth = riva.client.Auth(
@@ -134,13 +121,32 @@ def main() -> None:
     )
     nmt_client = riva.client.NeuralMachineTranslationClient(auth)
 
-    if args.list_models:
+    def request(inputs):
+        dnt_phrases_input = {}
+        if args.dnt_phrases_file is not None:
+            dnt_phrases_input = read_dnt_phrases_file(args.dnt_phrases_file)
+        response = nmt_client.translate(
+            texts=inputs,
+            model=args.model_name,
+            source_language=args.source_language_code,
+            target_language=args.target_language_code,
+            future=False,
+            dnt_phrases_dict=dnt_phrases_input,
+            max_len_variation=args.max_len_variation,
+        )
+        for translation in response.translations:
+            print(translation.text)
 
+    if args.list_models:
         response = nmt_client.get_config(args.model_name)
         print(response)
         return
 
-    if args.text_file != None and os.path.exists(args.text_file):
+    if args.text_file is not None:
+        if not os.path.exists(args.text_file):
+            print(f"Invalid input file path: {args.text_file}", file=sys.stderr)
+            return EXIT_BAD_INPUT
+        translated_any = False
         with open(args.text_file, "r") as f:
             batch = []
             for line in f:
@@ -148,15 +154,22 @@ def main() -> None:
                 if line != "":
                     batch.append(line)
                 if len(batch) == args.batch_size:
-                    request(batch, args)
+                    request(batch)
+                    translated_any = True
                     batch = []
             if len(batch) > 0:
-                request(batch, args)
+                request(batch)
+                translated_any = True
+        if not translated_any:
+            print(f"{args.text_file} contained no non-empty lines", file=sys.stderr)
+            return EXIT_BAD_INPUT
         return
 
-    if args.text != "":
-        request([args.text], args)
+    if not args.text or not args.text.strip():
+        print("No input text provided", file=sys.stderr)
+        return EXIT_BAD_INPUT
+    request([args.text])
 
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main())
