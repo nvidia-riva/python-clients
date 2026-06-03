@@ -104,7 +104,11 @@ def add_asr_config_argparse_parameters(
         action='store_true',
         help="If specified, text inverse normalization will be applied",
     )
-    parser.add_argument("--language-code", default="en-US", help="Language code of the model to be used.")
+    parser.add_argument(
+        "--language-code",
+        default="",
+        help="Language code of the model to be used. If omitted, the server chooses auto language detection or an unambiguous language when available.",
+    )
     parser.add_argument("--model-name", default="", help="Model name to be used.")
     parser.add_argument("--boosted-lm-words", action='append', help="Words to boost when decoding. Can be used multiple times to boost multiple words.")
     parser.add_argument(
