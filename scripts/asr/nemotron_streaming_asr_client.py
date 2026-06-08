@@ -10,14 +10,14 @@ from pathlib import Path
 from threading import Thread
 from typing import Union
 
-import riva.client
-from riva.client.asr import get_wav_file_parameters
-from riva.client.argparse_utils import (
+import nemotronspeech.client
+from nemotronspeech.client.asr import get_wav_file_parameters
+from nemotronspeech.client.argparse_utils import (
     add_asr_config_argparse_parameters,
     add_connection_argparse_parameters,
 )
 try:
-    from riva.client.argparse_utils import cli_main
+    from nemotronspeech.client.argparse_utils import cli_main
 except ImportError:
     def cli_main(func):
         return func
@@ -59,7 +59,7 @@ def streaming_transcription_worker(
 ) -> None:
     output_file = Path(output_file).expanduser()
     try:
-        auth = riva.client.Auth(
+        auth = nemotronspeech.client.Auth(
             ssl_root_cert=args.ssl_root_cert,
             ssl_client_cert=args.ssl_client_cert,
             ssl_client_key=args.ssl_client_key,
@@ -68,9 +68,9 @@ def streaming_transcription_worker(
             metadata_args=args.metadata,
             options=args.options
         )
-        asr_service = riva.client.ASRService(auth)
-        config = riva.client.StreamingRecognitionConfig(
-            config=riva.client.RecognitionConfig(
+        asr_service = nemotronspeech.client.ASRService(auth)
+        config = nemotronspeech.client.StreamingRecognitionConfig(
+            config=nemotronspeech.client.RecognitionConfig(
                 language_code=args.language_code,
                 model=args.model_name,
                 max_alternatives=args.max_alternatives,
@@ -81,7 +81,7 @@ def streaming_transcription_worker(
             ),
             interim_results=True,
         )
-        riva.client.add_endpoint_parameters_to_config(
+        nemotronspeech.client.add_endpoint_parameters_to_config(
             config,
             args.start_history,
             args.start_threshold,
@@ -90,19 +90,19 @@ def streaming_transcription_worker(
             args.stop_threshold,
             args.stop_threshold_eou
         )
-        riva.client.add_custom_configuration_to_config(
+        nemotronspeech.client.add_custom_configuration_to_config(
             config,
             args.custom_configuration
         )
-        riva.client.add_word_boosting_to_config(config, args.boosted_lm_words, args.boosted_lm_score)
-        riva.client.add_speaker_diarization_to_config(config, args.speaker_diarization, args.diarization_max_speakers)
+        nemotronspeech.client.add_word_boosting_to_config(config, args.boosted_lm_words, args.boosted_lm_score)
+        nemotronspeech.client.add_speaker_diarization_to_config(config, args.speaker_diarization, args.diarization_max_speakers)
         for _ in range(args.num_iterations):
-            with riva.client.AudioChunkFileIterator(
+            with nemotronspeech.client.AudioChunkFileIterator(
                 args.input_file,
                 args.file_streaming_chunk,
-                delay_callback=riva.client.sleep_audio_length if args.simulate_realtime else None,
+                delay_callback=nemotronspeech.client.sleep_audio_length if args.simulate_realtime else None,
             ) as audio_chunk_iterator:
-                riva.client.print_streaming(
+                nemotronspeech.client.print_streaming(
                     responses=asr_service.streaming_response_generator(
                         audio_chunks=audio_chunk_iterator,
                         streaming_config=config,

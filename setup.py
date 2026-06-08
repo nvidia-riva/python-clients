@@ -14,7 +14,7 @@ import setuptools
 from setuptools.command.build_py import build_py
 
 
-spec = importlib.util.spec_from_file_location('package_info', 'riva/client/package_info.py')
+spec = importlib.util.spec_from_file_location('package_info', 'nemotronspeech/client/package_info.py')
 package_info = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(package_info)
 
@@ -43,7 +43,7 @@ CHANGE_PB2_LOC_PATTERN = re.compile('from riva.proto import (.+_pb2.*)')
 class BuildPyCommand(build_py):
     def run(self):
         if not self.dry_run:
-            target_dir = setup_py_dir / 'riva/client/proto'
+            target_dir = setup_py_dir / 'nemotronspeech/client/proto'
             for elem in target_dir.iterdir():
                 if elem.name != '__init__.py':
                     if elem.is_dir():
@@ -139,7 +139,7 @@ setuptools.setup(
     maintainer_email=__contact_emails__,
     keywords=__keywords__,
     # packages=setuptools.find_packages(exclude=['tests', 'tutorials', 'scripts']),
-    package_dir={"riva.client": "riva/client"},
+    package_dir={"nemotronspeech.client": "nemotronspeech/client"},
     cmdclass={"build_py": BuildPyCommand},
     classifiers=[
         "Development Status :: 4 - Beta",

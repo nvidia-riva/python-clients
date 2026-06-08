@@ -20,14 +20,14 @@ import ssl
 import websockets
 from websockets.exceptions import WebSocketException
 
-from riva.client.argparse_utils import add_connection_argparse_parameters
+from nemotronspeech.client.argparse_utils import add_connection_argparse_parameters
 try:
-    from riva.client.argparse_utils import cli_main
+    from nemotronspeech.client.argparse_utils import cli_main
 except ImportError:
     def cli_main(func):
         return func
 
-from riva.client.realtime import RealtimeClientTTS
+from nemotronspeech.client.realtime import RealtimeClientTTS
 
 logging.basicConfig(
     level=logging.INFO,
@@ -489,8 +489,8 @@ async def main() -> int:
         voices = RealtimeClientTTS(args=args).list_voices()
         print(json.dumps(voices, indent=4))
     elif args.list_devices:
-        import riva.client.audio_io
-        riva.client.audio_io.list_output_devices()
+        import nemotronspeech.client.audio_io
+        nemotronspeech.client.audio_io.list_output_devices()
     else:
         # Use parallel processing if num_parallel_requests > 1
         if args.num_parallel_requests > 1:

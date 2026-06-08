@@ -7,19 +7,19 @@ source "$(dirname $0)/../init_server_cli_params.sh"
 source "$(dirname $0)/test_functions.sh"
 
 
-reference_outputs="$(dirname $0)/reference_outputs/test_riva_streaming_asr_client"
-source "$(dirname $0)/../prepare_test_output_dir.sh" "$(dirname $0)" "riva_streaming_asr_client.py"
+reference_outputs="$(dirname $0)/reference_outputs/test_nemotron_streaming_asr_client"
+source "$(dirname $0)/../prepare_test_output_dir.sh" "$(dirname $0)" "nemotron_streaming_asr_client.py"
 
 rm -f output_0.txt
 
 test_string_presence \
-  riva_streaming_asr_client.py \
+  nemotron_streaming_asr_client.py \
   "--input-file data/examples/en-US_sample.wav --language-code ru-RU" \
   "details = \"Error: Unavailable model requested. Lang: ru-RU, Type: online\"" \
   language_code_ru_RU \
   1
-test_simulate_realtime riva_streaming_asr_client.py
-test_transcript_affecting_params riva_streaming_asr_client.py
+test_simulate_realtime nemotron_streaming_asr_client.py
+test_transcript_affecting_params nemotron_streaming_asr_client.py
 
 # Testing --word-time-offsets
 function test_word_time_offsets(){
@@ -30,7 +30,7 @@ function test_word_time_offsets(){
   stdout_file="${test_output_dir}/stdout_word_time_offsets.txt"
   stderr_file="${test_output_dir}/stderr_word_time_offsets.txt"
   set +e
-  python scripts/asr/riva_streaming_asr_client.py ${server_args} ${exp_options} \
+  python scripts/asr/nemotron_streaming_asr_client.py ${server_args} ${exp_options} \
     1>"${stdout_file}" 2>"${stderr_file}"
   retVal=$?
   process_exit_status
@@ -74,7 +74,7 @@ function test_num_clients(){
   stdout_file="${test_output_dir}/stdout_num_clients_2.txt"
   stderr_file="${test_output_dir}/stderr_num_clients_2.txt"
   set +e
-  python scripts/asr/riva_streaming_asr_client.py ${server_args} ${exp_options} \
+  python scripts/asr/nemotron_streaming_asr_client.py ${server_args} ${exp_options} \
     1>"${stdout_file}" 2>"${stderr_file}"
   retVal=$?
   process_exit_status
@@ -109,7 +109,7 @@ function test_num_iterations(){
   stdout_file="${test_output_dir}/stdout_num_iterations.txt"
   stderr_file="${test_output_dir}/stderr_num_iterations.txt"
   set +e
-  python scripts/asr/riva_streaming_asr_client.py ${server_args} ${exp_options} \
+  python scripts/asr/nemotron_streaming_asr_client.py ${server_args} ${exp_options} \
     1>"${stdout_file}" 2>"${stderr_file}"
   retVal=$?
   process_exit_status

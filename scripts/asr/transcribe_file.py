@@ -5,13 +5,13 @@ import argparse
 import os
 import sys
 
-import riva.client
-from riva.client.argparse_utils import (
+import nemotronspeech.client
+from nemotronspeech.client.argparse_utils import (
     add_asr_config_argparse_parameters,
     add_connection_argparse_parameters,
 )
 try:
-    from riva.client.argparse_utils import cli_main, EXIT_BAD_INPUT
+    from nemotronspeech.client.argparse_utils import cli_main, EXIT_BAD_INPUT
 except ImportError:
     EXIT_BAD_INPUT = 2
     def cli_main(func):
@@ -67,7 +67,7 @@ def parse_args() -> argparse.Namespace:
     parser = add_asr_config_argparse_parameters(parser, max_alternatives=True, profanity_filter=True, word_time_offsets=True)
     args = parser.parse_args()
     if args.play_audio or args.output_device is not None or args.list_devices:
-        import riva.client.audio_io
+        import nemotronspeech.client.audio_io
     return args
 
 
@@ -75,9 +75,9 @@ def parse_args() -> argparse.Namespace:
 def main() -> int:
     args = parse_args()
     if args.list_devices:
-        riva.client.audio_io.list_output_devices()
+        nemotronspeech.client.audio_io.list_output_devices()
         return
-    auth = riva.client.Auth(
+    auth = nemotronspeech.client.Auth(
         ssl_root_cert=args.ssl_root_cert,
         ssl_client_cert=args.ssl_client_cert,
         ssl_client_key=args.ssl_client_key,
@@ -86,11 +86,11 @@ def main() -> int:
         metadata_args=args.metadata,
         options=args.options
     )
-    asr_service = riva.client.ASRService(auth)
+    asr_service = nemotronspeech.client.ASRService(auth)
 
     if args.list_models:
         asr_models = dict()
-        config_response = asr_service.stub.GetRivaSpeechRecognitionConfig(riva.client.proto.riva_asr_pb2.RivaSpeechRecognitionConfigRequest())
+        config_response = asr_service.stub.GetRivaSpeechRecognitionConfig(nemotronspeech.client.proto.riva_asr_pb2.RivaSpeechRecognitionConfigRequest())
         for model_config in config_response.model_config:
             if model_config.parameters["type"] == "online":
                 language_code = model_config.parameters['language_code']
@@ -109,8 +109,8 @@ def main() -> int:
         print(f"Invalid input file path: {args.input_file}", file=sys.stderr)
         return EXIT_BAD_INPUT
 
-    config = riva.client.StreamingRecognitionConfig(
-        config=riva.client.RecognitionConfig(
+    config = nemotronspeech.client.StreamingRecognitionConfig(
+        config=nemotronspeech.client.RecognitionConfig(
             language_code=args.language_code,
             model=args.model_name,
             max_alternatives=1,
@@ -121,9 +121,9 @@ def main() -> int:
         ),
         interim_results=True,
     )
-    riva.client.add_word_boosting_to_config(config, args.boosted_lm_words, args.boosted_lm_score)
-    riva.client.add_speaker_diarization_to_config(config, args.speaker_diarization, args.diarization_max_speakers)
-    riva.client.add_endpoint_parameters_to_config(
+    nemotronspeech.client.add_word_boosting_to_config(config, args.boosted_lm_words, args.boosted_lm_score)
+    nemotronspeech.client.add_speaker_diarization_to_config(config, args.speaker_diarization, args.diarization_max_speakers)
+    nemotronspeech.client.add_endpoint_parameters_to_config(
         config,
         args.start_history,
         args.start_threshold,
@@ -132,7 +132,7 @@ def main() -> int:
         args.stop_threshold,
         args.stop_threshold_eou
     )
-    riva.client.add_custom_configuration_to_config(
+    nemotronspeech.client.add_custom_configuration_to_config(
         config,
         args.custom_configuration
     )
@@ -143,17 +143,17 @@ def main() -> int:
             seglst_output_file = os.path.basename(args.input_file).split(".")[0]
 
         if args.play_audio or args.output_device is not None:
-            wp = riva.client.get_wav_file_parameters(args.input_file)
-            sound_callback = riva.client.audio_io.SoundCallBack(
+            wp = nemotronspeech.client.get_wav_file_parameters(args.input_file)
+            sound_callback = nemotronspeech.client.audio_io.SoundCallBack(
                 args.output_device, wp['sampwidth'], wp['nchannels'], wp['framerate'],
             )
             delay_callback = sound_callback
         else:
-            delay_callback = riva.client.sleep_audio_length if args.simulate_realtime else None
-        with riva.client.AudioChunkFileIterator(
+            delay_callback = nemotronspeech.client.sleep_audio_length if args.simulate_realtime else None
+        with nemotronspeech.client.AudioChunkFileIterator(
             args.input_file, args.file_streaming_chunk, delay_callback,
         ) as audio_chunk_iterator:
-            riva.client.print_streaming(
+            nemotronspeech.client.print_streaming(
                 responses=asr_service.streaming_response_generator(
                     audio_chunks=audio_chunk_iterator,
                     streaming_config=config,

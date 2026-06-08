@@ -5,10 +5,10 @@ from typing import Dict, Generator, Optional, Union, Iterable
 
 from grpc._channel import _MultiThreadedRendezvous
 
-import riva.client.proto.riva_tts_pb2 as rtts
-import riva.client.proto.riva_tts_pb2_grpc as rtts_srv
-from riva.client import Auth
-from riva.client.proto.riva_audio_pb2 import AudioEncoding
+import nemotronspeech.client.proto.riva_tts_pb2 as rtts
+import nemotronspeech.client.proto.riva_tts_pb2_grpc as rtts_srv
+from nemotronspeech.client import Auth
+from nemotronspeech.client.proto.riva_audio_pb2 import AudioEncoding
 import wave
 
 def parse_custom_configuration(custom_configuration: str) -> Dict[str, str]:
@@ -54,7 +54,7 @@ class SpeechSynthesisService:
         Initializes an instance of the class.
 
         Args:
-            auth (:obj:`Auth`): an instance of :class:`riva.client.auth.Auth` which is used for authentication metadata
+            auth (:obj:`Auth`): an instance of :class:`nemotronspeech.client.auth.Auth` which is used for authentication metadata
                 generation.
         """
         self.auth = auth
@@ -96,8 +96,8 @@ class SpeechSynthesisService:
             custom_configuration (:obj:`Dict[str, str]`, `optional`): Free-form key/value parameters forwarded
                 to the synthesizer (e.g. ``{"exaggeration_factor": "1.5"}``). Model-specific.
         Returns:
-            :obj:`Union[riva.client.proto.riva_tts_pb2.SynthesizeSpeechResponse, grpc._channel._MultiThreadedRendezvous]`:
-            a response with output. You may find :class:`riva.client.proto.riva_tts_pb2.SynthesizeSpeechResponse` fields
+            :obj:`Union[nemotronspeech.client.proto.riva_tts_pb2.SynthesizeSpeechResponse, grpc._channel._MultiThreadedRendezvous]`:
+            a response with output. You may find :class:`nemotronspeech.client.proto.riva_tts_pb2.SynthesizeSpeechResponse` fields
             description `here
             <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-tts-proto>`_.
         """
@@ -162,8 +162,8 @@ class SpeechSynthesisService:
             custom_configuration (:obj:`Dict[str, str]`, `optional`): Free-form key/value parameters forwarded
                 to the synthesizer (e.g. ``{"exaggeration_factor": "1.5"}``). Model-specific.
         Yields:
-            :obj:`riva.client.proto.riva_tts_pb2.SynthesizeSpeechResponse`: a response with output. You may find
-            :class:`riva.client.proto.riva_tts_pb2.SynthesizeSpeechResponse` fields description `here
+            :obj:`nemotronspeech.client.proto.riva_tts_pb2.SynthesizeSpeechResponse`: a response with output. You may find
+            :class:`nemotronspeech.client.proto.riva_tts_pb2.SynthesizeSpeechResponse` fields description `here
             <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-tts-proto>`_.
             If :param:`future` is :obj:`True`, then a future object is returned. You may retrieve a response from a
             future object by calling ``result()`` method.

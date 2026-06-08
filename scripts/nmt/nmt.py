@@ -30,13 +30,13 @@ import argparse
 import os
 import sys
 
-import riva.client.proto.riva_nmt_pb2 as riva_nmt
-import riva.client.proto.riva_nmt_pb2_grpc as riva_nmt_srv
+import nemotronspeech.client.proto.riva_nmt_pb2 as riva_nmt
+import nemotronspeech.client.proto.riva_nmt_pb2_grpc as riva_nmt_srv
 
-import riva.client
-from riva.client.argparse_utils import add_connection_argparse_parameters
+import nemotronspeech.client
+from nemotronspeech.client.argparse_utils import add_connection_argparse_parameters
 try:
-    from riva.client.argparse_utils import cli_main, EXIT_BAD_INPUT
+    from nemotronspeech.client.argparse_utils import cli_main, EXIT_BAD_INPUT
 except ImportError:
     EXIT_BAD_INPUT = 2
     def cli_main(func):
@@ -110,7 +110,7 @@ def parse_args() -> argparse.Namespace:
 def main() -> int:
     args = parse_args()
 
-    auth = riva.client.Auth(
+    auth = nemotronspeech.client.Auth(
         ssl_root_cert=args.ssl_root_cert,
         ssl_client_cert=args.ssl_client_cert,
         ssl_client_key=args.ssl_client_key,
@@ -119,7 +119,7 @@ def main() -> int:
         metadata_args=args.metadata,
         options=args.options
     )
-    nmt_client = riva.client.NeuralMachineTranslationClient(auth)
+    nmt_client = nemotronspeech.client.NeuralMachineTranslationClient(auth)
 
     def request(inputs):
         dnt_phrases_input = {}

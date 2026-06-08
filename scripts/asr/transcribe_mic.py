@@ -4,20 +4,20 @@
 import argparse
 import sys
 
-import riva.client
-from riva.client.argparse_utils import (
+import nemotronspeech.client
+from nemotronspeech.client.argparse_utils import (
     add_asr_config_argparse_parameters,
     add_connection_argparse_parameters,
 )
 try:
-    from riva.client.argparse_utils import cli_main, EXIT_BAD_INPUT
+    from nemotronspeech.client.argparse_utils import cli_main, EXIT_BAD_INPUT
 except ImportError:
     EXIT_BAD_INPUT = 2
     def cli_main(func):
         return func
 
 try:
-    import riva.client.audio_io
+    import nemotronspeech.client.audio_io
 except ModuleNotFoundError as e:
     print(f"ModuleNotFoundError: {e}", file=sys.stderr)
     print(
@@ -29,7 +29,7 @@ except ModuleNotFoundError as e:
     sys.exit(EXIT_BAD_INPUT)
 
 def parse_args() -> argparse.Namespace:
-    default_device_info = riva.client.audio_io.get_default_input_device_info()
+    default_device_info = nemotronspeech.client.audio_io.get_default_input_device_info()
     default_device_index = None if default_device_info is None else default_device_info['index']
     parser = argparse.ArgumentParser(
         description="Streaming transcription from microphone via Riva AI Services",
@@ -59,9 +59,9 @@ def parse_args() -> argparse.Namespace:
 def main() -> int:
     args = parse_args()
     if args.list_devices:
-        riva.client.audio_io.list_input_devices()
+        nemotronspeech.client.audio_io.list_input_devices()
         return
-    auth = riva.client.Auth(
+    auth = nemotronspeech.client.Auth(
         ssl_root_cert=args.ssl_root_cert,
         ssl_client_cert=args.ssl_client_cert,
         ssl_client_key=args.ssl_client_key,
@@ -70,10 +70,10 @@ def main() -> int:
         metadata_args=args.metadata,
         options=args.options
     )
-    asr_service = riva.client.ASRService(auth)
-    config = riva.client.StreamingRecognitionConfig(
-        config=riva.client.RecognitionConfig(
-            encoding=riva.client.AudioEncoding.LINEAR_PCM,
+    asr_service = nemotronspeech.client.ASRService(auth)
+    config = nemotronspeech.client.StreamingRecognitionConfig(
+        config=nemotronspeech.client.RecognitionConfig(
+            encoding=nemotronspeech.client.AudioEncoding.LINEAR_PCM,
             language_code=args.language_code,
             model=args.model_name,
             max_alternatives=1,
@@ -85,8 +85,8 @@ def main() -> int:
         ),
         interim_results=True,
     )
-    riva.client.add_word_boosting_to_config(config, args.boosted_lm_words, args.boosted_lm_score)
-    riva.client.add_endpoint_parameters_to_config(
+    nemotronspeech.client.add_word_boosting_to_config(config, args.boosted_lm_words, args.boosted_lm_score)
+    nemotronspeech.client.add_endpoint_parameters_to_config(
         config,
         args.start_history,
         args.start_threshold,
@@ -95,16 +95,16 @@ def main() -> int:
         args.stop_threshold,
         args.stop_threshold_eou
     )
-    riva.client.add_custom_configuration_to_config(
+    nemotronspeech.client.add_custom_configuration_to_config(
         config,
         args.custom_configuration
     )
-    with riva.client.audio_io.MicrophoneStream(
+    with nemotronspeech.client.audio_io.MicrophoneStream(
         args.sample_rate_hz,
         args.file_streaming_chunk,
         device=args.input_device,
     ) as audio_chunk_iterator:
-        riva.client.print_streaming(
+        nemotronspeech.client.print_streaming(
             responses=asr_service.streaming_response_generator(
                 audio_chunks=audio_chunk_iterator,
                 streaming_config=config,
