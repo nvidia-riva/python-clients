@@ -1,7 +1,7 @@
 [![License](https://img.shields.io/badge/license-MIT-green)](https://opensource.org/licenses/MIT)
-# NVIDIA NemotronSpeech Clients
+# NVIDIA Nemotron Speech Clients
 
-NemotronSpeech is a GPU-accelerated SDK for building Speech AI applications that are customized for your use 
+Nemotron Speech is a GPU-accelerated SDK for building Speech AI applications that are customized for your use 
 case and deliver real-time performance. This repo provides performant client example command-line clients.
 
 ## Main API
@@ -82,7 +82,7 @@ and restart.
 
 ### Server
 
-Before running client part of NemotronSpeech, please set up a server. The simplest
+Before running client part of Nemotron Speech, please set up a server. The simplest
 way to do this is to follow
 [quick start guide](https://docs.nvidia.com/deeplearning/riva/user-guide/docs/quick-start-guide.html#local-deployment-using-quick-start-scripts).
 
@@ -280,7 +280,7 @@ See tutorial notebooks in directory `tutorials`.
 
 ## Documentation
 
-Additional documentation on the NemotronSpeech Skills SDK can be found [here](https://docs.nvidia.com/deeplearning/riva/user-guide/docs/).
+Additional documentation on the Nemotron Speech Skills SDK can be found [here](https://docs.nvidia.com/deeplearning/riva/user-guide/docs/).
 
 
 ## License
