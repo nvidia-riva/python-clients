@@ -30,8 +30,8 @@ import argparse
 import os
 import sys
 
-import nemotronspeech.client.proto.riva_nmt_pb2 as riva_nmt
-import nemotronspeech.client.proto.riva_nmt_pb2_grpc as riva_nmt_srv
+import nemotronspeech.client.proto.nemotron_nmt_pb2 as riva_nmt
+import nemotronspeech.client.proto.nemotron_nmt_pb2_grpc as riva_nmt_srv
 
 import nemotronspeech.client
 from nemotronspeech.client.argparse_utils import add_connection_argparse_parameters

@@ -78,7 +78,7 @@ class BuildPyCommand(build_py):
             #     )
 
             os.chdir(cwd)
-            glob_dir = str(setup_py_dir / 'common/riva/proto/*.proto')
+            glob_dir = str(setup_py_dir / 'common/nemotronspeech/proto/*.proto')
             print("glob dir: ", glob_dir)
             protos = glob(glob_dir)
             if not protos:
@@ -99,17 +99,17 @@ class BuildPyCommand(build_py):
                         proto,
                     ]
                 )
-            for fn in glob(str(target_dir / 'riva/proto/*_pb2*.py')):
+            for fn in glob(str(target_dir / 'nemotronspeech/proto/*_pb2*.py')):
                 with open(fn) as f:
                     text = f.read()
                 with open(fn, 'w') as f:
                     f.write(CHANGE_PB2_LOC_PATTERN.sub(r'from . import \1', text))
-            # Move Python files to riva/client
-            for f in glob(str(target_dir / 'riva/proto/*.py')):
+            # Move Python files to nemotronspeech/client
+            for f in glob(str(target_dir / 'nemotronspeech/proto/*.py')):
                 shutil.move(f, target_dir)
             # Remove leftover empty dirs
-            shutil.rmtree(target_dir / 'riva/proto')
-            shutil.rmtree(target_dir / 'riva')
+            shutil.rmtree(target_dir / 'nemotronspeech/proto')
+            shutil.rmtree(target_dir / 'nemotronspeech')
             open(target_dir / '__init__.py', 'w').close()
             super(BuildPyCommand, self).run()
 

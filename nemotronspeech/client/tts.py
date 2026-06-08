@@ -5,10 +5,10 @@ from typing import Dict, Generator, Optional, Union, Iterable
 
 from grpc._channel import _MultiThreadedRendezvous
 
-import nemotronspeech.client.proto.riva_tts_pb2 as rtts
-import nemotronspeech.client.proto.riva_tts_pb2_grpc as rtts_srv
+import nemotronspeech.client.proto.nemotron_tts_pb2 as rtts
+import nemotronspeech.client.proto.nemotron_tts_pb2_grpc as rtts_srv
 from nemotronspeech.client import Auth
-from nemotronspeech.client.proto.riva_audio_pb2 import AudioEncoding
+from nemotronspeech.client.proto.nemotron_audio_pb2 import AudioEncoding
 import wave
 
 def parse_custom_configuration(custom_configuration: str) -> Dict[str, str]:
@@ -96,8 +96,8 @@ class SpeechSynthesisService:
             custom_configuration (:obj:`Dict[str, str]`, `optional`): Free-form key/value parameters forwarded
                 to the synthesizer (e.g. ``{"exaggeration_factor": "1.5"}``). Model-specific.
         Returns:
-            :obj:`Union[nemotronspeech.client.proto.riva_tts_pb2.SynthesizeSpeechResponse, grpc._channel._MultiThreadedRendezvous]`:
-            a response with output. You may find :class:`nemotronspeech.client.proto.riva_tts_pb2.SynthesizeSpeechResponse` fields
+            :obj:`Union[nemotronspeech.client.proto.nemotron_tts_pb2.SynthesizeSpeechResponse, grpc._channel._MultiThreadedRendezvous]`:
+            a response with output. You may find :class:`nemotronspeech.client.proto.nemotron_tts_pb2.SynthesizeSpeechResponse` fields
             description `here
             <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-tts-proto>`_.
         """
@@ -162,8 +162,8 @@ class SpeechSynthesisService:
             custom_configuration (:obj:`Dict[str, str]`, `optional`): Free-form key/value parameters forwarded
                 to the synthesizer (e.g. ``{"exaggeration_factor": "1.5"}``). Model-specific.
         Yields:
-            :obj:`nemotronspeech.client.proto.riva_tts_pb2.SynthesizeSpeechResponse`: a response with output. You may find
-            :class:`nemotronspeech.client.proto.riva_tts_pb2.SynthesizeSpeechResponse` fields description `here
+            :obj:`nemotronspeech.client.proto.nemotron_tts_pb2.SynthesizeSpeechResponse`: a response with output. You may find
+            :class:`nemotronspeech.client.proto.nemotron_tts_pb2.SynthesizeSpeechResponse` fields description `here
             <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-tts-proto>`_.
             If :param:`future` is :obj:`True`, then a future object is returned. You may retrieve a response from a
             future object by calling ``result()`` method.

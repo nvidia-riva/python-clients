@@ -5,7 +5,7 @@ from math import ceil
 from typing import Any, Generator, List, Union
 from unittest.mock import patch, Mock
 
-import nemotronspeech.client.proto.riva_asr_pb2 as rasr
+import nemotronspeech.client.proto.nemotron_asr_pb2 as rasr
 from nemotronspeech.client import ASRService
 from nemotronspeech.client.asr import streaming_request_generator
 
@@ -54,7 +54,7 @@ def is_iterable(obj: Any) -> bool:
     return True
 
 
-@patch("nemotronspeech.client.proto.riva_asr_pb2_grpc.RivaSpeechRecognitionStub.__init__", riva_asr_stub_init_patch)
+@patch("nemotronspeech.client.proto.nemotron_asr_pb2_grpc.RivaSpeechRecognitionStub.__init__", riva_asr_stub_init_patch)
 class TestSpeechSynthesisService:
     def test_offline_recognize(self) -> None:
         auth, return_value_of_get_auth_metadata = set_auth_mock()

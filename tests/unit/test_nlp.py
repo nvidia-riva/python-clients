@@ -4,7 +4,7 @@
 from typing import List, Union
 from unittest.mock import patch, Mock
 
-import nemotronspeech.client.proto.riva_nlp_pb2 as rnlp
+import nemotronspeech.client.proto.nemotron_nlp_pb2 as rnlp
 from nemotronspeech.client import NLPService
 
 from .helpers import set_auth_mock
@@ -76,7 +76,7 @@ def riva_nlp_stub_init_patch(self, channel):
     self.NaturalQuery = NATURAL_QUERY_MOCK
 
 
-@patch("nemotronspeech.client.proto.riva_nlp_pb2_grpc.RivaLanguageUnderstandingStub.__init__", riva_nlp_stub_init_patch)
+@patch("nemotronspeech.client.proto.nemotron_nlp_pb2_grpc.RivaLanguageUnderstandingStub.__init__", riva_nlp_stub_init_patch)
 class TestSpeechSynthesisService:
     def test_classify_text(self) -> None:
         auth, return_value_of_get_auth_metadata = set_auth_mock()

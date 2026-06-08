@@ -5,7 +5,7 @@ from math import ceil
 from typing import Any, Generator
 from unittest.mock import patch, Mock
 
-import nemotronspeech.client.proto.riva_tts_pb2 as rtts
+import nemotronspeech.client.proto.nemotron_tts_pb2 as rtts
 from nemotronspeech.client import AudioEncoding
 from nemotronspeech.client.tts import SpeechSynthesisService
 
@@ -50,7 +50,7 @@ def is_iterable(obj: Any) -> bool:
     return True
 
 
-@patch("nemotronspeech.client.proto.riva_tts_pb2_grpc.RivaSpeechSynthesisStub.__init__", riva_tts_stub_init_patch)
+@patch("nemotronspeech.client.proto.nemotron_tts_pb2_grpc.RivaSpeechSynthesisStub.__init__", riva_tts_stub_init_patch)
 class TestSpeechSynthesisService:
     def test_synthesize(self) -> None:
         auth, return_value_of_get_auth_metadata = set_auth_mock()

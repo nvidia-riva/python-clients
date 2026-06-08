@@ -4,8 +4,8 @@
 from typing import Callable, Dict, Generator, Iterable, List, Optional, TextIO, Union
 from grpc._channel import _MultiThreadedRendezvous
 
-import nemotronspeech.client.proto.riva_nmt_pb2 as riva_nmt
-import nemotronspeech.client.proto.riva_nmt_pb2_grpc as riva_nmt_srv
+import nemotronspeech.client.proto.nemotron_nmt_pb2 as riva_nmt
+import nemotronspeech.client.proto.nemotron_nmt_pb2_grpc as riva_nmt_srv
 from nemotronspeech.client import Auth
 
 def streaming_s2s_request_generator(
@@ -65,7 +65,7 @@ class NeuralMachineTranslationClient:
                     with wave.open(file_name, 'rb') as wav_f:
                         raw_audio = wav_f.readframes(n_frames)
 
-            streaming_config (:obj:`nemotronspeech.client.proto.riva_nmt_pb2.StreamingTranslateSpeechToSpeechConfig`): a config for streaming.
+            streaming_config (:obj:`nemotronspeech.client.proto.nemotron_nmt_pb2.StreamingTranslateSpeechToSpeechConfig`): a config for streaming.
                 You may find description of config fields in message ``StreamingTranslateSpeechToSpeechConfig`` in
                 `common repo
                 <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-nmt-proto>`_.
@@ -81,7 +81,7 @@ class NeuralMachineTranslationClient:
                     streaming_config = StreamingTranslateSpeechToSpeechConfig(asr_config, translation_config, tts_config)
 
         Yields:
-            :obj:`nemotronspeech.client.proto.riva_nmt_pb2.StreamingTranslateSpeechToSpeechResponse`: responses for audio chunks in
+            :obj:`nemotronspeech.client.proto.nemotron_nmt_pb2.StreamingTranslateSpeechToSpeechResponse`: responses for audio chunks in
             :param:`audio_chunks`. You may find description of response fields in declaration of
             ``StreamingTranslateSpeechToSpeechResponse``
             message `here
@@ -112,7 +112,7 @@ class NeuralMachineTranslationClient:
                     with wave.open(file_name, 'rb') as wav_f:
                         raw_audio = wav_f.readframes(n_frames)
 
-            streaming_config (:obj:`nemotronspeech.client.proto.riva_nmt_pb2.StreamingTranslateSpeechToTextConfig`): a config for streaming.
+            streaming_config (:obj:`nemotronspeech.client.proto.nemotron_nmt_pb2.StreamingTranslateSpeechToTextConfig`): a config for streaming.
                 You may find description of config fields in message ``StreamingTranslateSpeechToTextConfig`` in
                 `common repo
                 <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-nmt-proto>`_.
@@ -127,7 +127,7 @@ class NeuralMachineTranslationClient:
                     streaming_config = StreamingTranslateSpeechToTextConfig(asr_config, translation_config)
 
         Yields:
-            :obj:`nemotronspeech.client.proto.riva_nmt_pb2.StreamingTranslateSpeechToTextResponse`: responses for audio chunks in
+            :obj:`nemotronspeech.client.proto.nemotron_nmt_pb2.StreamingTranslateSpeechToTextResponse`: responses for audio chunks in
             :param:`audio_chunks`. You may find description of response fields in declaration of
             ``StreamingTranslateSpeechToTextResponse``
             message `here
@@ -157,8 +157,8 @@ class NeuralMachineTranslationClient:
                 response. You can get a response by calling ``result()`` method of the future object.
 
         Returns:
-            :obj:`Union[nemotronspeech.client.proto.riva_nmt_pb2.TranslateTextResponse, grpc._channel._MultiThreadedRendezvous]`:
-            a response with output. You may find :class:`nemotronspeech.client.proto.riva_nmt_pb2.TranslateTextResponse` fields
+            :obj:`Union[nemotronspeech.client.proto.nemotron_nmt_pb2.TranslateTextResponse, grpc._channel._MultiThreadedRendezvous]`:
+            a response with output. You may find :class:`nemotronspeech.client.proto.nemotron_nmt_pb2.TranslateTextResponse` fields
             description `here
             <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-nmt-proto>`_.
         """

@@ -35,9 +35,9 @@ from nemotronspeech.client.package_info import (
     __shortversion__,
     __version__,
 )
-from nemotronspeech.client.proto.riva_asr_pb2 import RecognitionConfig, StreamingRecognitionConfig, EndpointingConfig
-from nemotronspeech.client.proto.riva_audio_pb2 import AudioEncoding
-from nemotronspeech.client.proto.riva_nlp_pb2 import AnalyzeIntentOptions
-from nemotronspeech.client.proto.riva_nmt_pb2 import StreamingTranslateSpeechToSpeechConfig, TranslationConfig, SynthesizeSpeechConfig, StreamingTranslateSpeechToTextConfig
+from nemotronspeech.client.proto.nemotron_asr_pb2 import RecognitionConfig, StreamingRecognitionConfig, EndpointingConfig
+from nemotronspeech.client.proto.nemotron_audio_pb2 import AudioEncoding
+from nemotronspeech.client.proto.nemotron_nlp_pb2 import AnalyzeIntentOptions
+from nemotronspeech.client.proto.nemotron_nmt_pb2 import StreamingTranslateSpeechToSpeechConfig, TranslationConfig, SynthesizeSpeechConfig, StreamingTranslateSpeechToTextConfig
 from nemotronspeech.client.tts import SpeechSynthesisService
 from nemotronspeech.client.nmt import NeuralMachineTranslationClient

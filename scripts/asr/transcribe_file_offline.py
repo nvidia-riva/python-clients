@@ -56,7 +56,7 @@ def main() -> int:
 
     if args.list_models:
         asr_models = dict()
-        config_response = asr_service.stub.GetRivaSpeechRecognitionConfig(nemotronspeech.client.proto.riva_asr_pb2.RivaSpeechRecognitionConfigRequest())
+        config_response = asr_service.stub.GetRivaSpeechRecognitionConfig(nemotronspeech.client.proto.nemotron_asr_pb2.RivaSpeechRecognitionConfigRequest())
         for model_config in config_response.model_config:
             if model_config.parameters["type"] == "offline":
                 language_code = model_config.parameters['language_code']

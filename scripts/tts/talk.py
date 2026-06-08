@@ -16,7 +16,7 @@ except ImportError:
     EXIT_BAD_INPUT = 2
     def cli_main(func):
         return func
-from nemotronspeech.client.proto.riva_audio_pb2 import AudioEncoding
+from nemotronspeech.client.proto.nemotron_audio_pb2 import AudioEncoding
 
 def read_file_to_dict(file_path):
     result_dict = {}
@@ -140,7 +140,7 @@ def main() -> int:
 
     if args.list_voices:
         config_response = service.stub.GetRivaSynthesisConfig(
-                nemotronspeech.client.proto.riva_tts_pb2.RivaSynthesisConfigRequest()
+                nemotronspeech.client.proto.nemotron_tts_pb2.RivaSynthesisConfigRequest()
             )
         tts_models = dict()
         for model_config in config_response.model_config:

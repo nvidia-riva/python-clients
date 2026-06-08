@@ -5,8 +5,8 @@ import wave
 from typing import Iterator
 
 import nemotronspeech.client
-import nemotronspeech.client.proto.riva_asr_pb2 as riva_asr_pb2
-import nemotronspeech.client.proto.riva_nmt_pb2 as riva_nmt_pb2
+import nemotronspeech.client.proto.nemotron_asr_pb2 as nemotron_asr_pb2
+import nemotronspeech.client.proto.nemotron_nmt_pb2 as nemotron_nmt_pb2
 from nemotronspeech.client.argparse_utils import add_connection_argparse_parameters
 try:
     from nemotronspeech.client.argparse_utils import cli_main
@@ -58,20 +58,20 @@ def main():
     print(f"Server address: {args.server}")
 
     # Create ASR config
-    asr_config = riva_asr_pb2.StreamingRecognitionConfig(
-        config=riva_asr_pb2.RecognitionConfig(
+    asr_config = nemotron_asr_pb2.StreamingRecognitionConfig(
+        config=nemotron_asr_pb2.RecognitionConfig(
             language_code=args.source_language, max_alternatives=1, enable_automatic_punctuation=True
         ),
         interim_results=True,
     )
 
     # Create translation config
-    translation_config = riva_nmt_pb2.TranslationConfig(
+    translation_config = nemotron_nmt_pb2.TranslationConfig(
         source_language_code=args.source_language, target_language_code=args.target_language,
     )
 
     # Create synthesis config
-    tts_config = riva_nmt_pb2.SynthesizeSpeechConfig(
+    tts_config = nemotron_nmt_pb2.SynthesizeSpeechConfig(
         encoding=nemotronspeech.client.AudioEncoding.LINEAR_PCM,
         language_code=args.target_language,
         voice_name=args.voice,
@@ -79,7 +79,7 @@ def main():
     )
 
     # Create streaming config
-    streaming_config = riva_nmt_pb2.StreamingTranslateSpeechToSpeechConfig(
+    streaming_config = nemotron_nmt_pb2.StreamingTranslateSpeechToSpeechConfig(
         asr_config=asr_config, translation_config=translation_config, tts_config=tts_config
     )
 
