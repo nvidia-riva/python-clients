@@ -37,7 +37,7 @@ with open("README.md", "r", encoding='utf-8') as fh:
     long_description = fh.read()
 long_description_content_type = "text/markdown"
 
-CHANGE_PB2_LOC_PATTERN = re.compile('from riva.proto import (.+_pb2.*)')
+CHANGE_PB2_LOC_PATTERN = re.compile('from nemotronspeech.proto import (.+_pb2.*)')
 
 
 class BuildPyCommand(build_py):
