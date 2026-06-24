@@ -5,7 +5,7 @@ from unittest.mock import Mock, patch
 
 import grpc
 
-from riva.client.auth import create_channel, Auth
+from nemotronspeech.client.auth import create_channel, Auth
 
 
 @patch("grpc.insecure_channel", Mock(return_value="insecure_channel"))

@@ -6,15 +6,15 @@ import asyncio
 import signal
 import sys
 
-from riva.client.asr import get_wav_file_parameters, AudioChunkFileIterator
-from riva.client.realtime import RealtimeClientASR
-from riva.client.argparse_utils import (
+from nemotronspeech.client.asr import get_wav_file_parameters, AudioChunkFileIterator
+from nemotronspeech.client.realtime import RealtimeClientASR
+from nemotronspeech.client.argparse_utils import (
     add_asr_config_argparse_parameters,
     add_realtime_config_argparse_parameters,
     add_connection_argparse_parameters,
 )
 try:
-    from riva.client.argparse_utils import cli_main
+    from nemotronspeech.client.argparse_utils import cli_main
 except ImportError:
     def cli_main(func):
         return func
@@ -120,8 +120,8 @@ def parse_args() -> argparse.Namespace:
 def get_default_device_index():
     """Get default audio device index only when needed."""
     try:
-        import riva.client.audio_io
-        default_device_info = riva.client.audio_io.get_default_input_device_info()
+        import nemotronspeech.client.audio_io
+        default_device_info = nemotronspeech.client.audio_io.get_default_input_device_info()
         return None if default_device_info is None else default_device_info['index']
     except ModuleNotFoundError:
         return None
@@ -145,7 +145,7 @@ async def create_audio_iterator(args):
         Audio iterator for streaming audio data
     """
     if args.mic: 
-        from riva.client.audio_io import MicrophoneStream
+        from nemotronspeech.client.audio_io import MicrophoneStream
 
         # Get default device index if not specified
         device_index = args.input_device
@@ -302,8 +302,8 @@ async def main() -> None:
     # Handle list devices option
     if args.list_devices:
         try:
-            import riva.client.audio_io
-            riva.client.audio_io.list_input_devices()
+            import nemotronspeech.client.audio_io
+            nemotronspeech.client.audio_io.list_input_devices()
         except ModuleNotFoundError:
             print(
                 "PyAudio not available. Install the system PortAudio headers first "

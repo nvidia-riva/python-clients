@@ -6,13 +6,13 @@ import sys
 import argparse
 from pathlib import Path
 
-import riva.client
-from riva.client.argparse_utils import (
+import nemotronspeech.client
+from nemotronspeech.client.argparse_utils import (
     add_asr_config_argparse_parameters,
     add_connection_argparse_parameters,
 )
 try:
-    from riva.client.argparse_utils import cli_main, EXIT_BAD_INPUT
+    from nemotronspeech.client.argparse_utils import cli_main, EXIT_BAD_INPUT
 except ImportError:
     EXIT_BAD_INPUT = 2
     def cli_main(func):
@@ -44,7 +44,7 @@ def main() -> int:
     args = parse_args()
 
     options = [('grpc.max_receive_message_length', args.max_message_length), ('grpc.max_send_message_length', args.max_message_length)]
-    auth = riva.client.Auth(
+    auth = nemotronspeech.client.Auth(
         ssl_root_cert=args.ssl_root_cert,
         ssl_client_cert=args.ssl_client_cert,
         ssl_client_key=args.ssl_client_key,
@@ -52,11 +52,11 @@ def main() -> int:
         uri=args.server,
         metadata_args=args.metadata,
         options=options)
-    asr_service = riva.client.ASRService(auth)
+    asr_service = nemotronspeech.client.ASRService(auth)
 
     if args.list_models:
         asr_models = dict()
-        config_response = asr_service.stub.GetRivaSpeechRecognitionConfig(riva.client.proto.riva_asr_pb2.RivaSpeechRecognitionConfigRequest())
+        config_response = asr_service.stub.GetRivaSpeechRecognitionConfig(nemotronspeech.client.proto.nemotron_asr_pb2.RivaSpeechRecognitionConfigRequest())
         for model_config in config_response.model_config:
             if model_config.parameters["type"] == "offline":
                 language_code = model_config.parameters['language_code']
@@ -75,7 +75,7 @@ def main() -> int:
         print(f"Invalid input file path: {args.input_file}", file=sys.stderr)
         return EXIT_BAD_INPUT
 
-    config = riva.client.RecognitionConfig(
+    config = nemotronspeech.client.RecognitionConfig(
         language_code=args.language_code,
         model=args.model_name,
         max_alternatives=args.max_alternatives,
@@ -84,9 +84,9 @@ def main() -> int:
         verbatim_transcripts=not args.no_verbatim_transcripts,
         enable_word_time_offsets=args.word_time_offsets or args.speaker_diarization,
     )
-    riva.client.add_word_boosting_to_config(config, args.boosted_lm_words, args.boosted_lm_score)
-    riva.client.add_speaker_diarization_to_config(config, args.speaker_diarization, args.diarization_max_speakers)
-    riva.client.add_endpoint_parameters_to_config(
+    nemotronspeech.client.add_word_boosting_to_config(config, args.boosted_lm_words, args.boosted_lm_score)
+    nemotronspeech.client.add_speaker_diarization_to_config(config, args.speaker_diarization, args.diarization_max_speakers)
+    nemotronspeech.client.add_endpoint_parameters_to_config(
         config,
         args.start_history,
         args.start_threshold,
@@ -95,7 +95,7 @@ def main() -> int:
         args.stop_threshold,
         args.stop_threshold_eou
     )
-    riva.client.add_custom_configuration_to_config(
+    nemotronspeech.client.add_custom_configuration_to_config(
         config,
         args.custom_configuration
     )
@@ -104,7 +104,7 @@ def main() -> int:
     seglst_output_file = None
     if args.output_seglst:
         seglst_output_file = os.path.basename(args.input_file).split(".")[0]
-    riva.client.print_offline(
+    nemotronspeech.client.print_offline(
         response=asr_service.offline_recognize(data, config),
         speaker_diarization=args.speaker_diarization,
         seglst_output_file=seglst_output_file,

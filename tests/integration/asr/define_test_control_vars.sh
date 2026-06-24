@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: MIT
 
-if [[ "${script_name}" == "riva_streaming_asr_client.py" ]]; then
+if [[ "${script_name}" == "nemotron_streaming_asr_client.py" ]]; then
   use_stdout_for_testing=0
   time_info_before_final_transcript=1
   test_max_alternatives=1

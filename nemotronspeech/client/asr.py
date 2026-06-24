@@ -16,10 +16,10 @@ from typing import Callable, Dict, Generator, Iterable, List, Optional, TextIO, 
 from google.protobuf.json_format import MessageToJson
 from grpc._channel import _MultiThreadedRendezvous
 
-import riva.client
-import riva.client.proto.riva_asr_pb2 as rasr
-import riva.client.proto.riva_asr_pb2_grpc as rasr_srv
-from riva.client.auth import Auth
+import nemotronspeech.client
+import nemotronspeech.client.proto.nemotron_asr_pb2 as rasr
+import nemotronspeech.client.proto.nemotron_asr_pb2_grpc as rasr_srv
+from nemotronspeech.client.auth import Auth
 
 
 def get_wav_file_parameters(input_file: Union[str, os.PathLike]) -> Dict[str, Union[int, float]]:
@@ -194,7 +194,7 @@ def print_streaming(
     Prints streaming speech recognition results to provided files or streams.
 
     Args:
-        responses (:obj:`Iterable[riva.client.proto.riva_asr_pb2.StreamingRecognizeResponse]`): responses acquired during
+        responses (:obj:`Iterable[nemotronspeech.client.proto.nemotron_asr_pb2.StreamingRecognizeResponse]`): responses acquired during
             streaming speech recognition.
         output_file (:obj:`Union[Union[os.PathLike, str, TextIO], List[Union[os.PathLike, str, TextIO]]]`, `optional`):
             a path to an output file or a text stream or a list of paths/streams. If contains several elements, then
@@ -394,7 +394,7 @@ class ASRService:
         Initializes an instance of the class.
 
         Args:
-            auth (:obj:`riva.client.auth.Auth`): an instance of :class:`riva.client.auth.Auth` which is used for
+            auth (:obj:`nemotronspeech.client.auth.Auth`): an instance of :class:`nemotronspeech.client.auth.Auth` which is used for
                 authentication metadata generation.
         """
         self.auth = auth
@@ -420,7 +420,7 @@ class ASRService:
                     with wave.open(file_name, 'rb') as wav_f:
                         raw_audio = wav_f.readframes(n_frames)
 
-            streaming_config (:obj:`riva.client.proto.riva_asr_pb2.StreamingRecognitionConfig`): a config for streaming.
+            streaming_config (:obj:`nemotronspeech.client.proto.nemotron_asr_pb2.StreamingRecognitionConfig`): a config for streaming.
                 You may find description of config fields in message ``StreamingRecognitionConfig`` in
                 `common repo
                 <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-asr-proto>`_.
@@ -428,12 +428,12 @@ class ASRService:
 
                 .. code-style:: python
 
-                    from riva.client import RecognitionConfig, StreamingRecognitionConfig
+                    from nemotronspeech.client import RecognitionConfig, StreamingRecognitionConfig
                     config = RecognitionConfig(enable_automatic_punctuation=True)
                     streaming_config = StreamingRecognitionConfig(config, interim_results=True)
 
         Yields:
-            :obj:`riva.client.proto.riva_asr_pb2.StreamingRecognizeResponse`: responses for audio chunks in
+            :obj:`nemotronspeech.client.proto.nemotron_asr_pb2.StreamingRecognizeResponse`: responses for audio chunks in
             :param:`audio_chunks`. You may find description of response fields in declaration of
             ``StreamingRecognizeResponse``
             message `here
@@ -459,7 +459,7 @@ class ASRService:
                     with wave.open(file_name, 'rb') as wav_f:
                         raw_audio = wav_f.readframes(n_frames)
 
-            config (:obj:`riva.client.proto.riva_asr_pb2.RecognitionConfig`): a config for offline speech recognition.
+            config (:obj:`nemotronspeech.client.proto.nemotron_asr_pb2.RecognitionConfig`): a config for offline speech recognition.
                 You may find description of config fields in message ``RecognitionConfig`` in
                 `common repo
                 <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-asr-proto>`_.
@@ -467,13 +467,13 @@ class ASRService:
 
                 .. code-style:: python
 
-                    from riva.client import RecognitionConfig
+                    from nemotronspeech.client import RecognitionConfig
                     config = RecognitionConfig(enable_automatic_punctuation=True)
             future (:obj:`bool`, defaults to :obj:`False`): whether to return an async result instead of usual
                 response. You can get a response by calling ``result()`` method of the future object.
 
         Returns:
-            :obj:`Union[riva.client.proto.riva_asr_pb2.RecognizeResponse, grpc._channel._MultiThreadedRendezvous]``: a
+            :obj:`Union[nemotronspeech.client.proto.nemotron_asr_pb2.RecognizeResponse, grpc._channel._MultiThreadedRendezvous]``: a
             response with results of :param:`audio_bytes` processing. You may find description of response fields in
             declaration of ``RecognizeResponse`` message `here
             <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-asr-proto>`_.

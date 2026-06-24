@@ -68,14 +68,14 @@ class Auth:
         Initialize the Auth class for establishing secure connections with a server.
 
         This class handles SSL/TLS configuration, authentication metadata, and gRPC channel creation
-        for secure communication with Riva services.
+        for secure communication with NemotronSpeech services.
 
         Args:
             ssl_root_cert (Optional[Union[str, os.PathLike]], optional): Path to the SSL root certificate file.
                 If provided and use_ssl is False, SSL will still be enabled. Defaults to None.
             use_ssl (bool, optional): Whether to use SSL/TLS encryption. If True and ssl_root_cert is None,
                 SSL will be used with default credentials. Defaults to False.
-            uri (str, optional): The Riva server URI in format "host:port". Defaults to "localhost:50051".
+            uri (str, optional): The NemotronSpeech server URI in format "host:port". Defaults to "localhost:50051".
             metadata_args (List[List[str]], optional): List of metadata key-value pairs for authentication.
                 Each inner list should contain exactly 2 elements: [key, value]. Defaults to None.
             ssl_client_cert (Optional[Union[str, os.PathLike]], optional): Path to the SSL client certificate file.

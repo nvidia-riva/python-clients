@@ -23,8 +23,8 @@ rm -rf out
 
 echo "Testing script transcribe_mic.py"
 bash "$(dirname $0)/asr/test_transcribe_mic.sh"
-echo "Testing script riva_streaming_asr_client.py ..."
-bash "$(dirname $0)/asr/test_riva_streaming_asr_client.sh"
+echo "Testing script nemotron_streaming_asr_client.py ..."
+bash "$(dirname $0)/asr/test_nemotron_streaming_asr_client.sh"
 echo "Testing script transcribe_file_offline.py"
 bash "$(dirname $0)/asr/test_transcribe_file_offline.sh"
 echo "Testing script transcribe_file.py ..."

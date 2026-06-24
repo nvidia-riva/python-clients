@@ -8,15 +8,15 @@ import wave
 import json
 from pathlib import Path
 
-import riva.client
-from riva.client.argparse_utils import add_connection_argparse_parameters
+import nemotronspeech.client
+from nemotronspeech.client.argparse_utils import add_connection_argparse_parameters
 try:
-    from riva.client.argparse_utils import cli_main, EXIT_BAD_INPUT
+    from nemotronspeech.client.argparse_utils import cli_main, EXIT_BAD_INPUT
 except ImportError:
     EXIT_BAD_INPUT = 2
     def cli_main(func):
         return func
-from riva.client.proto.riva_audio_pb2 import AudioEncoding
+from nemotronspeech.client.proto.nemotron_audio_pb2 import AudioEncoding
 
 def read_file_to_dict(file_path):
     result_dict = {}
@@ -97,7 +97,7 @@ def parse_args() -> argparse.Namespace:
         args.output = args.output.expanduser()
     try:
         if args.list_devices or args.output_device or args.play_audio:
-            import riva.client.audio_io
+            import nemotronspeech.client.audio_io
     except ModuleNotFoundError as e:
         print(f"ModuleNotFoundError: {e}")
         print(
@@ -116,7 +116,7 @@ def main() -> int:
         print("Empty output file path not allowed", file=sys.stderr)
         return EXIT_BAD_INPUT
     if args.list_devices:
-        riva.client.audio_io.list_output_devices()
+        nemotronspeech.client.audio_io.list_output_devices()
         return
 
     if args.options is None:
@@ -124,7 +124,7 @@ def main() -> int:
     args.options.append(('grpc.max_receive_message_length', args.max_message_length))
     args.options.append(('grpc.max_send_message_length', args.max_message_length))
 
-    auth = riva.client.Auth(
+    auth = nemotronspeech.client.Auth(
         ssl_root_cert=args.ssl_root_cert,
         ssl_client_cert=args.ssl_client_cert,
         ssl_client_key=args.ssl_client_key,
@@ -133,14 +133,14 @@ def main() -> int:
         metadata_args=args.metadata,
         options=args.options
     )
-    service = riva.client.SpeechSynthesisService(auth)
+    service = nemotronspeech.client.SpeechSynthesisService(auth)
     nchannels = 1
     sampwidth = 2
     sound_stream, out_f = None, None
 
     if args.list_voices:
         config_response = service.stub.GetRivaSynthesisConfig(
-                riva.client.proto.riva_tts_pb2.RivaSynthesisConfigRequest()
+                nemotronspeech.client.proto.nemotron_tts_pb2.RivaSynthesisConfigRequest()
             )
         tts_models = dict()
         for model_config in config_response.model_config:
@@ -169,7 +169,7 @@ def main() -> int:
         return EXIT_BAD_INPUT
     try:
         if args.output_device is not None or args.play_audio:
-            sound_stream = riva.client.audio_io.SoundCallBack(
+            sound_stream = nemotronspeech.client.audio_io.SoundCallBack(
                 args.output_device, nchannels=nchannels, sampwidth=sampwidth, framerate=args.sample_rate_hz
             )
         if args.output is not None:
@@ -195,7 +195,7 @@ def main() -> int:
 
         custom_configuration_kwargs = {}
         if args.custom_configuration:
-            from riva.client.tts import parse_custom_configuration
+            from nemotronspeech.client.tts import parse_custom_configuration
             custom_configuration_kwargs['custom_configuration'] = parse_custom_configuration(args.custom_configuration)
 
         print("Generating audio for request...")

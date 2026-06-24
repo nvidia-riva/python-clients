@@ -1,19 +1,19 @@
 [![License](https://img.shields.io/badge/license-MIT-green)](https://opensource.org/licenses/MIT)
-# NVIDIA Riva Clients
+# NVIDIA Nemotron Speech Clients
 
-NVIDIA Riva is a GPU-accelerated SDK for building Speech AI applications that are customized for your use 
+Nemotron Speech is a GPU-accelerated SDK for building Speech AI applications that are customized for your use 
 case and deliver real-time performance. This repo provides performant client example command-line clients.
 
 ## Main API
 
-- `riva.client.ASRService` is a class for speech recognition,
-- `riva.client.TTSService` is a class for speech synthesis,
-- `riva.client.NLPService` is a class for natural language processing.
+- `nemotronspeech.client.ASRService` is a class for speech recognition,
+- `nemotronspeech.client.TTSService` is a class for speech synthesis,
+- `nemotronspeech.client.NLPService` is a class for natural language processing.
 
 ## CLI interface
 
 - **Automatic Speech Recognition (ASR)**
-    - `scripts/asr/riva_streaming_asr_client.py` demonstrates streaming transcription in several threads, can print time stamps.
+    - `scripts/asr/nemotron_streaming_asr_client.py` demonstrates streaming transcription in several threads, can print time stamps.
     - `scripts/asr/transcribe_file.py` performs streaming transcription,
     - `scripts/asr/transcribe_file_offline.py` performs offline transcription,
     - `scripts/asr/transcribe_mic.py` performs streaming transcription of audio acquired through microphone.
@@ -47,12 +47,12 @@ pip install --force-reinstall dist/*.whl
 ```
 3. `pip`:
 ```bash
-pip install nvidia-riva-client
+pip install nvidia-nemotronspeech-client
 ```
 
 If you would like to use output and input audio devices 
 (scripts `scripts/asr/transcribe_file_rt.py`, `scripts/asr/transcribe_mic.py`, `scripts/tts/talk.py`, `scripts/asr/realtime_asr_client.py`, `scripts/tts/realtime_tts_client.py` or module 
-`riva.client/audio_io.py`), you will need to install `PyAudio`.
+`nemotronspeech.client/audio_io.py`), you will need to install `PyAudio`.
 ```bash
 conda install -c anaconda pyaudio
 ```
@@ -82,7 +82,7 @@ and restart.
 
 ### Server
 
-Before running client part of Riva, please set up a server. The simplest
+Before running client part of Nemotron Speech, please set up a server. The simplest
 way to do this is to follow
 [quick start guide](https://docs.nvidia.com/deeplearning/riva/user-guide/docs/quick-start-guide.html#local-deployment-using-quick-start-scripts).
 
@@ -280,7 +280,7 @@ See tutorial notebooks in directory `tutorials`.
 
 ## Documentation
 
-Additional documentation on the Riva Speech Skills SDK can be found [here](https://docs.nvidia.com/deeplearning/riva/user-guide/docs/).
+Additional documentation on the Nemotron Speech Skills SDK can be found [here](https://docs.nvidia.com/deeplearning/riva/user-guide/docs/).
 
 
 ## License

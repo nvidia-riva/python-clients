@@ -2,12 +2,12 @@ import argparse
 import os
 import sys
 
-import riva.client
-import riva.client.proto.riva_asr_pb2 as riva_asr_pb2
-import riva.client.proto.riva_nmt_pb2 as riva_nmt_pb2
-from riva.client.argparse_utils import add_connection_argparse_parameters
+import nemotronspeech.client
+import nemotronspeech.client.proto.nemotron_asr_pb2 as nemotron_asr_pb2
+import nemotronspeech.client.proto.nemotron_nmt_pb2 as nemotron_nmt_pb2
+from nemotronspeech.client.argparse_utils import add_connection_argparse_parameters
 try:
-    from riva.client.argparse_utils import cli_main
+    from nemotronspeech.client.argparse_utils import cli_main
 except ImportError:
     def cli_main(func):
         return func
@@ -51,7 +51,7 @@ def main():
     if not os.path.exists(args.audio_file):
         raise FileNotFoundError(f"Input audio file not found: {args.audio_file}")
 
-    auth = riva.client.Auth(
+    auth = nemotronspeech.client.Auth(
         ssl_root_cert=args.ssl_root_cert,
         ssl_client_cert=args.ssl_client_cert,
         ssl_client_key=args.ssl_client_key,
@@ -60,7 +60,7 @@ def main():
         metadata_args=args.metadata,
         options=args.options
     )
-    nmt_client = riva.client.NeuralMachineTranslationClient(auth)
+    nmt_client = nemotronspeech.client.NeuralMachineTranslationClient(auth)
 
     if args.list_models:
         response = nmt_client.get_config(args.model)
@@ -72,8 +72,8 @@ def main():
     print(f"Server address: {args.server}")
 
     # Create ASR config
-    asr_config = riva_asr_pb2.StreamingRecognitionConfig(
-        config=riva_asr_pb2.RecognitionConfig(
+    asr_config = nemotron_asr_pb2.StreamingRecognitionConfig(
+        config=nemotron_asr_pb2.RecognitionConfig(
             language_code=args.source_language,
             max_alternatives=1,
             enable_automatic_punctuation=True
@@ -82,20 +82,20 @@ def main():
     )
 
     # Create translation config
-    translation_config = riva_nmt_pb2.TranslationConfig(
+    translation_config = nemotron_nmt_pb2.TranslationConfig(
         source_language_code=args.source_language,
         target_language_code=args.target_language,
         model_name=args.model
     )
 
     # Create streaming config
-    streaming_config = riva_nmt_pb2.StreamingTranslateSpeechToTextConfig(
+    streaming_config = nemotron_nmt_pb2.StreamingTranslateSpeechToTextConfig(
         asr_config=asr_config,
         translation_config=translation_config
     )
 
     responses = nmt_client.streaming_s2t_response_generator(
-        audio_chunks=riva.client.AudioChunkFileIterator(args.audio_file, 100),
+        audio_chunks=nemotronspeech.client.AudioChunkFileIterator(args.audio_file, 100),
         streaming_config=streaming_config
     )
 

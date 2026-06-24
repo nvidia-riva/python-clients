@@ -14,7 +14,7 @@ import setuptools
 from setuptools.command.build_py import build_py
 
 
-spec = importlib.util.spec_from_file_location('package_info', 'riva/client/package_info.py')
+spec = importlib.util.spec_from_file_location('package_info', 'nemotronspeech/client/package_info.py')
 package_info = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(package_info)
 
@@ -37,13 +37,13 @@ with open("README.md", "r", encoding='utf-8') as fh:
     long_description = fh.read()
 long_description_content_type = "text/markdown"
 
-CHANGE_PB2_LOC_PATTERN = re.compile('from riva.proto import (.+_pb2.*)')
+CHANGE_PB2_LOC_PATTERN = re.compile('from nemotronspeech.proto import (.+_pb2.*)')
 
 
 class BuildPyCommand(build_py):
     def run(self):
         if not self.dry_run:
-            target_dir = setup_py_dir / 'riva/client/proto'
+            target_dir = setup_py_dir / 'nemotronspeech/client/proto'
             for elem in target_dir.iterdir():
                 if elem.name != '__init__.py':
                     if elem.is_dir():
@@ -78,7 +78,7 @@ class BuildPyCommand(build_py):
             #     )
 
             os.chdir(cwd)
-            glob_dir = str(setup_py_dir / 'common/riva/proto/*.proto')
+            glob_dir = str(setup_py_dir / 'common/nemotronspeech/proto/*.proto')
             print("glob dir: ", glob_dir)
             protos = glob(glob_dir)
             if not protos:
@@ -99,17 +99,17 @@ class BuildPyCommand(build_py):
                         proto,
                     ]
                 )
-            for fn in glob(str(target_dir / 'riva/proto/*_pb2*.py')):
+            for fn in glob(str(target_dir / 'nemotronspeech/proto/*_pb2*.py')):
                 with open(fn) as f:
                     text = f.read()
                 with open(fn, 'w') as f:
                     f.write(CHANGE_PB2_LOC_PATTERN.sub(r'from . import \1', text))
-            # Move Python files to riva/client
-            for f in glob(str(target_dir / 'riva/proto/*.py')):
+            # Move Python files to nemotronspeech/client
+            for f in glob(str(target_dir / 'nemotronspeech/proto/*.py')):
                 shutil.move(f, target_dir)
             # Remove leftover empty dirs
-            shutil.rmtree(target_dir / 'riva/proto')
-            shutil.rmtree(target_dir / 'riva')
+            shutil.rmtree(target_dir / 'nemotronspeech/proto')
+            shutil.rmtree(target_dir / 'nemotronspeech')
             open(target_dir / '__init__.py', 'w').close()
             super(BuildPyCommand, self).run()
 
@@ -139,7 +139,7 @@ setuptools.setup(
     maintainer_email=__contact_emails__,
     keywords=__keywords__,
     # packages=setuptools.find_packages(exclude=['tests', 'tutorials', 'scripts']),
-    package_dir={"riva.client": "riva/client"},
+    package_dir={"nemotronspeech.client": "nemotronspeech/client"},
     cmdclass={"build_py": BuildPyCommand},
     classifiers=[
         "Development Status :: 4 - Beta",

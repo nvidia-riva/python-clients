@@ -4,8 +4,8 @@
 import argparse
 import time
 
-import riva.client
-from riva.client.argparse_utils import add_connection_argparse_parameters
+import nemotronspeech.client
+from nemotronspeech.client.argparse_utils import add_connection_argparse_parameters
 
 
 def parse_args() -> argparse.Namespace:
@@ -39,7 +39,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def run_punct_capit(args: argparse.Namespace) -> None:
-    auth = riva.client.Auth(
+    auth = nemotronspeech.client.Auth(
         ssl_root_cert=args.ssl_root_cert,
         ssl_client_cert=args.ssl_client_cert,
         ssl_client_key=args.ssl_client_key,
@@ -48,12 +48,12 @@ def run_punct_capit(args: argparse.Namespace) -> None:
         metadata_args=args.metadata,
         options=args.options
     )
-    nlp_service = riva.client.NLPService(auth)
+    nlp_service = nemotronspeech.client.NLPService(auth)
     if args.interactive:
         while True:
             query = input("Enter a query: ")
             start = time.time()
-            result = riva.client.nlp.extract_most_probable_transformed_text(
+            result = nemotronspeech.client.nlp.extract_most_probable_transformed_text(
                 nlp_service.punctuate_text(
                     input_strings=query, model_name=args.model, language_code=args.language_code
                 )
@@ -63,7 +63,7 @@ def run_punct_capit(args: argparse.Namespace) -> None:
             print(result, end='\n' * 2)
     else:
         print(
-            riva.client.nlp.extract_most_probable_transformed_text(
+            nemotronspeech.client.nlp.extract_most_probable_transformed_text(
                 nlp_service.punctuate_text(
                     input_strings=args.query, model_name=args.model, language_code=args.language_code
                 )
@@ -142,7 +142,7 @@ def run_tests(args: argparse.Namespace) -> int:
         ],
     }
 
-    auth = riva.client.Auth(
+    auth = nemotronspeech.client.Auth(
         ssl_root_cert=args.ssl_root_cert,
         ssl_client_cert=args.ssl_client_cert,
         ssl_client_key=args.ssl_client_key,
@@ -151,11 +151,11 @@ def run_tests(args: argparse.Namespace) -> int:
         metadata_args=args.metadata,
         options=args.options
     )
-    nlp_service = riva.client.NLPService(auth)
+    nlp_service = nemotronspeech.client.NLPService(auth)
 
     fail_count = 0
     for input_, output_ref in zip(test_inputs[args.language_code], test_output_ref[args.language_code]):
-        pred = riva.client.nlp.extract_most_probable_transformed_text(
+        pred = nemotronspeech.client.nlp.extract_most_probable_transformed_text(
             nlp_service.punctuate_text(
                 input_strings=input_,
                 model_name=args.model,
