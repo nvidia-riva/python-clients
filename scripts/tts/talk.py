@@ -72,6 +72,11 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--encoding", default="LINEAR_PCM", choices={"LINEAR_PCM", "OGGOPUS"}, help="Output audio encoding.")
     parser.add_argument("--custom-dictionary", type=str, help="A file path to a user dictionary with key-value pairs separated by double spaces.")
+    parser.add_argument(
+        "--word-time-offsets", action="store_true",
+        help="Request per-word start/end timestamps (printed from response metadata). Works for both "
+        "streaming and non-streaming synthesis.",
+    )
 
     parser.add_argument(
         "--stream",
@@ -207,6 +212,7 @@ def main() -> int:
                 zero_shot_audio_prompt_file=args.zero_shot_audio_prompt_file,
                 zero_shot_quality=(20 if args.zero_shot_quality is None else args.zero_shot_quality),
                 custom_dictionary=custom_dictionary_input,
+                enable_word_time_offsets=args.word_time_offsets,
                 **custom_configuration_kwargs,
             )
             first = True
@@ -215,6 +221,10 @@ def main() -> int:
                 if first:
                     print(f"Time to first audio: {(stop - start):.3f}s")
                     first = False
+                # Word timestamps arrive on a final metadata-only chunk (no audio).
+                if args.word_time_offsets and resp.meta.words:
+                    for word in resp.meta.words:
+                        print(f'word: "{word.word}" start: {word.start_time} ms end: {word.end_time} ms')
                 if sound_stream is not None:
                     sound_stream(resp.audio)
                 if out_f is not None:
@@ -227,10 +237,14 @@ def main() -> int:
                 zero_shot_quality=(20 if args.zero_shot_quality is None else args.zero_shot_quality),
                 custom_dictionary=custom_dictionary_input,
                 zero_shot_transcript=args.zero_shot_transcript,
+                enable_word_time_offsets=args.word_time_offsets,
                 **custom_configuration_kwargs,
             )
             stop = time.time()
             print(f"Time spent: {(stop - start):.3f}s")
+            if args.word_time_offsets:
+                for word in resp.meta.words:
+                    print(f'word: "{word.word}" start: {word.start_time} ms end: {word.end_time} ms')
             if sound_stream is not None:
                 sound_stream(resp.audio)
             if out_f is not None:
