@@ -189,4 +189,9 @@ def add_connection_argparse_parameters(parser: argparse.ArgumentParser) -> argpa
 def add_realtime_config_argparse_parameters(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
     parser.add_argument("--endpoint", default="/v1/realtime", help="Endpoint to WebSocket server endpoint.")
     parser.add_argument("--query-params", default="intent=transcription", help="Query parameters to WebSocket server endpoint.")
+    parser.add_argument(
+        "--mint-api-key",
+        default=None,
+        help="API key for POST /v1/realtime/*_sessions (Authorization: Bearer).",
+    )
     return parser

@@ -21,6 +21,69 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+def _mint_auth_headers(args: argparse.Namespace) -> Dict[str, str]:
+    """Build HTTP headers for session mint endpoints, including optional tier-1 auth."""
+    headers = {"Content-Type": "application/json"}
+    api_key = (getattr(args, "mint_api_key", None) or "").strip()
+    if api_key:
+        headers["Authorization"] = f"Bearer {api_key}"
+    return headers
+
+
+def _server_error_detail(response) -> str:
+    """Extract the FastAPI ``detail`` message from an error response, falling back to raw text."""
+    try:
+        payload = response.json()
+    except ValueError:
+        return response.text.strip()
+    if isinstance(payload, dict) and payload.get("detail"):
+        return str(payload["detail"])
+    return response.text.strip()
+
+
+def _raise_for_session_status(response, provided_key: bool) -> None:
+    """Raise a clear, actionable error when the session mint request fails."""
+    if response.status_code == 200:
+        return
+    if response.status_code in (401, 403):
+        if provided_key:
+            hint = "The --mint-api-key value was rejected by the server. Verify it matches the server's REALTIME_AUTH_MINT_API_KEY."
+        else:
+            hint = "This server requires an API key on the session endpoint. Pass it with --mint-api-key <key>."
+        raise Exception(
+            f"Session authentication failed (HTTP {response.status_code}: {_server_error_detail(response)}). {hint}"
+        )
+    raise Exception(
+        f"Failed to initialize session. Status: {response.status_code}, Error: {_server_error_detail(response)}"
+    )
+
+
+def _extract_client_secret_token(session_data: Dict[str, Any]) -> str:
+    """Return the ephemeral client_secret token from a session-creation response."""
+    client_secret = session_data.get("client_secret")
+    if not isinstance(client_secret, dict):
+        raise ValueError("Session response missing client_secret")
+    token = client_secret.get("value")
+    if not token:
+        raise ValueError("Session response missing client_secret.value")
+    return token
+
+
+def _build_websocket_url(
+    server: str,
+    endpoint: str,
+    query_params: str,
+    token: str,
+    use_ssl: bool,
+) -> str:
+    """Build the WebSocket URL with intent and ephemeral token query parameters."""
+    query = query_params.strip()
+    if "token=" not in query:
+        query = f"{query}&token={token}" if query else f"token={token}"
+    scheme = "wss" if use_ssl else "ws"
+    return f"{scheme}://{server}{endpoint}?{query}"
+
+
 class RealtimeClientASR:
     """Client for real-time transcription via WebSocket connection."""
 
@@ -33,6 +96,7 @@ class RealtimeClientASR:
         self.args = args
         self.websocket = None
         self.session_config = None
+        self._client_secret_token: Optional[str] = None
 
         # Input audio playback
         self.input_audio_queue = queue.Queue()
@@ -50,6 +114,7 @@ class RealtimeClientASR:
             # Initialize session via HTTP POST
             session_data = await self._initialize_http_session()
             self.session_config = session_data
+            self._client_secret_token = _extract_client_secret_token(session_data)
 
             # Connect to WebSocket
             await self._connect_websocket()
@@ -67,7 +132,7 @@ class RealtimeClientASR:
 
     async def _initialize_http_session(self) -> Dict[str, Any]:
         """Initialize session via HTTP POST request."""
-        headers = {"Content-Type": "application/json"}
+        headers = _mint_auth_headers(self.args)
         uri = f"http://{self.args.server}/v1/realtime/transcription_sessions"
         if self.args.use_ssl:
             uri = f"https://{self.args.server}/v1/realtime/transcription_sessions"
@@ -80,11 +145,7 @@ class RealtimeClientASR:
             verify=self.args.ssl_root_cert if self.args.ssl_root_cert else True
         )
 
-        if response.status_code != 200:
-            raise Exception(
-                f"Failed to initialize session. Status: {response.status_code}, "
-                f"Error: {response.text}"
-            )
+        _raise_for_session_status(response, provided_key=bool(getattr(self.args, "mint_api_key", None)))
 
         session_data = response.json()
         logger.debug("Session initialized: %s", session_data)
@@ -92,11 +153,18 @@ class RealtimeClientASR:
 
     async def _connect_websocket(self):
         """Connect to WebSocket endpoint."""
-        ssl_context = None
-        ws_url = f"ws://{self.args.server}{self.args.endpoint}?{self.args.query_params}"
-        if self.args.use_ssl:
-            ws_url = f"wss://{self.args.server}{self.args.endpoint}?{self.args.query_params}"
+        if not self._client_secret_token:
+            raise ValueError("client_secret token is required before opening the WebSocket")
 
+        ssl_context = None
+        ws_url = _build_websocket_url(
+            self.args.server,
+            self.args.endpoint,
+            self.args.query_params,
+            self._client_secret_token,
+            self.args.use_ssl,
+        )
+        if self.args.use_ssl:
             ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
             # Load a custom CA certificate bundle
             if self.args.ssl_root_cert:
@@ -536,6 +604,7 @@ class RealtimeClientTTS:
         self.args = args
         self.websocket = None
         self.session_config = None
+        self._client_secret_token: Optional[str] = None
         self.audio_data = []
         self.is_synthesis_complete = False
         self.wav_file = None  # WAV file handle for streaming write
@@ -564,6 +633,7 @@ class RealtimeClientTTS:
             logger.info("Initializing HTTP session...")
             session_data = await self._initialize_http_session()
             self.session_config = session_data
+            self._client_secret_token = _extract_client_secret_token(session_data)
             logger.info("HTTP session initialized successfully")
 
             # Connect to WebSocket
@@ -593,7 +663,7 @@ class RealtimeClientTTS:
 
     async def _initialize_http_session(self) -> Dict[str, Any]:
         """Initialize session via HTTP POST request."""
-        headers = {"Content-Type": "application/json"}
+        headers = _mint_auth_headers(self.args)
         uri = f"http://{self.args.server}/v1/realtime/synthesis_sessions"
         if self.args.use_ssl:
             uri = f"https://{self.args.server}/v1/realtime/synthesis_sessions"
@@ -631,11 +701,7 @@ class RealtimeClientTTS:
             logger.error("HTTP request failed: %s", e)
             raise
 
-        if response.status_code != 200:
-            raise Exception(
-                f"Failed to initialize session. Status: {response.status_code}, "
-                f"Error: {response.text}"
-            )
+        _raise_for_session_status(response, provided_key=bool(getattr(self.args, "mint_api_key", None)))
 
         session_data = response.json()
         logger.info("Session initialized: %s", session_data)
@@ -643,11 +709,18 @@ class RealtimeClientTTS:
 
     async def _connect_websocket(self):
         """Connect to WebSocket endpoint."""
-        ssl_context = None
-        ws_url = f"ws://{self.args.server}{self.args.endpoint}?{self.args.query_params}"
-        if self.args.use_ssl:
-            ws_url = f"wss://{self.args.server}{self.args.endpoint}?{self.args.query_params}"
+        if not self._client_secret_token:
+            raise ValueError("client_secret token is required before opening the WebSocket")
 
+        ssl_context = None
+        ws_url = _build_websocket_url(
+            self.args.server,
+            self.args.endpoint,
+            self.args.query_params,
+            self._client_secret_token,
+            self.args.use_ssl,
+        )
+        if self.args.use_ssl:
             ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
             if self.args.ssl_root_cert:
                 ssl_context.load_verify_locations(self.args.ssl_root_cert)
