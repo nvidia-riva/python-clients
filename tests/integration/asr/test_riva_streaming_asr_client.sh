@@ -42,10 +42,30 @@ function test_word_time_offsets(){
   reference_file="${reference_outputs}/time_stamps_AntiBERTa.txt"
   while read hyp_line <&3 && read ref_line <&4; do
     ref_line="$(echo "${ref_line}" | tr -d '\n\r')"
-    if [[ "${hyp_line}" != "${ref_line}" ]]; then
+    if (( line_i == 1 )); then
+      hyp_timestamp_line="${hyp_line}"
+      ref_timestamp_line="${ref_line}"
+    elif (( line_i == 2 )); then
+      hyp_timestamp_line="$(echo "${hyp_line}" | awk '{$NF=""; sub(/[[:space:]]+$/, ""); print}')"
+      ref_timestamp_line="$(echo "${ref_line}" | awk '{$1=$1; print}')"
+      if [[ "${hyp_line}" != *"Confidence"* ]]; then
+        echo "Word timestamp header does not contain a confidence column: '${hyp_line}'"
+        exit 1
+      fi
+    else
+      read -r hyp_word hyp_start hyp_end hyp_confidence <<< "${hyp_line}"
+      read -r ref_word ref_start ref_end <<< "${ref_line}"
+      hyp_timestamp_line="${hyp_word} ${hyp_start} ${hyp_end}"
+      ref_timestamp_line="${ref_word} ${ref_start} ${ref_end}"
+      if ! [[ "${hyp_confidence}" =~ ^-?[0-9]+([.][0-9]+)?$ ]]; then
+        echo "Word confidence is not numeric: '${hyp_confidence}'"
+        exit 1
+      fi
+    fi
+    if [[ "${hyp_timestamp_line}" != "${ref_timestamp_line}" ]]; then
       echo "${line_i}th line time stamps outputs do not match reference."
-      echo "hypothesis: '${hyp_line}'"
-      echo "reference:  '${ref_line}'"
+      echo "hypothesis: '${hyp_timestamp_line}'"
+      echo "reference:  '${ref_timestamp_line}'"
       exit 1
     fi
     ((line_i++))

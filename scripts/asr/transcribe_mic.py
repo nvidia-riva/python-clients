@@ -37,7 +37,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--input-device", type=int, default=default_device_index, help="An input audio device to use.")
     parser.add_argument("--list-devices", action="store_true", help="List input audio device indices.")
-    parser = add_asr_config_argparse_parameters(parser, profanity_filter=True)
+    parser = add_asr_config_argparse_parameters(parser, profanity_filter=True, word_time_offsets=True)
     parser = add_connection_argparse_parameters(parser)
     parser.add_argument(
         "--sample-rate-hz",
@@ -82,6 +82,7 @@ def main() -> int:
             verbatim_transcripts=not args.no_verbatim_transcripts,
             sample_rate_hertz=args.sample_rate_hz,
             audio_channel_count=1,
+            enable_word_time_offsets=args.word_time_offsets,
         ),
         interim_results=True,
     )
@@ -109,7 +110,9 @@ def main() -> int:
                 audio_chunks=audio_chunk_iterator,
                 streaming_config=config,
             ),
-            show_intermediate=True,
+            additional_info="time" if args.word_time_offsets else "no",
+            word_time_offsets=args.word_time_offsets,
+            show_intermediate=not args.word_time_offsets,
         )
 
 
