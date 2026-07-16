@@ -61,7 +61,12 @@ def parse_args() -> argparse.Namespace:
         "normal speech.",
     )
     parser.add_argument(
-        "--print-confidence", action="store_true", help="Whether to print stability and confidence of transcript. If `--word-time-offsets` or `--speaker-diarization` is set, then confidence is not printed."
+        "--print-confidence",
+        action="store_true",
+        help=(
+            "Whether to print interim stability and final transcript confidence. "
+            "Per-word confidence is printed with `--word-time-offsets` or `--speaker-diarization`."
+        ),
     )
     parser = add_connection_argparse_parameters(parser)
     parser = add_asr_config_argparse_parameters(parser, max_alternatives=True, profanity_filter=True, word_time_offsets=True)

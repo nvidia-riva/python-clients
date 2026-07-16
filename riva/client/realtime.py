@@ -7,7 +7,7 @@ import json
 import logging
 import queue
 import uuid
-from typing import Any, Dict, Generator, List, Optional
+from typing import Any, Dict, Generator, Iterable, List, Optional
 
 import requests
 import websockets
@@ -41,6 +41,7 @@ class RealtimeClientASR:
         self.input_buffer_size = 1024  # Buffer size for input audio playback
         self.final_transcript: str = ""
         self.is_config_updated = False
+        self._force_eou_pending = False
 
 
     async def connect(self):
@@ -366,27 +367,49 @@ class RealtimeClientASR:
         """Send a JSON message to the WebSocket server."""
         await self.websocket.send(json.dumps(message))
 
-    async def send_audio_chunks(self, audio_chunks):
-        """Send audio chunks to the server for transcription."""
+    def request_force_eou(self) -> None:
+        """Request end-of-utterance finalization on the next audio chunk."""
+        self._force_eou_pending = True
+
+    async def _send_audio_chunk(self, chunk: bytes, force_eou: bool = False) -> None:
+        """Send and commit one audio chunk, optionally forcing end of utterance."""
+        chunk_base64 = base64.b64encode(chunk).decode("utf-8")
+        force_eou = force_eou or self._force_eou_pending
+        self._force_eou_pending = False
+
+        append_message = {
+            "type": "input_audio_buffer.append",
+            "audio": chunk_base64,
+        }
+        if force_eou:
+            append_message["runtime_config"] = {"force_eou": "true"}
+
+        await self._send_message(append_message)
+        await self._send_message({"type": "input_audio_buffer.commit"})
+
+    async def send_audio_chunks(
+        self,
+        audio_chunks,
+        force_eou_chunks: Optional[Iterable[bool]] = None,
+    ):
+        """Send audio chunks to the server for transcription.
+
+        Args:
+            audio_chunks: A synchronous or asynchronous iterable of raw audio chunks.
+            force_eou_chunks: Optional per-chunk flags. A true value forces the
+                server to finalize the utterance after processing that chunk while
+                keeping the stream open.
+        """
         logger.debug("Sending audio chunks...")
+        force_eou_iter = iter(force_eou_chunks) if force_eou_chunks is not None else None
 
         # Check if the audio_chunks supports async iteration
         if hasattr(audio_chunks, '__aiter__'):
             # Use async for for async iterators - this allows proper task switching
             async for chunk in audio_chunks:
                 try:
-                    chunk_base64 = base64.b64encode(chunk).decode("utf-8")
-
-                    # Send chunk to the server
-                    await self._send_message({
-                        "type": "input_audio_buffer.append",
-                        "audio": chunk_base64,
-                    })
-
-                    # Commit the chunk
-                    await self._send_message({
-                        "type": "input_audio_buffer.commit",
-                    })
+                    force_eou = next(force_eou_iter, False) if force_eou_iter is not None else False
+                    await self._send_audio_chunk(chunk, force_eou)
                 except TimeoutError:
                     # Handle timeout from AsyncAudioIterator - no audio available, continue
                     logger.debug("No audio chunk available within timeout, continuing...")
@@ -397,18 +420,8 @@ class RealtimeClientASR:
         else:
             # Fallback for regular iterators
             for chunk in audio_chunks:
-                chunk_base64 = base64.b64encode(chunk).decode("utf-8")
-
-                # Send chunk to the server
-                await self._send_message({
-                    "type": "input_audio_buffer.append",
-                    "audio": chunk_base64,
-                })
-
-                # Commit the chunk
-                await self._send_message({
-                    "type": "input_audio_buffer.commit",
-                })
+                force_eou = next(force_eou_iter, False) if force_eou_iter is not None else False
+                await self._send_audio_chunk(chunk, force_eou)
 
         logger.debug("All chunks sent")
 

@@ -1,13 +1,14 @@
 # SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: MIT
 
+from io import StringIO
 from math import ceil
 from typing import Any, Generator, List, Union
 from unittest.mock import patch, Mock
 
 import riva.client.proto.riva_asr_pb2 as rasr
 from riva.client import ASRService
-from riva.client.asr import streaming_request_generator
+from riva.client.asr import print_streaming, streaming_request_generator
 
 from .helpers import set_auth_mock
 
@@ -92,3 +93,32 @@ class TestSpeechSynthesisService:
         assert len(STREAMING_RECOGNIZE_MOCK.call_args.kwargs) == 1
         assert 'metadata' in STREAMING_RECOGNIZE_MOCK.call_args.kwargs
         assert STREAMING_RECOGNIZE_MOCK.call_args.kwargs['metadata'] == return_value_of_get_auth_metadata
+
+
+def test_print_streaming_includes_word_confidence_with_timestamps() -> None:
+    response = rasr.StreamingRecognizeResponse(
+        results=[
+            rasr.StreamingRecognitionResult(
+                is_final=True,
+                alternatives=[
+                    rasr.SpeechRecognitionAlternative(
+                        transcript="hello",
+                        words=[rasr.WordInfo(word="hello", start_time=10, end_time=20, confidence=0.75)],
+                    )
+                ],
+            )
+        ]
+    )
+    output = StringIO()
+
+    print_streaming(
+        responses=[response],
+        output_file=output,
+        additional_info="time",
+        word_time_offsets=True,
+    )
+
+    rendered = output.getvalue()
+    assert "Confidence" in rendered
+    assert "hello" in rendered
+    assert "0.7500" in rendered

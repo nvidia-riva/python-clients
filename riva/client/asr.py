@@ -293,8 +293,8 @@ def print_streaming(
                         if word_time_offsets:
                             for f in output_file:
                                 f.write("Timestamps:\n")
-                                temp = '{: <40s}{: <16s}{: <16s}'
-                                value = ['Word', 'Start (ms)', 'End (ms)']
+                                temp = '{: <40s}{: <16s}{: <16s}{: <16s}'
+                                value = ['Word', 'Start (ms)', 'End (ms)', 'Confidence']
                                 if speaker_diarization:
                                     temp += '{: <16s}'
                                     value.append('Speaker')
@@ -303,7 +303,7 @@ def print_streaming(
                                 for word_info in result.alternatives[0].words:
                                     f.write(
                                         f'{word_info.word: <40s}{word_info.start_time: <16.0f}'
-                                        f'{word_info.end_time: <16.0f}'
+                                        f'{word_info.end_time: <16.0f}{word_info.confidence: <16.4f}'
                                     )
                                     if speaker_diarization:
                                         f.write(f'{word_info.speaker_tag: <16d}')
