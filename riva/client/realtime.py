@@ -68,20 +68,31 @@ def _extract_client_secret_token(session_data: Dict[str, Any]) -> str:
         raise ValueError("Session response missing client_secret.value")
     return token
 
+TOKEN_SUBPROTO_PREFIX = "realtime-token."
+REALTIME_SUBPROTOCOL = "realtime.v1"
 
 def _build_websocket_url(
     server: str,
     endpoint: str,
     query_params: str,
-    token: str,
     use_ssl: bool,
 ) -> str:
-    """Build the WebSocket URL with intent and ephemeral token query parameters."""
+    """Build the WebSocket URL (intent only; auth token goes in Sec-WebSocket-Protocol)."""
     query = query_params.strip()
-    if "token=" not in query:
-        query = f"{query}&token={token}" if query else f"token={token}"
     scheme = "wss" if use_ssl else "ws"
-    return f"{scheme}://{server}{endpoint}?{query}"
+    if query:
+        return f"{scheme}://{server}{endpoint}?{query}"
+    return f"{scheme}://{server}{endpoint}"
+
+
+def _websocket_subprotocols(token: str) -> List[str]:
+    """Return Sec-WebSocket-Protocol entries for the realtime handshake.
+
+    Offers ``realtime.v1`` plus ``realtime-token.<client_secret>``.  The server
+    validates the token entry and echoes back ``realtime.v1`` so the secret
+    never appears in the response headers.
+    """
+    return [REALTIME_SUBPROTOCOL, f"{TOKEN_SUBPROTO_PREFIX}{token}"]
 
 
 class RealtimeClientASR:
@@ -161,7 +172,6 @@ class RealtimeClientASR:
             self.args.server,
             self.args.endpoint,
             self.args.query_params,
-            self._client_secret_token,
             self.args.use_ssl,
         )
         if self.args.use_ssl:
@@ -176,8 +186,11 @@ class RealtimeClientASR:
             ssl_context.check_hostname = False
             # ssl_context.verify_mode = ssl.CERT_REQUIRED
 
-        logger.debug("Connecting to WebSocket: %s", ws_url)
-        self.websocket = await websockets.connect(ws_url, ssl=ssl_context)
+        subprotocols = _websocket_subprotocols(self._client_secret_token)
+        logger.debug("Connecting to WebSocket: %s (subprotocols=%s)", ws_url, [REALTIME_SUBPROTOCOL, TOKEN_SUBPROTO_PREFIX + "<REDACTED>"])
+        self.websocket = await websockets.connect(
+            ws_url, ssl=ssl_context, subprotocols=subprotocols,
+        )
 
     async def _initialize_session(self):
         """Initialize the WebSocket session."""
@@ -717,7 +730,6 @@ class RealtimeClientTTS:
             self.args.server,
             self.args.endpoint,
             self.args.query_params,
-            self._client_secret_token,
             self.args.use_ssl,
         )
         if self.args.use_ssl:
@@ -728,8 +740,15 @@ class RealtimeClientTTS:
                 ssl_context.load_cert_chain(self.args.ssl_client_cert, self.args.ssl_client_key)
             ssl_context.check_hostname = False
 
-        logger.info("Connecting to WebSocket: %s", ws_url)
-        self.websocket = await websockets.connect(ws_url, ssl=ssl_context)
+        subprotocols = _websocket_subprotocols(self._client_secret_token)
+        logger.info(
+            "Connecting to WebSocket: %s (subprotocols=%s)",
+            ws_url,
+            [REALTIME_SUBPROTOCOL, TOKEN_SUBPROTO_PREFIX + "<REDACTED>"],
+        )
+        self.websocket = await websockets.connect(
+            ws_url, ssl=ssl_context, subprotocols=subprotocols,
+        )
 
     async def _initialize_session(self):
         """Initialize the WebSocket session."""
