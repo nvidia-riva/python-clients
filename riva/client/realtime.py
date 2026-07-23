@@ -724,6 +724,9 @@ class RealtimeClientTTS:
             requested_voice = self.args.voice
             input_text_synthesis["voice_name"] = requested_voice
             overrides.append("voice_name")
+        else:
+            # Explicitly clear voice so the server selects based on language_code
+            input_text_synthesis["voice_name"] = ""
         if input_text_synthesis:
             session_payload["input_text_synthesis"] = input_text_synthesis
 

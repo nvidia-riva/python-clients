@@ -10,13 +10,9 @@ import riva.client
 from riva.client.argparse_utils import (
     add_asr_config_argparse_parameters,
     add_connection_argparse_parameters,
+    cli_main,
+    EXIT_BAD_INPUT,
 )
-try:
-    from riva.client.argparse_utils import cli_main, EXIT_BAD_INPUT
-except ImportError:
-    EXIT_BAD_INPUT = 2
-    def cli_main(func):
-        return func
 
 
 def parse_args() -> argparse.Namespace:
