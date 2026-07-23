@@ -226,7 +226,12 @@ class RealtimeClientASR:
             overrides.append("profanity_filter")
 
         if hasattr(self.args, 'no_verbatim_transcripts') and self.args.no_verbatim_transcripts is not None:
-            self._safe_update_config(session_config, "enable_verbatim_transcripts", self.args.no_verbatim_transcripts, "recognition_config")
+            self._safe_update_config(
+                session_config,
+                "enable_verbatim_transcripts",
+                not self.args.no_verbatim_transcripts,
+                "recognition_config",
+            )
             overrides.append("verbatim_transcripts")
 
         # Configure speaker diarization if enabled
@@ -262,7 +267,12 @@ class RealtimeClientASR:
         if hasattr(self.args, 'custom_configuration') and self.args.custom_configuration:
             custom_config = self._parse_custom_configuration(self.args.custom_configuration)
             if custom_config:
-                session_config["custom_configuration"] = custom_config
+                self._safe_update_config(
+                    session_config,
+                    "custom_configuration",
+                    self.args.custom_configuration,
+                    "recognition_config",
+                )
                 overrides.append("custom_configuration")
 
         if overrides:
