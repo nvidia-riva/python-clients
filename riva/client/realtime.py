@@ -741,11 +741,6 @@ class RealtimeClientTTS:
             ssl_context.check_hostname = False
 
         subprotocols = _websocket_subprotocols(self._client_secret_token)
-        logger.info(
-            "Connecting to WebSocket: %s (subprotocols=%s)",
-            ws_url,
-            [REALTIME_SUBPROTOCOL, TOKEN_SUBPROTO_PREFIX + "<REDACTED>"],
-        )
         self.websocket = await websockets.connect(
             ws_url, ssl=ssl_context, subprotocols=subprotocols,
         )
