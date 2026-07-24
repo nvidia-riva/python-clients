@@ -58,15 +58,20 @@ def _raise_for_session_status(response, provided_key: bool) -> None:
     )
 
 
-def _extract_client_secret_token(session_data: Dict[str, Any]) -> str:
-    """Return the ephemeral client_secret token from a session-creation response."""
+def _extract_client_secret_token(session_data: Dict[str, Any]) -> Optional[str]:
+    """Return the ephemeral client_secret token when present, else ``None``.
+
+    Older servers that do not mint ``client_secret`` keep the legacy
+    unauthenticated WebSocket flow.  New servers that return a secret require
+    it on ``Sec-WebSocket-Protocol``.
+    """
     client_secret = session_data.get("client_secret")
     if not isinstance(client_secret, dict):
-        raise ValueError("Session response missing client_secret")
+        return None
     token = client_secret.get("value")
     if not token:
-        raise ValueError("Session response missing client_secret.value")
-    return token
+        return None
+    return str(token)
 
 TOKEN_SUBPROTO_PREFIX = "realtime-token."
 REALTIME_SUBPROTOCOL = "realtime"
@@ -93,6 +98,46 @@ def _websocket_subprotocols(token: str) -> List[str]:
     never appears in the response headers.
     """
     return [REALTIME_SUBPROTOCOL, f"{TOKEN_SUBPROTO_PREFIX}{token}"]
+
+
+def _build_ssl_context(args: argparse.Namespace):
+    """Build an optional SSL context for WebSocket connections."""
+    if not getattr(args, "use_ssl", False):
+        return None
+    ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+    if getattr(args, "ssl_root_cert", None):
+        ssl_context.load_verify_locations(args.ssl_root_cert)
+    if getattr(args, "ssl_client_cert", None) and getattr(args, "ssl_client_key", None):
+        ssl_context.load_cert_chain(args.ssl_client_cert, args.ssl_client_key)
+    ssl_context.check_hostname = False
+    return ssl_context
+
+
+async def _connect_realtime_websocket(
+    args: argparse.Namespace,
+    client_secret_token: Optional[str],
+):
+    """Open the realtime WebSocket, attaching subprotocol auth when available."""
+    ws_url = _build_websocket_url(
+        args.server,
+        args.endpoint,
+        args.query_params,
+        args.use_ssl,
+    )
+    ssl_context = _build_ssl_context(args)
+    connect_kwargs = {"ssl": ssl_context}
+    if client_secret_token:
+        connect_kwargs["subprotocols"] = _websocket_subprotocols(client_secret_token)
+        logger.debug(
+            "Connecting to WebSocket: %s (using client_secret; basic authenticated flow)",
+            ws_url,
+        )
+    else:
+        logger.debug(
+            "Connecting to WebSocket: %s (no client_secret; legacy unauthenticated flow)",
+            ws_url,
+        )
+    return await websockets.connect(ws_url, **connect_kwargs)
 
 
 class RealtimeClientASR:
@@ -164,32 +209,8 @@ class RealtimeClientASR:
 
     async def _connect_websocket(self):
         """Connect to WebSocket endpoint."""
-        if not self._client_secret_token:
-            raise ValueError("client_secret token is required before opening the WebSocket")
-
-        ssl_context = None
-        ws_url = _build_websocket_url(
-            self.args.server,
-            self.args.endpoint,
-            self.args.query_params,
-            self.args.use_ssl,
-        )
-        if self.args.use_ssl:
-            ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
-            # Load a custom CA certificate bundle
-            if self.args.ssl_root_cert:
-                ssl_context.load_verify_locations(self.args.ssl_root_cert)
-            # Load a client certificate and key
-            if self.args.ssl_client_cert and self.args.ssl_client_key:
-                ssl_context.load_cert_chain(self.args.ssl_client_cert, self.args.ssl_client_key)
-            # Disable hostname verification
-            ssl_context.check_hostname = False
-            # ssl_context.verify_mode = ssl.CERT_REQUIRED
-
-        subprotocols = _websocket_subprotocols(self._client_secret_token)
-        logger.debug("Connecting to WebSocket: %s (subprotocols=%s)", ws_url, [REALTIME_SUBPROTOCOL, TOKEN_SUBPROTO_PREFIX + "<REDACTED>"])
-        self.websocket = await websockets.connect(
-            ws_url, ssl=ssl_context, subprotocols=subprotocols,
+        self.websocket = await _connect_realtime_websocket(
+            self.args, self._client_secret_token,
         )
 
     async def _initialize_session(self):
@@ -722,27 +743,8 @@ class RealtimeClientTTS:
 
     async def _connect_websocket(self):
         """Connect to WebSocket endpoint."""
-        if not self._client_secret_token:
-            raise ValueError("client_secret token is required before opening the WebSocket")
-
-        ssl_context = None
-        ws_url = _build_websocket_url(
-            self.args.server,
-            self.args.endpoint,
-            self.args.query_params,
-            self.args.use_ssl,
-        )
-        if self.args.use_ssl:
-            ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
-            if self.args.ssl_root_cert:
-                ssl_context.load_verify_locations(self.args.ssl_root_cert)
-            if self.args.ssl_client_cert and self.args.ssl_client_key:
-                ssl_context.load_cert_chain(self.args.ssl_client_cert, self.args.ssl_client_key)
-            ssl_context.check_hostname = False
-
-        subprotocols = _websocket_subprotocols(self._client_secret_token)
-        self.websocket = await websockets.connect(
-            ws_url, ssl=ssl_context, subprotocols=subprotocols,
+        self.websocket = await _connect_realtime_websocket(
+            self.args, self._client_secret_token,
         )
 
     async def _initialize_session(self):
