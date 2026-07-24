@@ -20,7 +20,10 @@ import ssl
 import websockets
 from websockets.exceptions import WebSocketException
 
-from riva.client.argparse_utils import add_connection_argparse_parameters
+from riva.client.argparse_utils import (
+    add_connection_argparse_parameters,
+    add_realtime_config_argparse_parameters,
+)
 try:
     from riva.client.argparse_utils import cli_main
 except ImportError:
@@ -154,6 +157,7 @@ def parse_args() -> argparse.Namespace:
 
     # Add connection parameters
     parser = add_connection_argparse_parameters(parser)
+    parser = add_realtime_config_argparse_parameters(parser)
 
     # Override default server for realtime TTS (WebSocket endpoint, not gRPC)
     parser.set_defaults(server="localhost:9000")
