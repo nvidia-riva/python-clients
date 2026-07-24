@@ -113,7 +113,7 @@ def _build_ssl_context(args: argparse.Namespace):
     return ssl_context
 
 
-async def _connect_realtime_websocket(
+async def _connect_websocket(
     args: argparse.Namespace,
     client_secret_token: Optional[str],
 ):
@@ -128,15 +128,6 @@ async def _connect_realtime_websocket(
     connect_kwargs = {"ssl": ssl_context}
     if client_secret_token:
         connect_kwargs["subprotocols"] = _websocket_subprotocols(client_secret_token)
-        logger.debug(
-            "Connecting to WebSocket: %s (using client_secret; basic authenticated flow)",
-            ws_url,
-        )
-    else:
-        logger.debug(
-            "Connecting to WebSocket: %s (no client_secret; legacy unauthenticated flow)",
-            ws_url,
-        )
     return await websockets.connect(ws_url, **connect_kwargs)
 
 
@@ -173,7 +164,9 @@ class RealtimeClientASR:
             self._client_secret_token = _extract_client_secret_token(session_data)
 
             # Connect to WebSocket
-            await self._connect_websocket()
+            self.websocket = await _connect_websocket(
+                self.args, self._client_secret_token,
+            )
             await self._initialize_session()
 
         except requests.exceptions.RequestException as e:
@@ -206,12 +199,6 @@ class RealtimeClientASR:
         session_data = response.json()
         logger.debug("Session initialized: %s", session_data)
         return session_data
-
-    async def _connect_websocket(self):
-        """Connect to WebSocket endpoint."""
-        self.websocket = await _connect_realtime_websocket(
-            self.args, self._client_secret_token,
-        )
 
     async def _initialize_session(self):
         """Initialize the WebSocket session."""
@@ -672,7 +659,9 @@ class RealtimeClientTTS:
 
             # Connect to WebSocket
             logger.info("Connecting to WebSocket...")
-            await self._connect_websocket()
+            self.websocket = await _connect_websocket(
+                self.args, self._client_secret_token,
+            )
             logger.info("WebSocket connected successfully")
 
             # Initialize WebSocket session
@@ -740,12 +729,6 @@ class RealtimeClientTTS:
         session_data = response.json()
         logger.info("Session initialized: %s", session_data)
         return session_data
-
-    async def _connect_websocket(self):
-        """Connect to WebSocket endpoint."""
-        self.websocket = await _connect_realtime_websocket(
-            self.args, self._client_secret_token,
-        )
 
     async def _initialize_session(self):
         """Initialize the WebSocket session."""
