@@ -69,7 +69,7 @@ def _extract_client_secret_token(session_data: Dict[str, Any]) -> str:
     return token
 
 TOKEN_SUBPROTO_PREFIX = "realtime-token."
-REALTIME_SUBPROTOCOL = "realtime.v1"
+REALTIME_SUBPROTOCOL = "realtime"
 
 def _build_websocket_url(
     server: str,
@@ -88,8 +88,8 @@ def _build_websocket_url(
 def _websocket_subprotocols(token: str) -> List[str]:
     """Return Sec-WebSocket-Protocol entries for the realtime handshake.
 
-    Offers ``realtime.v1`` plus ``realtime-token.<client_secret>``.  The server
-    validates the token entry and echoes back ``realtime.v1`` so the secret
+    Offers ``realtime`` plus ``realtime-token.<client_secret>``.  The server
+    validates the token entry and echoes back ``realtime`` so the secret
     never appears in the response headers.
     """
     return [REALTIME_SUBPROTOCOL, f"{TOKEN_SUBPROTO_PREFIX}{token}"]
