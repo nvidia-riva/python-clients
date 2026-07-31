@@ -2,10 +2,12 @@
 # SPDX-License-Identifier: MIT
 
 import argparse
+import importlib
 import os
 import sys
 
 import riva.client
+from riva.client.transcript import TRANSCRIPT_OUTPUT_FORMATS, resolve_output_format
 from riva.client.argparse_utils import (
     add_asr_config_argparse_parameters,
     add_connection_argparse_parameters,
@@ -31,6 +33,15 @@ def parse_args() -> argparse.Namespace:
     group.add_argument("--list-models", action="store_true", help="List available models.")
     group.add_argument("--list-devices", action="store_true", help="List output devices indices")
     parser.add_argument("--output-seglst", action="store_true", help="Output seglst file for speaker diarization.")
+    parser.add_argument(
+        "--output-file",
+        help="Write the finalized transcript to a .json, .srt, or .vtt file.",
+    )
+    parser.add_argument(
+        "--output-format",
+        choices=TRANSCRIPT_OUTPUT_FORMATS,
+        help="Transcript output format. By default, infer it from --output-file.",
+    )
 
     parser.add_argument(
         "--show-intermediate", action="store_true", help="Show intermediate transcripts as they are available."
@@ -71,8 +82,15 @@ def parse_args() -> argparse.Namespace:
     parser = add_connection_argparse_parameters(parser)
     parser = add_asr_config_argparse_parameters(parser, max_alternatives=True, profanity_filter=True, word_time_offsets=True)
     args = parser.parse_args()
+    if args.output_format and not args.output_file:
+        parser.error("--output-format requires --output-file")
+    if args.output_file:
+        try:
+            args.output_format = resolve_output_format(args.output_file, args.output_format)
+        except ValueError as error:
+            parser.error(str(error))
     if args.play_audio or args.output_device is not None or args.list_devices:
-        import riva.client.audio_io
+        importlib.import_module("riva.client.audio_io")
     return args
 
 
@@ -122,7 +140,11 @@ def main() -> int:
             profanity_filter=args.profanity_filter,
             enable_automatic_punctuation=args.automatic_punctuation,
             verbatim_transcripts=not args.no_verbatim_transcripts,
-            enable_word_time_offsets=args.word_time_offsets or args.speaker_diarization,
+            enable_word_time_offsets=(
+                args.word_time_offsets
+                or args.speaker_diarization
+                or args.output_format in ("srt", "vtt")
+            ),
         ),
         interim_results=True,
     )
@@ -158,17 +180,24 @@ def main() -> int:
         with riva.client.AudioChunkFileIterator(
             args.input_file, args.file_streaming_chunk, delay_callback,
         ) as audio_chunk_iterator:
+            responses = asr_service.streaming_response_generator(
+                audio_chunks=audio_chunk_iterator,
+                streaming_config=config,
+            )
+            transcript = None
+            if args.output_file:
+                transcript = riva.client.Transcript()
+                responses = riva.client.collect_streaming_transcript(responses, transcript)
             riva.client.print_streaming(
-                responses=asr_service.streaming_response_generator(
-                    audio_chunks=audio_chunk_iterator,
-                    streaming_config=config,
-                ),
+                responses=responses,
                 show_intermediate=args.show_intermediate,
                 additional_info="time" if (args.word_time_offsets or args.speaker_diarization) else ("confidence" if args.print_confidence else "no"),
                 word_time_offsets=args.word_time_offsets or args.speaker_diarization,
                 speaker_diarization=args.speaker_diarization,
                 seglst_output_file=seglst_output_file,
             )
+            if transcript is not None:
+                riva.client.write_transcript(transcript, args.output_file, args.output_format)
     finally:
         if sound_callback is not None and sound_callback.opened:
             sound_callback.close()

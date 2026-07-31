@@ -8,6 +8,7 @@ import sys
 
 from riva.client.asr import get_wav_file_parameters, AudioChunkFileIterator
 from riva.client.realtime import RealtimeClientASR
+from riva.client.transcript import TRANSCRIPT_OUTPUT_FORMATS, resolve_output_format
 from riva.client.argparse_utils import (
     add_asr_config_argparse_parameters,
     add_realtime_config_argparse_parameters,
@@ -92,6 +93,15 @@ def parse_args() -> argparse.Namespace:
         help="Output text file"
     )
     parser.add_argument(
+        "--output-file",
+        help="Write the finalized transcript to a .json, .srt, or .vtt file. File input only.",
+    )
+    parser.add_argument(
+        "--output-format",
+        choices=TRANSCRIPT_OUTPUT_FORMATS,
+        help="Transcript output format. By default, infer it from --output-file.",
+    )
+    parser.add_argument(
         "--prompt",
         default="",
         help="Prompt to be used for transcription."
@@ -113,6 +123,20 @@ def parse_args() -> argparse.Namespace:
     parser = add_realtime_config_argparse_parameters(parser)
 
     args = parser.parse_args()
+
+    if args.output_format and not args.output_file:
+        parser.error("--output-format requires --output-file")
+    if args.output_text and args.output_file:
+        parser.error("--output-text and --output-file cannot be used together")
+    if args.output_file:
+        if args.mic:
+            parser.error("--output-file currently supports --input-file only")
+        try:
+            args.output_format = resolve_output_format(args.output_file, args.output_format)
+        except ValueError as error:
+            parser.error(str(error))
+        if args.output_format in ("srt", "vtt"):
+            args.word_time_offsets = True
 
     return args
 
@@ -246,6 +270,8 @@ async def run_transcription(args):
         # Save results if output file specified
         if args.output_text:
             client.save_responses(args.output_text)
+        elif args.output_file:
+            client.save_transcript(args.output_file, args.output_format)
             
     except KeyboardInterrupt:
         if hasattr(args, '_interruptible_iterator'):

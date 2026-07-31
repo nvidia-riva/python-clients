@@ -15,6 +15,17 @@ from riva.client.asr import (
     add_custom_configuration_to_config,
 )
 from riva.client.auth import Auth
+from riva.client.transcript import (
+    TRANSCRIPT_OUTPUT_FORMATS,
+    Transcript,
+    TranscriptAlternative,
+    TranscriptSegment,
+    TranscriptWord,
+    collect_streaming_transcript,
+    resolve_output_format,
+    transcript_from_offline_response,
+    write_transcript,
+)
 from riva.client.nlp import (
     NLPService,
     extract_all_text_classes_and_confidences,

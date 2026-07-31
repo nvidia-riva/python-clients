@@ -14,6 +14,8 @@ import websockets
 import ssl
 from websockets.exceptions import WebSocketException
 
+from riva.client.transcript import Transcript, write_transcript
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s"
@@ -151,6 +153,7 @@ class RealtimeClientASR:
         self.is_input_playing = False
         self.input_buffer_size = 1024  # Buffer size for input audio playback
         self.final_transcript: str = ""
+        self.transcript = Transcript()
         self.is_config_updated = False
         self._force_eou_pending = False
 
@@ -547,7 +550,8 @@ class RealtimeClientASR:
                 elif event_type == "conversation.item.input_audio_transcription.completed":
                     is_last_result = event.get("is_last_result", False)
                     interim_final_transcript = event.get("transcript", "")
-                    self.final_transcript = interim_final_transcript
+                    self.transcript.add_realtime_event(event)
+                    self.final_transcript = self.transcript.text
 
                     if is_last_result:
                         logger.info("Final Transcript: %s", self.final_transcript)
@@ -607,6 +611,10 @@ class RealtimeClientASR:
                     f.write(self.final_transcript)
             except Exception as e:
                 logger.error("Error saving text: %s", e)
+
+    def save_transcript(self, output_file: str, output_format: Optional[str] = None):
+        """Save collected finalized responses as JSON, SRT, or WebVTT."""
+        write_transcript(self.transcript, output_file, output_format)
 
     async def disconnect(self):
         """Close the WebSocket connection."""

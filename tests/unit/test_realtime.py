@@ -120,3 +120,36 @@ def test_update_session_maps_no_verbatim_transcripts_to_itn():
 
     request = client._send_message.await_args.args[0]
     assert request["session"]["recognition_config"]["enable_verbatim_transcripts"] is False
+
+
+def test_receive_responses_accumulates_completed_transcripts():
+    client = RealtimeClientASR(argparse.Namespace(word_time_offsets=False))
+    client.websocket = AsyncMock()
+    client.websocket.recv.side_effect = [
+        json.dumps(
+            {
+                "type": "conversation.item.input_audio_transcription.completed",
+                "transcript": "hello",
+                "words_info": {
+                    "words": [{"word": "hello", "start_time": 0.0, "end_time": 0.5}]
+                },
+                "is_last_result": False,
+            }
+        ),
+        json.dumps(
+            {
+                "type": "conversation.item.input_audio_transcription.completed",
+                "transcript": "world",
+                "words_info": {
+                    "words": [{"word": "world", "start_time": 0.5, "end_time": 1.0}]
+                },
+                "is_last_result": True,
+            }
+        ),
+    ]
+
+    asyncio.run(client.receive_responses())
+
+    assert client.final_transcript == "hello world"
+    assert len(client.transcript.segments) == 2
+    assert client.transcript.segments[1].end_time_ms == 1000
