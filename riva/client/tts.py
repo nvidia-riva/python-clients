@@ -74,7 +74,7 @@ class SpeechSynthesisService:
         custom_dictionary: Optional[dict] = None,
         zero_shot_transcript: Optional[str] = None,
         custom_configuration: Optional[Dict[str, str]] = None,
-        enable_word_time_offsets: bool = False,
+        enable_word_time_offsets: Optional[bool] = None,
     ) -> Union[rtts.SynthesizeSpeechResponse, _MultiThreadedRendezvous]:
         """
         Synthesizes an entire audio for text :param:`text`.
@@ -96,7 +96,7 @@ class SpeechSynthesisService:
             zero_shot_transcript (:obj:`str`, `optional`): Transcript corresponding to Zero shot audio prompt.
             custom_configuration (:obj:`Dict[str, str]`, `optional`): Free-form key/value parameters forwarded
                 to the synthesizer (e.g. ``{"exaggeration_factor": "1.5"}``). Model-specific.
-            enable_word_time_offsets (:obj:`bool`, defaults to :obj:`False`): If :obj:`True`, request per-word
+            enable_word_time_offsets (:obj:`bool`, `optional`): If :obj:`True`, request per-word
                 start/end timestamps, returned in ``response.meta.words`` (supported by models that produce
                 word alignment, e.g. Magpie TTS).
         Returns:
@@ -113,7 +113,8 @@ class SpeechSynthesisService:
         )
         if voice_name is not None:
             req.voice_name = voice_name
-        req.enable_word_time_offsets = enable_word_time_offsets
+        if enable_word_time_offsets is not None:
+            req.enable_word_time_offsets = enable_word_time_offsets
         if zero_shot_audio_prompt_file is not None:
             with zero_shot_audio_prompt_file.open('rb') as f:
                 audio_data = f.read()
@@ -144,7 +145,7 @@ class SpeechSynthesisService:
         zero_shot_quality: int = 20,
         custom_dictionary: Optional[dict] = None,
         custom_configuration: Optional[Dict[str, str]] = None,
-        enable_word_time_offsets: bool = False,
+        enable_word_time_offsets: Optional[bool] = None,
     ) -> Generator[rtts.SynthesizeSpeechResponse, None, None]:
         """
         Synthesizes and yields output audio chunks for text :param:`text` as the chunks
@@ -167,6 +168,9 @@ class SpeechSynthesisService:
             custom_dictionary (:obj:`dict`, `optional`): Dictionary with key-value pair containing grapheme and corresponding phoneme
             custom_configuration (:obj:`Dict[str, str]`, `optional`): Free-form key/value parameters forwarded
                 to the synthesizer (e.g. ``{"exaggeration_factor": "1.5"}``). Model-specific.
+            enable_word_time_offsets (:obj:`bool`, `optional`): If :obj:`True`, request per-word
+                start/end timestamps, returned in ``response.meta.words`` (supported by models that produce
+                word alignment, e.g. Magpie TTS).
         Yields:
             :obj:`riva.client.proto.riva_tts_pb2.SynthesizeSpeechResponse`: a response with output. You may find
             :class:`riva.client.proto.riva_tts_pb2.SynthesizeSpeechResponse` fields description `here
@@ -182,7 +186,8 @@ class SpeechSynthesisService:
         )
         if voice_name is not None:
             req.voice_name = voice_name
-        req.enable_word_time_offsets = enable_word_time_offsets
+        if enable_word_time_offsets is not None:
+            req.enable_word_time_offsets = enable_word_time_offsets
 
         if zero_shot_audio_prompt_file is not None:
             with zero_shot_audio_prompt_file.open('rb') as f:
