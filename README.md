@@ -123,6 +123,28 @@ python scripts/asr/transcribe_file_offline.py \
     --input-file data/examples/en-US_AntiBERTa_for_word_boosting_testing.wav
 ```
 
+Streaming, offline, and Realtime file transcription can write finalized results as
+JSON, SubRip, or WebVTT. The format is inferred from the output extension unless
+`--output-format` is provided. SRT and VTT outputs automatically request word time
+offsets from the ASR model.
+```bash
+python scripts/asr/transcribe_file.py \
+    --input-file data/examples/en-US_AntiBERTa_for_word_boosting_testing.wav \
+    --output-file transcript.srt
+
+python scripts/asr/transcribe_file_offline.py \
+    --input-file data/examples/en-US_AntiBERTa_for_word_boosting_testing.wav \
+    --output-file transcript.json
+
+python scripts/asr/realtime_asr_client.py \
+    --input-file data/examples/en-US_AntiBERTa_for_word_boosting_testing.wav \
+    --output-file transcript.vtt
+```
+
+JSON export remains available when a model does not return word timestamps. SRT and
+VTT export require timestamp support and fail with an explicit error if a finalized
+result does not contain word offsets.
+
 You can improve transcription of this audio by word boosting.
 ```bash
 python scripts/asr/transcribe_file_offline.py \

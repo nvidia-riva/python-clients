@@ -7,6 +7,7 @@ import argparse
 from pathlib import Path
 
 import riva.client
+from riva.client.transcript import TRANSCRIPT_OUTPUT_FORMATS, resolve_output_format
 from riva.client.argparse_utils import (
     add_asr_config_argparse_parameters,
     add_connection_argparse_parameters,
@@ -30,10 +31,26 @@ def parse_args() -> argparse.Namespace:
     group.add_argument("--input-file", type=Path, help="A path to a local file to transcribe.")
     group.add_argument("--list-models", action="store_true", help="List available models.")
     parser.add_argument("--output-seglst", action="store_true", help="Output seglst file for speaker diarization.")
+    parser.add_argument(
+        "--output-file",
+        help="Write the finalized transcript to a .json, .srt, or .vtt file.",
+    )
+    parser.add_argument(
+        "--output-format",
+        choices=TRANSCRIPT_OUTPUT_FORMATS,
+        help="Transcript output format. By default, infer it from --output-file.",
+    )
 
     parser = add_connection_argparse_parameters(parser)
     parser = add_asr_config_argparse_parameters(parser, max_alternatives=True, profanity_filter=True, word_time_offsets=True)
     args = parser.parse_args()
+    if args.output_format and not args.output_file:
+        parser.error("--output-format requires --output-file")
+    if args.output_file:
+        try:
+            args.output_format = resolve_output_format(args.output_file, args.output_format)
+        except ValueError as error:
+            parser.error(str(error))
     if args.input_file:
         args.input_file = args.input_file.expanduser()
     return args
@@ -82,7 +99,11 @@ def main() -> int:
         profanity_filter=args.profanity_filter,
         enable_automatic_punctuation=args.automatic_punctuation,
         verbatim_transcripts=not args.no_verbatim_transcripts,
-        enable_word_time_offsets=args.word_time_offsets or args.speaker_diarization,
+        enable_word_time_offsets=(
+            args.word_time_offsets
+            or args.speaker_diarization
+            or args.output_format in ("srt", "vtt")
+        ),
     )
     riva.client.add_word_boosting_to_config(config, args.boosted_lm_words, args.boosted_lm_score)
     riva.client.add_speaker_diarization_to_config(config, args.speaker_diarization, args.diarization_max_speakers)
@@ -104,11 +125,15 @@ def main() -> int:
     seglst_output_file = None
     if args.output_seglst:
         seglst_output_file = os.path.basename(args.input_file).split(".")[0]
+    response = asr_service.offline_recognize(data, config)
     riva.client.print_offline(
-        response=asr_service.offline_recognize(data, config),
+        response=response,
         speaker_diarization=args.speaker_diarization,
         seglst_output_file=seglst_output_file,
     )
+    if args.output_file:
+        transcript = riva.client.transcript_from_offline_response(response)
+        riva.client.write_transcript(transcript, args.output_file, args.output_format)
 
 
 if __name__ == "__main__":
