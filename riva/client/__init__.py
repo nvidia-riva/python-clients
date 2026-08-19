@@ -41,3 +41,6 @@ from riva.client.proto.riva_nlp_pb2 import AnalyzeIntentOptions
 from riva.client.proto.riva_nmt_pb2 import StreamingTranslateSpeechToSpeechConfig, TranslationConfig, SynthesizeSpeechConfig, StreamingTranslateSpeechToTextConfig
 from riva.client.tts import SpeechSynthesisService
 from riva.client.nmt import NeuralMachineTranslationClient
+
+# Async extensions (grpc.aio)
+from riva.client.asr_async import ASRServiceAsync, AsyncAuth
