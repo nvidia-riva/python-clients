@@ -44,7 +44,6 @@ from riva.client.retry import (
     RETRYABLE_GRPC_CODES,
     exponential_backoff,
     is_retryable_grpc_error,
-    retry_streaming,
 )
 from riva.client.tts import SpeechSynthesisService, ResilientStreamingTTS
 from riva.client.nmt import NeuralMachineTranslationClient

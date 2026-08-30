@@ -1,8 +1,9 @@
 # SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: MIT
 
+import logging
 import time
-from typing import Dict, Generator, Optional, Union, Iterable
+from typing import Dict, Generator, Iterable, Iterator, List, Optional, Union
 
 import grpc
 from grpc._channel import _MultiThreadedRendezvous
@@ -11,7 +12,11 @@ import riva.client.proto.riva_tts_pb2 as rtts
 import riva.client.proto.riva_tts_pb2_grpc as rtts_srv
 from riva.client import Auth
 from riva.client.proto.riva_audio_pb2 import AudioEncoding
+from riva.client.retry import exponential_backoff, is_retryable_grpc_error
 import wave
+
+
+LOGGER = logging.getLogger(__name__)
 
 def parse_custom_configuration(custom_configuration: str) -> Dict[str, str]:
     """Parse a comma-separated ``key:value`` string into a dictionary.
@@ -222,22 +227,13 @@ class SpeechSynthesisService:
         return self.stub.SynthesizeOnline(request_generator(text), metadata=self.auth.get_auth_metadata())
 
 
-import logging
-from typing import Iterator
-
-import grpc
-
-from riva.client.retry import is_retryable_grpc_error, exponential_backoff
-
-LOGGER = logging.getLogger(__name__)
-
-
 class ResilientStreamingTTS:
     """A resilient wrapper around :class:`SpeechSynthesisService` for streaming TTS.
 
-    This class retries individual text segments on transient gRPC failures,
-    yielding audio chunks as they arrive. It is designed for long-running
-    streaming synthesis where network blips should not terminate the session.
+    This class retries individual text segments on transient gRPC failures.
+    Responses for a segment are buffered until that segment completes, so a
+    retry cannot duplicate audio that was already delivered to the caller.
+    Segment size is therefore the latency/recovery trade-off.
 
     Example:
         >>> auth = Auth(uri="localhost:50051")
@@ -335,8 +331,8 @@ class ResilientStreamingTTS:
                         custom_configuration=custom_configuration,
                         enable_word_time_offsets=enable_word_time_offsets,
                     )
-                    for resp in responses:
-                        yield resp
+                    completed_segment: List[rtts.SynthesizeSpeechResponse] = list(responses)
+                    yield from completed_segment
                     break  # Segment completed successfully.
 
                 except grpc.RpcError as exc:

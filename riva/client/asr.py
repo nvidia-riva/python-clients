@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 import io
+import logging
 import os
 import sys
 import time
@@ -11,8 +12,10 @@ import json
 import wave
 from itertools import groupby
 from pathlib import Path
-from typing import Callable, Dict, Generator, Iterable, List, Optional, TextIO, Union
+from collections import deque
+from typing import Callable, Deque, Dict, Generator, Iterable, List, Optional, TextIO, Union
 
+import grpc
 from google.protobuf.json_format import MessageToJson
 from grpc._channel import _MultiThreadedRendezvous
 
@@ -20,6 +23,10 @@ import riva.client
 import riva.client.proto.riva_asr_pb2 as rasr
 import riva.client.proto.riva_asr_pb2_grpc as rasr_srv
 from riva.client.auth import Auth
+from riva.client.retry import exponential_backoff, is_retryable_grpc_error
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 def get_wav_file_parameters(input_file: Union[str, os.PathLike]) -> Dict[str, Union[int, float]]:
@@ -486,25 +493,14 @@ class ASRService:
 
 
 
-import hashlib
-import logging
-from collections import deque
-from typing import Set
-
-import grpc
-
-from riva.client.retry import is_retryable_grpc_error, exponential_backoff
-
-LOGGER = logging.getLogger(__name__)
-
-
 class ResilientStreamingASR:
     """A resilient wrapper around :class:`ASRService` for streaming recognition.
 
     This class buffers recent audio and automatically reconnects on transient
     gRPC failures, replaying buffered audio so that recognition can continue
-    with minimal data loss. Final transcripts are deduplicated across
-    reconnections.
+    with a bounded audio lookback. Recovery is best effort: audio older than
+    the configured lookback window may not be replayed, and applications must
+    tolerate repeated transcripts after a reconnect.
 
     Example:
         >>> auth = Auth(uri="localhost:50051")
@@ -523,8 +519,9 @@ class ResilientStreamingASR:
         max_retries: Maximum number of reconnection attempts per failure.
         lookback_seconds: Duration of audio to replay after reconnecting.
             A larger value improves recovery at the cost of higher latency.
-        sample_rate_hz: Sample rate of the audio stream (used to size the
-            lookback buffer).
+        sample_rate_hz: Sample rate of linear PCM audio.
+        audio_channel_count: Number of PCM audio channels.
+        sample_width_bytes: Bytes per PCM sample.
         base_delay: Initial backoff delay in seconds.
         max_delay: Maximum backoff delay in seconds.
     """
@@ -536,6 +533,8 @@ class ResilientStreamingASR:
         max_retries: int = 3,
         lookback_seconds: float = 2.0,
         sample_rate_hz: int = 16000,
+        audio_channel_count: int = 1,
+        sample_width_bytes: int = 2,
         base_delay: float = 1.0,
         max_delay: float = 60.0,
     ) -> None:
@@ -545,13 +544,15 @@ class ResilientStreamingASR:
         self.base_delay = base_delay
         self.max_delay = max_delay
 
-        # Size the lookback buffer in chunks. We assume a typical chunk
-        # duration of ~0.1 s (e.g. 1600 frames at 16 kHz). The exact
-        # chunk size does not matter for correctness; we simply keep a
-        # bounded number of recent chunks.
-        self._lookback_chunk_count = max(1, int(lookback_seconds * 10))
-        self._audio_buffer: deque = deque(maxlen=self._lookback_chunk_count)
-        self._finalized_hashes: Set[str] = set()
+        if lookback_seconds <= 0:
+            raise ValueError("lookback_seconds must be greater than zero")
+        if min(sample_rate_hz, audio_channel_count, sample_width_bytes) <= 0:
+            raise ValueError("PCM format values must be greater than zero")
+        self._lookback_max_bytes = int(
+            lookback_seconds * sample_rate_hz * audio_channel_count * sample_width_bytes
+        )
+        self._audio_buffer: Deque[bytes] = deque()
+        self._buffered_bytes = 0
         self._retry_count = 0
 
     def _buffered_request_generator(
@@ -570,34 +571,14 @@ class ResilientStreamingASR:
             yield rasr.StreamingRecognizeRequest(audio_content=chunk)
 
         for chunk in audio_source:
-            self._audio_buffer.append(chunk)
+            self._append_audio(chunk)
             yield rasr.StreamingRecognizeRequest(audio_content=chunk)
 
-    def _is_duplicate(self, response: rasr.StreamingRecognizeResponse) -> bool:
-        """Return ``True`` if every final transcript in *response* was already emitted."""
-        if not response.results:
-            return False
-        all_final = True
-        for result in response.results:
-            if not result.is_final:
-                all_final = False
-                continue
-            if not result.alternatives:
-                continue
-            transcript = result.alternatives[0].transcript
-            h = hashlib.sha256(transcript.encode("utf-8")).hexdigest()
-            if h not in self._finalized_hashes:
-                return False
-        # Only consider it a duplicate if *all* results are final and known.
-        return all_final and len(response.results) > 0
-
-    def _record_final(self, response: rasr.StreamingRecognizeResponse) -> None:
-        """Store hashes of any new final transcripts."""
-        for result in response.results:
-            if result.is_final and result.alternatives:
-                transcript = result.alternatives[0].transcript
-                h = hashlib.sha256(transcript.encode("utf-8")).hexdigest()
-                self._finalized_hashes.add(h)
+    def _append_audio(self, chunk: bytes) -> None:
+        self._audio_buffer.append(chunk)
+        self._buffered_bytes += len(chunk)
+        while self._audio_buffer and self._buffered_bytes > self._lookback_max_bytes:
+            self._buffered_bytes -= len(self._audio_buffer.popleft())
 
     def stream(
         self,
@@ -609,8 +590,9 @@ class ResilientStreamingASR:
             audio_source: An iterable of raw audio chunks.
 
         Yields:
-            :obj:`StreamingRecognizeResponse` objects. On a successful
-            reconnect, duplicate final transcripts are suppressed.
+            :obj:`StreamingRecognizeResponse` objects. A reconnect replays
+            the configured audio lookback, so callers should deduplicate
+            transcripts if their application requires exactly-once output.
 
         Raises:
             :obj:`grpc.RpcError`: If a non-retryable error occurs or the
@@ -618,18 +600,12 @@ class ResilientStreamingASR:
         """
         audio_iterator = iter(audio_source)
         attempt = 0
-        last_exception: Optional[grpc.RpcError] = None
-
         while True:
             try:
                 generator = self._buffered_request_generator(audio_iterator)
                 for response in self.asr_service.stub.StreamingRecognize(
                     generator, metadata=self.asr_service.auth.get_auth_metadata()
                 ):
-                    if self._is_duplicate(response):
-                        LOGGER.debug("Suppressing duplicate final transcript after reconnect.")
-                        continue
-                    self._record_final(response)
                     yield response
                 # Stream completed normally.
                 if self._retry_count > 0:
@@ -637,7 +613,6 @@ class ResilientStreamingASR:
                 return
 
             except grpc.RpcError as exc:
-                last_exception = exc
                 if not is_retryable_grpc_error(exc):
                     LOGGER.warning(
                         "Non-retryable gRPC error in streaming ASR: %s – %s",
