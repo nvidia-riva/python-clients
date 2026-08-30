@@ -17,6 +17,19 @@ def create_channel(
     options: Optional[List[Tuple[str, str]]] = [],
     use_aio: Optional[bool] = False,
 ) -> grpc.Channel:
+    """Create a gRPC channel with sensible defaults for resilient streaming.
+
+    Default keepalive settings are injected so that dead connections are
+    detected quickly, enabling faster recovery on transient failures.
+    """
+    default_options = [
+        ("grpc.keepalive_time_ms", "10000"),
+        ("grpc.keepalive_timeout_ms", "5000"),
+        ("grpc.keepalive_permit_without_calls", "1"),
+        ("grpc.http2.max_pings_without_data", "0"),
+    ]
+    options = default_options + (options or [])
+
     def metadata_callback(context, callback):
         callback(metadata, None)
 

@@ -1,8 +1,10 @@
 # SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: MIT
 
+import time
 from typing import Dict, Generator, Optional, Union, Iterable
 
+import grpc
 from grpc._channel import _MultiThreadedRendezvous
 
 import riva.client.proto.riva_tts_pb2 as rtts
@@ -218,3 +220,154 @@ class SpeechSynthesisService:
                 raise ValueError(f"Invalid text type: {type(text)}")
 
         return self.stub.SynthesizeOnline(request_generator(text), metadata=self.auth.get_auth_metadata())
+
+
+import logging
+from typing import Iterator
+
+import grpc
+
+from riva.client.retry import is_retryable_grpc_error, exponential_backoff
+
+LOGGER = logging.getLogger(__name__)
+
+
+class ResilientStreamingTTS:
+    """A resilient wrapper around :class:`SpeechSynthesisService` for streaming TTS.
+
+    This class retries individual text segments on transient gRPC failures,
+    yielding audio chunks as they arrive. It is designed for long-running
+    streaming synthesis where network blips should not terminate the session.
+
+    Example:
+        >>> auth = Auth(uri="localhost:50051")
+        >>> tts = SpeechSynthesisService(auth)
+        >>> resilient_tts = ResilientStreamingTTS(tts)
+        >>> for audio_chunk in resilient_tts.synthesize_stream(
+        ...     ["Hello world", "This is a test."],
+        ...     voice_name="English-US-Female-1",
+        ... ):
+        ...     play_audio(audio_chunk)
+
+    Args:
+        tts_service: The underlying :class:`SpeechSynthesisService` instance.
+        max_retries: Maximum number of retry attempts per text segment.
+        base_delay: Initial backoff delay in seconds.
+        max_delay: Maximum backoff delay in seconds.
+    """
+
+    def __init__(
+        self,
+        tts_service: SpeechSynthesisService,
+        max_retries: int = 3,
+        base_delay: float = 1.0,
+        max_delay: float = 60.0,
+    ) -> None:
+        self.tts_service = tts_service
+        self.max_retries = max_retries
+        self.base_delay = base_delay
+        self.max_delay = max_delay
+        self._retry_count = 0
+
+    def synthesize_stream(
+        self,
+        text_segments: Union[str, list[str], Iterable[str]],
+        voice_name: Optional[str] = None,
+        language_code: str = 'en-US',
+        encoding: AudioEncoding = AudioEncoding.LINEAR_PCM,
+        sample_rate_hz: int = 22050,
+        zero_shot_audio_prompt_file: Optional[str] = None,
+        audio_prompt_encoding: AudioEncoding = AudioEncoding.ENCODING_UNSPECIFIED,
+        zero_shot_quality: int = 20,
+        custom_dictionary: Optional[dict] = None,
+        custom_configuration: Optional[Dict[str, str]] = None,
+        enable_word_time_offsets: Optional[bool] = None,
+    ) -> Generator[rtts.SynthesizeSpeechResponse, None, None]:
+        """Synthesize speech from text segments with automatic recovery.
+
+        Each text segment is sent independently. If the gRPC stream fails
+        while synthesizing a segment, that segment is retried up to
+        *max_retries* times before the error is propagated.
+
+        Args:
+            text_segments: Input text. A single string, a list, or any iterable
+                of strings. Each element is treated as one retryable unit.
+            voice_name: See :meth:`SpeechSynthesisService.synthesize_online`.
+            language_code: See :meth:`SpeechSynthesisService.synthesize_online`.
+            encoding: See :meth:`SpeechSynthesisService.synthesize_online`.
+            sample_rate_hz: See :meth:`SpeechSynthesisService.synthesize_online`.
+            zero_shot_audio_prompt_file: See :meth:`SpeechSynthesisService.synthesize_online`.
+            audio_prompt_encoding: See :meth:`SpeechSynthesisService.synthesize_online`.
+            zero_shot_quality: See :meth:`SpeechSynthesisService.synthesize_online`.
+            custom_dictionary: See :meth:`SpeechSynthesisService.synthesize_online`.
+            custom_configuration: See :meth:`SpeechSynthesisService.synthesize_online`.
+            enable_word_time_offsets: See :meth:`SpeechSynthesisService.synthesize_online`.
+
+        Yields:
+            :obj:`SynthesizeSpeechResponse` objects containing audio chunks.
+
+        Raises:
+            :obj:`grpc.RpcError`: If a non-retryable error occurs or the
+            maximum number of retries is exceeded for a segment.
+        """
+        # Normalise input to an iterator of strings.
+        if isinstance(text_segments, str):
+            segment_iter: Iterator[str] = iter([text_segments])
+        else:
+            segment_iter = iter(text_segments)
+
+        for segment in segment_iter:
+            attempt = 0
+            last_exception: Optional[grpc.RpcError] = None
+
+            while True:
+                try:
+                    responses = self.tts_service.synthesize_online(
+                        text=segment,
+                        voice_name=voice_name,
+                        language_code=language_code,
+                        encoding=encoding,
+                        sample_rate_hz=sample_rate_hz,
+                        zero_shot_audio_prompt_file=zero_shot_audio_prompt_file,
+                        audio_prompt_encoding=audio_prompt_encoding,
+                        zero_shot_quality=zero_shot_quality,
+                        custom_dictionary=custom_dictionary,
+                        custom_configuration=custom_configuration,
+                        enable_word_time_offsets=enable_word_time_offsets,
+                    )
+                    for resp in responses:
+                        yield resp
+                    break  # Segment completed successfully.
+
+                except grpc.RpcError as exc:
+                    last_exception = exc
+                    if not is_retryable_grpc_error(exc):
+                        LOGGER.warning(
+                            "Non-retryable gRPC error in streaming TTS: %s – %s",
+                            exc.code() if hasattr(exc, "code") else "UNKNOWN",
+                            exc.details() if hasattr(exc, "details") else str(exc),
+                        )
+                        raise
+                    if attempt >= self.max_retries:
+                        LOGGER.error(
+                            "Streaming TTS failed permanently after %d retries for segment %r. "
+                            "Last error: %s",
+                            self.max_retries,
+                            segment,
+                            exc.details() if hasattr(exc, "details") else str(exc),
+                        )
+                        raise
+                    delay = exponential_backoff(attempt, self.base_delay, self.max_delay)
+                    LOGGER.info(
+                        "Streaming TTS connection lost (%s) on segment %r. "
+                        "Retrying in %.2f s (attempt %d/%d).",
+                        exc.code(),
+                        segment,
+                        delay,
+                        attempt + 1,
+                        self.max_retries,
+                    )
+                    self._retry_count += 1
+                    attempt += 1
+                    time.sleep(delay)
+                    # Loop continues: retry the same segment.
