@@ -86,12 +86,6 @@ def parse_args() -> argparse.Namespace:
         "all text is processed.",
     )
     parser.add_argument(
-        "--auto-recover",
-        action="store_true",
-        help="Retry a failed streaming synthesis segment before writing its audio.",
-    )
-    parser.add_argument("--max-retries", type=int, default=3, help="Maximum retry attempts per text segment.")
-    parser.add_argument(
         "--zero_shot_transcript",
         type=str,
         help="Transcript corresponding to Zero shot audio prompt.",
@@ -212,8 +206,8 @@ def main() -> int:
         print("Generating audio for request...")
         start = time.time()
         if args.stream:
-            synthesize_kwargs = dict(
-                voice_name=args.voice, language_code=args.language_code, sample_rate_hz=args.sample_rate_hz,
+            responses = service.synthesize_online(
+                text_list, args.voice, args.language_code, sample_rate_hz=args.sample_rate_hz,
                 encoding=(AudioEncoding.OGGOPUS if args.encoding == "OGGOPUS" else AudioEncoding.LINEAR_PCM),
                 zero_shot_audio_prompt_file=args.zero_shot_audio_prompt_file,
                 zero_shot_quality=(20 if args.zero_shot_quality is None else args.zero_shot_quality),
@@ -221,12 +215,6 @@ def main() -> int:
                 enable_word_time_offsets=args.word_time_offsets,
                 **custom_configuration_kwargs,
             )
-            if args.auto_recover:
-                responses = riva.client.ResilientStreamingTTS(
-                    service, max_retries=args.max_retries
-                ).synthesize_stream(text_list, **synthesize_kwargs)
-            else:
-                responses = service.synthesize_online(text_list, **synthesize_kwargs)
             first = True
             for resp in responses:
                 stop = time.time()

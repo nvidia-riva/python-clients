@@ -14,7 +14,7 @@ def create_channel(
     use_ssl: bool = False,
     uri: str = "localhost:50051",
     metadata: Optional[List[Tuple[str, str]]] = None,
-    options: Optional[List[Tuple[str, Union[str, int]]]] = None,
+    options: Optional[List[Tuple[str, str]]] = [],
     use_aio: Optional[bool] = False,
 ) -> grpc.Channel:
     def metadata_callback(context, callback):
@@ -61,7 +61,7 @@ class Auth:
         metadata_args: List[List[str]] = None,
         ssl_client_cert: Optional[Union[str, os.PathLike]] = None,
         ssl_client_key: Optional[Union[str, os.PathLike]] = None,
-        options: Optional[List[Tuple[str, Union[str, int]]]] = None,
+        options: Optional[List[Tuple[str, str]]] = [],
         use_aio: bool = False,
     ) -> None:
         """
@@ -82,8 +82,8 @@ class Auth:
                 Used for mutual TLS authentication. Defaults to None.
             ssl_client_key (Optional[Union[str, os.PathLike]], optional): Path to the SSL client private key file.
                 Used for mutual TLS authentication. Defaults to None.
-            options (Optional[List[Tuple[str, Union[str, int]]]], optional): Additional gRPC channel options.
-                Each tuple should contain an option name and value.
+            options (Optional[List[Tuple[str, str]]], optional): Additional gRPC channel options.
+                Each tuple should contain (option_name, option_value). Defaults to [].
             use_aio (bool, optional): Whether to use asyncio for the channel. Defaults to False.
 
         Raises:

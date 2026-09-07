@@ -8,11 +8,19 @@ failures with exponential backoff. It is designed to be used by both
 :mod:`riva.client.asr` and :mod:`riva.client.tts`.
 """
 
-import logging
 import random
+from typing import Dict, Mapping, Tuple
+
 import grpc
 
-LOGGER = logging.getLogger(__name__)
+CLIENT_AUTO_RECOVER = "client_auto_recover"
+CLIENT_MAX_RETRIES = "client_max_retries"
+CLIENT_LOOKBACK_SECONDS = "client_lookback_seconds"
+CLIENT_RECOVERY_KEYS = frozenset({
+    CLIENT_AUTO_RECOVER,
+    CLIENT_MAX_RETRIES,
+    CLIENT_LOOKBACK_SECONDS,
+})
 
 # gRPC status codes that are generally considered transient and safe to retry.
 RETRYABLE_GRPC_CODES = frozenset({
@@ -74,3 +82,25 @@ def exponential_backoff(
     if jitter:
         delay = delay * random.random()
     return delay
+
+
+def split_recovery_configuration(
+    custom_configuration: Mapping[str, str],
+) -> Tuple[Dict[str, str], bool, int, float]:
+    """Separate client-only streaming recovery options from server options.
+
+    The reserved ``client_*`` keys control retry behaviour in the Python
+    client and are intentionally not forwarded to Riva. All other key/value
+    pairs are returned unchanged for the server.
+    """
+    server_configuration = {
+        key: value for key, value in custom_configuration.items() if key not in CLIENT_RECOVERY_KEYS
+    }
+    enabled = str(custom_configuration.get(CLIENT_AUTO_RECOVER, "false")).lower() == "true"
+    max_retries = int(custom_configuration.get(CLIENT_MAX_RETRIES, "3"))
+    lookback_seconds = float(custom_configuration.get(CLIENT_LOOKBACK_SECONDS, "2.0"))
+    if max_retries < 0:
+        raise ValueError(f"{CLIENT_MAX_RETRIES} must be non-negative")
+    if lookback_seconds <= 0:
+        raise ValueError(f"{CLIENT_LOOKBACK_SECONDS} must be greater than zero")
+    return server_configuration, enabled, max_retries, lookback_seconds

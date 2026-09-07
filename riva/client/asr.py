@@ -23,7 +23,7 @@ import riva.client
 import riva.client.proto.riva_asr_pb2 as rasr
 import riva.client.proto.riva_asr_pb2_grpc as rasr_srv
 from riva.client.auth import Auth
-from riva.client.retry import exponential_backoff, is_retryable_grpc_error
+from riva.client.retry import exponential_backoff, is_retryable_grpc_error, split_recovery_configuration
 
 
 LOGGER = logging.getLogger(__name__)
@@ -439,6 +439,11 @@ class ASRService:
                     config = RecognitionConfig(enable_automatic_punctuation=True)
                     streaming_config = StreamingRecognitionConfig(config, interim_results=True)
 
+                Set ``client_auto_recover:true`` in ``config.custom_configuration`` to enable
+                retry. ``client_max_retries`` and ``client_lookback_seconds`` control the
+                retry count and bounded PCM lookback buffer. These client-only keys are not
+                sent to Riva.
+
         Yields:
             :obj:`riva.client.proto.riva_asr_pb2.StreamingRecognizeResponse`: responses for audio chunks in
             :param:`audio_chunks`. You may find description of response fields in declaration of
@@ -446,9 +451,55 @@ class ASRService:
             message `here
             <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-asr-proto>`_.
         """
-        generator = streaming_request_generator(audio_chunks, streaming_config)
-        for response in self.stub.StreamingRecognize(generator, metadata=self.auth.get_auth_metadata()):
-            yield response
+        server_configuration, auto_recover, max_retries, lookback_seconds = split_recovery_configuration(
+            streaming_config.config.custom_configuration
+        )
+        server_streaming_config = rasr.StreamingRecognitionConfig()
+        server_streaming_config.CopyFrom(streaming_config)
+        server_streaming_config.config.custom_configuration.clear()
+        server_streaming_config.config.custom_configuration.update(server_configuration)
+
+        if not auto_recover:
+            generator = streaming_request_generator(audio_chunks, server_streaming_config)
+            yield from self.stub.StreamingRecognize(generator, metadata=self.auth.get_auth_metadata())
+            return
+
+        sample_rate_hz = server_streaming_config.config.sample_rate_hertz or 16000
+        channel_count = server_streaming_config.config.audio_channel_count or 1
+        max_buffered_bytes = int(lookback_seconds * sample_rate_hz * channel_count * 2)
+        buffered_audio: Deque[bytes] = deque()
+        buffered_bytes = 0
+        audio_iterator = iter(audio_chunks)
+        attempt = 0
+
+        while True:
+            def request_generator() -> Generator[rasr.StreamingRecognizeRequest, None, None]:
+                nonlocal buffered_bytes
+                yield rasr.StreamingRecognizeRequest(streaming_config=server_streaming_config)
+                for chunk in buffered_audio:
+                    yield rasr.StreamingRecognizeRequest(audio_content=chunk)
+                for chunk in audio_iterator:
+                    buffered_audio.append(chunk)
+                    buffered_bytes += len(chunk)
+                    while buffered_audio and buffered_bytes > max_buffered_bytes:
+                        buffered_bytes -= len(buffered_audio.popleft())
+                    yield rasr.StreamingRecognizeRequest(audio_content=chunk)
+
+            try:
+                yield from self.stub.StreamingRecognize(
+                    request_generator(), metadata=self.auth.get_auth_metadata()
+                )
+                return
+            except grpc.RpcError as exc:
+                if not is_retryable_grpc_error(exc) or attempt >= max_retries:
+                    raise
+                delay = exponential_backoff(attempt)
+                LOGGER.info(
+                    "Streaming ASR connection lost (%s); retrying in %.2f seconds (attempt %d/%d).",
+                    exc.code(), delay, attempt + 1, max_retries,
+                )
+                attempt += 1
+                time.sleep(delay)
 
     def offline_recognize(
         self, audio_bytes: bytes, config: rasr.RecognitionConfig, future: bool = False
@@ -490,154 +541,3 @@ class ASRService:
         request = rasr.RecognizeRequest(config=config, audio=audio_bytes)
         func = self.stub.Recognize.future if future else self.stub.Recognize
         return func(request, metadata=self.auth.get_auth_metadata())
-
-
-
-class ResilientStreamingASR:
-    """A resilient wrapper around :class:`ASRService` for streaming recognition.
-
-    This class buffers recent audio and automatically reconnects on transient
-    gRPC failures, replaying buffered audio so that recognition can continue
-    with a bounded audio lookback. Recovery is best effort: audio older than
-    the configured lookback window may not be replayed, and applications must
-    tolerate repeated transcripts after a reconnect.
-
-    Example:
-        >>> auth = Auth(uri="localhost:50051")
-        >>> asr = ASRService(auth)
-        >>> config = StreamingRecognitionConfig(
-        ...     config=RecognitionConfig(enable_automatic_punctuation=True),
-        ...     interim_results=True,
-        ... )
-        >>> resilient_asr = ResilientStreamingASR(asr, config)
-        >>> for response in resilient_asr.stream(audio_chunks):
-        ...     print(response)
-
-    Args:
-        asr_service: The underlying :class:`ASRService` instance.
-        streaming_config: Configuration for streaming recognition.
-        max_retries: Maximum number of reconnection attempts per failure.
-        lookback_seconds: Duration of audio to replay after reconnecting.
-            A larger value improves recovery at the cost of higher latency.
-        sample_rate_hz: Sample rate of linear PCM audio.
-        audio_channel_count: Number of PCM audio channels.
-        sample_width_bytes: Bytes per PCM sample.
-        base_delay: Initial backoff delay in seconds.
-        max_delay: Maximum backoff delay in seconds.
-    """
-
-    def __init__(
-        self,
-        asr_service: ASRService,
-        streaming_config: rasr.StreamingRecognitionConfig,
-        max_retries: int = 3,
-        lookback_seconds: float = 2.0,
-        sample_rate_hz: int = 16000,
-        audio_channel_count: int = 1,
-        sample_width_bytes: int = 2,
-        base_delay: float = 1.0,
-        max_delay: float = 60.0,
-    ) -> None:
-        self.asr_service = asr_service
-        self.streaming_config = streaming_config
-        self.max_retries = max_retries
-        self.base_delay = base_delay
-        self.max_delay = max_delay
-
-        if lookback_seconds <= 0:
-            raise ValueError("lookback_seconds must be greater than zero")
-        if min(sample_rate_hz, audio_channel_count, sample_width_bytes) <= 0:
-            raise ValueError("PCM format values must be greater than zero")
-        self._lookback_max_bytes = int(
-            lookback_seconds * sample_rate_hz * audio_channel_count * sample_width_bytes
-        )
-        self._audio_buffer: Deque[bytes] = deque()
-        self._buffered_bytes = 0
-        self._retry_count = 0
-
-    def _buffered_request_generator(
-        self,
-        audio_source: Iterable[bytes],
-    ) -> Generator[rasr.StreamingRecognizeRequest, None, None]:
-        """Yield the config message, buffered audio, then new audio.
-
-        Each chunk from *audio_source* is appended to the lookback buffer
-        before being yielded so that it is available for the next reconnect.
-        """
-        yield rasr.StreamingRecognizeRequest(streaming_config=self.streaming_config)
-
-        # Replay buffered audio from previous (partial) stream
-        for chunk in self._audio_buffer:
-            yield rasr.StreamingRecognizeRequest(audio_content=chunk)
-
-        for chunk in audio_source:
-            self._append_audio(chunk)
-            yield rasr.StreamingRecognizeRequest(audio_content=chunk)
-
-    def _append_audio(self, chunk: bytes) -> None:
-        self._audio_buffer.append(chunk)
-        self._buffered_bytes += len(chunk)
-        while self._audio_buffer and self._buffered_bytes > self._lookback_max_bytes:
-            self._buffered_bytes -= len(self._audio_buffer.popleft())
-
-    def stream(
-        self,
-        audio_source: Iterable[bytes],
-    ) -> Generator[rasr.StreamingRecognizeResponse, None, None]:
-        """Stream audio for recognition with automatic recovery.
-
-        Args:
-            audio_source: An iterable of raw audio chunks.
-
-        Yields:
-            :obj:`StreamingRecognizeResponse` objects. A reconnect replays
-            the configured audio lookback, so callers should deduplicate
-            transcripts if their application requires exactly-once output.
-
-        Raises:
-            :obj:`grpc.RpcError`: If a non-retryable error occurs or the
-            maximum number of retries is exceeded.
-        """
-        audio_iterator = iter(audio_source)
-        attempt = 0
-        while True:
-            try:
-                generator = self._buffered_request_generator(audio_iterator)
-                for response in self.asr_service.stub.StreamingRecognize(
-                    generator, metadata=self.asr_service.auth.get_auth_metadata()
-                ):
-                    yield response
-                # Stream completed normally.
-                if self._retry_count > 0:
-                    LOGGER.info("Streaming ASR recovered after %d retry(s).", self._retry_count)
-                return
-
-            except grpc.RpcError as exc:
-                if not is_retryable_grpc_error(exc):
-                    LOGGER.warning(
-                        "Non-retryable gRPC error in streaming ASR: %s – %s",
-                        exc.code() if hasattr(exc, "code") else "UNKNOWN",
-                        exc.details() if hasattr(exc, "details") else str(exc),
-                    )
-                    raise
-                if attempt >= self.max_retries:
-                    LOGGER.error(
-                        "Streaming ASR failed permanently after %d retries. Last error: %s",
-                        self.max_retries,
-                        exc.details() if hasattr(exc, "details") else str(exc),
-                    )
-                    raise
-                delay = exponential_backoff(attempt, self.base_delay, self.max_delay)
-                LOGGER.info(
-                    "Streaming ASR connection lost (%s). Reconnecting in %.2f s "
-                    "(attempt %d/%d).",
-                    exc.code(),
-                    delay,
-                    attempt + 1,
-                    self.max_retries,
-                )
-                self._retry_count += 1
-                attempt += 1
-                time.sleep(delay)
-                # Loop continues: _buffered_request_generator will replay
-                # self._audio_buffer and then consume audio_iterator.

@@ -4,7 +4,6 @@
 from riva.client.asr import (
     AudioChunkFileIterator,
     ASRService,
-    ResilientStreamingASR,
     add_audio_file_specs_to_config,
     add_word_boosting_to_config,
     add_speaker_diarization_to_config,
@@ -40,10 +39,5 @@ from riva.client.proto.riva_asr_pb2 import RecognitionConfig, StreamingRecogniti
 from riva.client.proto.riva_audio_pb2 import AudioEncoding
 from riva.client.proto.riva_nlp_pb2 import AnalyzeIntentOptions
 from riva.client.proto.riva_nmt_pb2 import StreamingTranslateSpeechToSpeechConfig, TranslationConfig, SynthesizeSpeechConfig, StreamingTranslateSpeechToTextConfig
-from riva.client.retry import (
-    RETRYABLE_GRPC_CODES,
-    exponential_backoff,
-    is_retryable_grpc_error,
-)
-from riva.client.tts import SpeechSynthesisService, ResilientStreamingTTS
+from riva.client.tts import SpeechSynthesisService
 from riva.client.nmt import NeuralMachineTranslationClient

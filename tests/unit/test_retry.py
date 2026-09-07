@@ -5,11 +5,14 @@ import grpc
 import pytest
 
 from riva.client.retry import (
+    CLIENT_AUTO_RECOVER,
+    CLIENT_LOOKBACK_SECONDS,
+    CLIENT_MAX_RETRIES,
     RETRYABLE_GRPC_CODES,
     exponential_backoff,
     is_retryable_grpc_error,
+    split_recovery_configuration,
 )
-from riva.client.tts import ResilientStreamingTTS
 
 
 class FakeRpcError(grpc.RpcError):
@@ -53,25 +56,16 @@ class TestExponentialBackoff:
             assert 0.0 <= d < 4.0
 
 
-class TestResilientStreamingTTS:
-    def test_does_not_yield_partial_audio_from_a_failed_segment(self, monkeypatch):
-        class Service:
-            def __init__(self):
-                self.calls = 0
+class TestRecoveryConfiguration:
+    def test_client_options_are_not_forwarded_to_riva(self):
+        server_configuration, enabled, max_retries, lookback_seconds = split_recovery_configuration({
+            "exaggeration_factor": "1.5",
+            CLIENT_AUTO_RECOVER: "true",
+            CLIENT_MAX_RETRIES: "4",
+            CLIENT_LOOKBACK_SECONDS: "3.5",
+        })
 
-            def synthesize_online(self, **_kwargs):
-                self.calls += 1
-                if self.calls == 1:
-                    def failed_stream():
-                        yield "partial-audio"
-                        raise FakeRpcError(grpc.StatusCode.UNAVAILABLE)
-                    return failed_stream()
-
-                return iter(["complete-audio"])
-
-        monkeypatch.setattr("riva.client.tts.time.sleep", lambda _delay: None)
-        service = Service()
-        client = ResilientStreamingTTS(service, max_retries=1, base_delay=0)
-
-        assert list(client.synthesize_stream("hello")) == ["complete-audio"]
-        assert service.calls == 2
+        assert server_configuration == {"exaggeration_factor": "1.5"}
+        assert enabled is True
+        assert max_retries == 4
+        assert lookback_seconds == 3.5

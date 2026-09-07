@@ -61,16 +61,6 @@ def parse_args() -> argparse.Namespace:
         "normal speech.",
     )
     parser.add_argument(
-        "--auto-recover",
-        action="store_true",
-        help="Retry retryable streaming gRPC failures using a bounded audio lookback.",
-    )
-    parser.add_argument("--max-retries", type=int, default=3, help="Maximum reconnect attempts.")
-    parser.add_argument(
-        "--lookback-seconds", type=float, default=2.0,
-        help="PCM audio duration to replay after a reconnect.",
-    )
-    parser.add_argument(
         "--print-confidence",
         action="store_true",
         help=(
@@ -168,23 +158,11 @@ def main() -> int:
         with riva.client.AudioChunkFileIterator(
             args.input_file, args.file_streaming_chunk, delay_callback,
         ) as audio_chunk_iterator:
-            if args.auto_recover:
-                wav_parameters = riva.client.get_wav_file_parameters(args.input_file) or {}
-                responses = riva.client.ResilientStreamingASR(
-                    asr_service,
-                    config,
-                    max_retries=args.max_retries,
-                    lookback_seconds=args.lookback_seconds,
-                    sample_rate_hz=wav_parameters.get("framerate", 16000),
-                    audio_channel_count=wav_parameters.get("nchannels", 1),
-                    sample_width_bytes=wav_parameters.get("sampwidth", 2),
-                ).stream(audio_chunk_iterator)
-            else:
-                responses = asr_service.streaming_response_generator(
-                    audio_chunks=audio_chunk_iterator, streaming_config=config
-                )
             riva.client.print_streaming(
-                responses=responses,
+                responses=asr_service.streaming_response_generator(
+                    audio_chunks=audio_chunk_iterator,
+                    streaming_config=config,
+                ),
                 show_intermediate=args.show_intermediate,
                 additional_info="time" if (args.word_time_offsets or args.speaker_diarization) else ("confidence" if args.print_confidence else "no"),
                 word_time_offsets=args.word_time_offsets or args.speaker_diarization,
