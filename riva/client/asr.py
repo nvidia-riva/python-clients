@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 import io
+import logging
 import os
 import sys
 import time
@@ -11,8 +12,10 @@ import json
 import wave
 from itertools import groupby
 from pathlib import Path
-from typing import Callable, Dict, Generator, Iterable, List, Optional, TextIO, Union
+from collections import deque
+from typing import Callable, Deque, Dict, Generator, Iterable, List, Optional, TextIO, Union
 
+import grpc
 from google.protobuf.json_format import MessageToJson
 from grpc._channel import _MultiThreadedRendezvous
 
@@ -20,6 +23,10 @@ import riva.client
 import riva.client.proto.riva_asr_pb2 as rasr
 import riva.client.proto.riva_asr_pb2_grpc as rasr_srv
 from riva.client.auth import Auth
+from riva.client.retry import exponential_backoff, is_retryable_grpc_error, split_recovery_configuration
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 def get_wav_file_parameters(input_file: Union[str, os.PathLike]) -> Dict[str, Union[int, float]]:
@@ -432,6 +439,11 @@ class ASRService:
                     config = RecognitionConfig(enable_automatic_punctuation=True)
                     streaming_config = StreamingRecognitionConfig(config, interim_results=True)
 
+                Set ``client_auto_recover:true`` in ``config.custom_configuration`` to enable
+                retry. ``client_max_retries`` and ``client_lookback_seconds`` control the
+                retry count and bounded PCM lookback buffer. These client-only keys are not
+                sent to Riva.
+
         Yields:
             :obj:`riva.client.proto.riva_asr_pb2.StreamingRecognizeResponse`: responses for audio chunks in
             :param:`audio_chunks`. You may find description of response fields in declaration of
@@ -439,9 +451,55 @@ class ASRService:
             message `here
             <https://docs.nvidia.com/deeplearning/riva/user-guide/docs/reference/protos/protos.html#riva-proto-riva-asr-proto>`_.
         """
-        generator = streaming_request_generator(audio_chunks, streaming_config)
-        for response in self.stub.StreamingRecognize(generator, metadata=self.auth.get_auth_metadata()):
-            yield response
+        server_configuration, auto_recover, max_retries, lookback_seconds = split_recovery_configuration(
+            streaming_config.config.custom_configuration
+        )
+        server_streaming_config = rasr.StreamingRecognitionConfig()
+        server_streaming_config.CopyFrom(streaming_config)
+        server_streaming_config.config.custom_configuration.clear()
+        server_streaming_config.config.custom_configuration.update(server_configuration)
+
+        if not auto_recover:
+            generator = streaming_request_generator(audio_chunks, server_streaming_config)
+            yield from self.stub.StreamingRecognize(generator, metadata=self.auth.get_auth_metadata())
+            return
+
+        sample_rate_hz = server_streaming_config.config.sample_rate_hertz or 16000
+        channel_count = server_streaming_config.config.audio_channel_count or 1
+        max_buffered_bytes = int(lookback_seconds * sample_rate_hz * channel_count * 2)
+        buffered_audio: Deque[bytes] = deque()
+        buffered_bytes = 0
+        audio_iterator = iter(audio_chunks)
+        attempt = 0
+
+        while True:
+            def request_generator() -> Generator[rasr.StreamingRecognizeRequest, None, None]:
+                nonlocal buffered_bytes
+                yield rasr.StreamingRecognizeRequest(streaming_config=server_streaming_config)
+                for chunk in buffered_audio:
+                    yield rasr.StreamingRecognizeRequest(audio_content=chunk)
+                for chunk in audio_iterator:
+                    buffered_audio.append(chunk)
+                    buffered_bytes += len(chunk)
+                    while buffered_audio and buffered_bytes > max_buffered_bytes:
+                        buffered_bytes -= len(buffered_audio.popleft())
+                    yield rasr.StreamingRecognizeRequest(audio_content=chunk)
+
+            try:
+                yield from self.stub.StreamingRecognize(
+                    request_generator(), metadata=self.auth.get_auth_metadata()
+                )
+                return
+            except grpc.RpcError as exc:
+                if not is_retryable_grpc_error(exc) or attempt >= max_retries:
+                    raise
+                delay = exponential_backoff(attempt)
+                LOGGER.info(
+                    "Streaming ASR connection lost (%s); retrying in %.2f seconds (attempt %d/%d).",
+                    exc.code(), delay, attempt + 1, max_retries,
+                )
+                attempt += 1
+                time.sleep(delay)
 
     def offline_recognize(
         self, audio_bytes: bytes, config: rasr.RecognitionConfig, future: bool = False
