@@ -127,8 +127,9 @@ def add_speaker_diarization_to_config(
     if diarization_enable:
         diarization_config = rasr.SpeakerDiarizationConfig(
             enable_speaker_diarization=True,
-            max_speaker_count=diarization_max_speakers,
         )
+        if diarization_max_speakers > 0:
+            diarization_config.max_speaker_count = diarization_max_speakers
         inner_config.diarization_config.CopyFrom(diarization_config)
 
 
