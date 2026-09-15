@@ -120,3 +120,23 @@ def test_update_session_maps_no_verbatim_transcripts_to_itn():
 
     request = client._send_message.await_args.args[0]
     assert request["session"]["recognition_config"]["enable_verbatim_transcripts"] is False
+
+
+def test_update_session_uses_server_default_for_diarization_max_speakers():
+    client = make_session_update_client(speaker_diarization=True)
+
+    asyncio.run(client._update_session())
+
+    request = client._send_message.await_args.args[0]
+    assert request["session"]["speaker_diarization"] == {
+        "enable_speaker_diarization": True,
+    }
+
+
+def test_update_session_sends_explicit_diarization_max_speakers():
+    client = make_session_update_client(speaker_diarization=True, diarization_max_speakers=4)
+
+    asyncio.run(client._update_session())
+
+    request = client._send_message.await_args.args[0]
+    assert request["session"]["speaker_diarization"]["max_speaker_count"] == 4

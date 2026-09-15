@@ -122,9 +122,9 @@ def add_asr_config_argparse_parameters(
     )
     parser.add_argument(
         "--diarization-max-speakers",
-        default=3,
+        default=0,
         type=int,
-        help="Max number of speakers to detect when performing speaker diarization",
+        help="Max number of speakers to detect when performing speaker diarization; 0 uses the server default",
     )
     parser.add_argument(
         "--start-history",
