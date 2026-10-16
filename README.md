@@ -13,6 +13,7 @@ case and deliver real-time performance. This repo provides performant client exa
 ## CLI interface
 
 - **Automatic Speech Recognition (ASR)**
+    - [`scripts/asr/nemotron_transcribe_client.py`](scripts/asr/nemotron_transcribe_client.py) transcribes JSONL datasets through Nemotron Transcribe's HTTP chat-completions API; see the [client guide](scripts/asr/README-nemotron-transcribe.md).
     - `scripts/asr/riva_streaming_asr_client.py` demonstrates streaming transcription in several threads, can print time stamps.
     - `scripts/asr/transcribe_file.py` performs streaming transcription,
     - `scripts/asr/transcribe_file_offline.py` performs offline transcription,
