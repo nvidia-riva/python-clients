@@ -25,7 +25,7 @@ SPEC.loader.exec_module(client)
 
 def response(text="Hello world.", **payload):
     return {"id": "chatcmpl-test", "choices": [{"message": {"content": text}, "finish_reason": "stop"}],
-            "n3nt": dict({"text": text, "language": "en", "duration": 1, "transcript_origin": "llm"}, **payload)}
+            "transcription": dict({"text": text, "language": "en", "duration": 1, "transcript_origin": "llm"}, **payload)}
 
 
 class ClientTests(unittest.TestCase):
@@ -114,7 +114,9 @@ class ClientTests(unittest.TestCase):
             parts = request["messages"][0]["content"]
             self.assertEqual(parts[0]["text"], prompt)
             self.assertEqual(base64.b64decode(parts[1]["input_audio"]["data"]), raw)
-            self.assertEqual(request["n3nt"], {"word_timestamps": True, "seed": 42})
+            self.assertEqual((request["word_timestamps"], request["seed"]), (True, 42))
+            self.assertNotIn("n3nt", request)  # ASR options are top-level fields
+            self.assertEqual(parts[1]["input_audio"]["format"], "wav")
 
     def test_changed_file_rejected(self):
         for actual, expected in ((b"x", 2), (b"xx", 1)):
@@ -122,7 +124,7 @@ class ClientTests(unittest.TestCase):
                 list(client.streamed_body(io.BytesIO(actual), expected, b"", b""))
 
     def test_audio_validation(self):
-        self.assertEqual(client.audio_info(self.audio, 3600), 1)
+        self.assertEqual(client.audio_info(self.audio, 3600), (1, "wav"))
         with self.assertRaises(ValueError):
             client.audio_info(self.audio, 0.5)
         with wave.open(str(self.audio), "wb") as audio:
@@ -133,13 +135,37 @@ class ClientTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             client.audio_info(self.audio, 3600)
 
+    def test_flac_and_ogg_opus_durations_and_formats(self):
+        flac = self.root / "audio.flac"
+        info = (16000 << 44) | 32000  # 16 kHz, 32,000 samples: 2 s
+        streaminfo = bytes(10) + info.to_bytes(8, "big") + bytes(16)
+        flac.write_bytes(b"fLaC" + bytes([0x80, 0, 0, 34]) + streaminfo + b"frames")
+        self.assertEqual(client.audio_info(flac, 3600), (2.0, "flac"))
+        opus = self.root / "audio.opus"
+        head = b"OpusHead" + bytes([1, 1]) + (312).to_bytes(2, "little") + bytes(7)
+        first = b"OggS" + bytes(2) + (0).to_bytes(8, "little") + bytes(16) + head
+        last = b"OggS" + bytes(2) + (312 + 3 * 48000).to_bytes(8, "little") + bytes(16)
+        opus.write_bytes(first + b"audio" * 100 + last)
+        self.assertEqual(client.audio_info(opus, 3600), (3.0, "ogg"))
+        with self.assertRaisesRegex(ValueError, "exceeds"):
+            client.audio_info(opus, 1)
+        prefix, suffix = client.body_parts("Transcribe.", self.arguments(), "flac")
+        request = json.loads(prefix + base64.b64encode(b"x") + suffix)
+        self.assertEqual(request["messages"][0]["content"][1]["input_audio"]["format"], "flac")
+
+    def test_unsupported_container_rejected_before_upload(self):
+        mp3 = self.root / "audio.mp3"
+        mp3.write_bytes(b"ID3" + bytes(100))
+        with self.assertRaisesRegex(ValueError, "unsupported audio format: send WAV, FLAC or Ogg Opus"):
+            client.audio_info(mp3, 3600)
+
     def test_server_resampled_wav_allowed(self):
         with wave.open(str(self.audio), "wb") as audio:
             audio.setnchannels(2)
             audio.setsampwidth(2)
             audio.setframerate(48000)
             audio.writeframes(b"\0" * 192000)
-        self.assertEqual(client.audio_info(self.audio, 3600), 1)
+        self.assertEqual(client.audio_info(self.audio, 3600), (1, "wav"))
 
     def test_truncated_wav(self):
         with self.audio.open("r+b") as audio:
@@ -284,6 +310,8 @@ class ClientTests(unittest.TestCase):
             self.assertNotIn("Transfer-Encoding", headers)
             self.assertEqual(int(headers["Content-Length"]), len(body))
             request = json.loads(body)
+            self.assertEqual(request["model"], "nvidia-nemotron-3p5-transcribe")
+            self.assertNotIn("n3nt", request)
             self.assertEqual(base64.b64decode(request["messages"][0]["content"][1]["input_audio"]["data"]), self.audio.read_bytes())
             args.max_request_bytes = 1
             with self.assertRaisesRegex(ValueError, "encoded request"):

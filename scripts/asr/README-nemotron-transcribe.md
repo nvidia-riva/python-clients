@@ -1,7 +1,7 @@
 # Nemotron Transcribe dataset client
 
-`nemotron_transcribe_client.py` sends one complete WAV recording per request to
-`/v1/chat/completions`. It uses only the Python standard library; no Riva gRPC,
+`nemotron_transcribe_client.py` sends one complete WAV, FLAC or Ogg Opus recording per
+request to `/v1/chat/completions`. It uses only the Python standard library; no Riva gRPC,
 OpenAI SDK, or additional packages are required. This is an offline client,
 not a streaming-audio client. It does not split, resample, or otherwise modify audio.
 
@@ -34,7 +34,7 @@ python3 scripts/asr/nemotron_transcribe_client.py \
 
 The server argument accepts an HTTP(S) origin, a `/v1` base URL, or the full
 `/v1/chat/completions` endpoint. Use `--model-name` if the served model ID differs
-from `nvidia-nemotron-transcribe-hr9a`. Run `--help` for all options.
+from `nvidia-nemotron-3p5-transcribe` (listed by `GET /v1/models`). Run `--help` for all options.
 
 ## Controls
 
@@ -46,8 +46,8 @@ from `nvidia-nemotron-transcribe-hr9a`. Run `--help` for all options.
 | `--no-automatic-punctuation` | Requests no added punctuation. |
 | `--diarization` / `--speaker-diarization` | Requests consistent `<spk:N>` speaker tags. |
 | `--no-diarization` | Requests no speaker tags. |
-| `--word-timestamps` / `--word-time-offsets` | Sets `n3nt.word_timestamps=true` for real CTC-aligned words. |
-| `--language-code en` | Sets the API language hint. |
+| `--word-timestamps` / `--word-time-offsets` | Sets the top-level `word_timestamps: true` for real CTC-aligned words. |
+| `--language-code en` | Sets the top-level `language` hint; the server refuses codes outside `/v1/models` `supported_languages` with `400`. |
 | `--subtitle-format srt` / `vtt` | Requests server-generated subtitles; implies word timestamps. |
 | `--seed` | Sets the API's signed 64-bit seed. |
 | `--num-clients N` | Runs up to N simultaneous requests, preserving manifest order. |
@@ -73,19 +73,19 @@ views; both are retained in the API payload rather than conflated.
 One result is flushed to the output JSONL per nonblank input row:
 
 ```json
-{"manifest_line":1,"input":{"audio_filepath":"audio/example.wav","prompt":"Transcribe."},"audio_filepath":"/absolute/audio/example.wav","effective_prompt":"Transcribe.","audio_duration_seconds":1.0,"result":{"text":"Hello.","raw_text":"<spk:0> Hello.","speaker_turns":[{"speaker":"spk:0","text":"Hello."}],"words":[],"n3nt":{},"warnings":[],"finish_reason":"stop","usage":null,"response_id":"chatcmpl-example"},"status":"ok","elapsed_seconds":0.5}
+{"manifest_line":1,"input":{"audio_filepath":"audio/example.wav","prompt":"Transcribe."},"audio_filepath":"/absolute/audio/example.wav","effective_prompt":"Transcribe.","audio_duration_seconds":1.0,"result":{"text":"Hello.","raw_text":"<spk:0> Hello.","speaker_turns":[{"speaker":"spk:0","text":"Hello."}],"words":[],"transcription":{},"warnings":[],"finish_reason":"stop","usage":null,"response_id":"chatcmpl-example"},"status":"ok","elapsed_seconds":0.5}
 ```
 
 `result.text` removes valid speaker tags; `raw_text` preserves the assistant
 transcript. `words` contains the actual server timings and speaker labels.
-The complete `n3nt` payload retains alignment availability, native segments,
+The complete `transcription` payload (the response's top-level `transcription` object) retains alignment availability, native segments,
 speaker-grouped words, diarization intervals, subtitles, and provenance.
 `--include-raw-response` additionally stores the entire chat-completions envelope.
 Console output shows speaker turns and, when present, aligned word times.
 Each completed request also records `request_elapsed_seconds` and per-request
 `request_rtfx` (audio duration / latency), separately from total row processing
 `elapsed_seconds`. Request timing includes connection, incremental JSON/base64
-upload and response reading/JSON decoding, but excludes local WAV validation and
+upload and response reading/JSON decoding, but excludes local audio validation and
 queueing before a client worker starts. Monotonic start/end fields define the
 first-request-to-last-completion serving window. The final aggregate RTFx uses
 audio seconds from `ok` rows divided by this window, including failed/warning
@@ -111,10 +111,14 @@ There is no automatic resume or retry; select unfinished rows for a new run.
 
 ## Long audio and safety
 
-- Qualified input: mono 16 kHz, 16-bit PCM WAV. The client also accepts 16-bit
-  PCM WAV at other sample rates/channel counts: the server's WAV ingress
-  downmixes/resamples it. Original bytes are uploaded unchanged. Unsupported
-  encodings require explicit conversion. Recordings shorter than 20 ms are rejected.
+- Qualified input: mono 16 kHz, 16-bit PCM WAV. The client also sends 16-bit
+  PCM WAV at other sample rates/channel counts, FLAC and Ogg Opus: the server
+  decodes, downmixes and resamples them. The container is identified from the
+  file's bytes (not its extension) and sent as `input_audio.format`; the duration
+  is read from the WAV header, FLAC STREAMINFO or the last Ogg page. Original bytes
+  are uploaded unchanged. MP3, Ogg Vorbis, AAC, M4A and other formats are refused
+  before upload (the server answers them with `422`); convert them to WAV or FLAC
+  first. Recordings shorter than 20 ms are rejected.
 - Default audio limit is 3,600 seconds and JSON request limit is 256 MiB,
   matching the current stack. Base64 adds about one third to audio size.
   One hour in this WAV format is about 154 MB as an encoded JSON request.

@@ -2,8 +2,10 @@
 # SPDX-License-Identifier: MIT
 """JSONL dataset client for Nemotron Transcribe's chat-completions API.
 
-Uses only the Python standard library. Audio is base64-encoded incrementally,
-with Content-Length, not HTTP chunked transfer or a large shell argument.
+Uses only the Python standard library. Audio (WAV, FLAC or Ogg Opus) is base64-encoded
+incrementally, with Content-Length, not HTTP chunked transfer or a large shell argument.
+ASR options are top-level request fields; the structured result is the response's top-level
+``transcription`` object.
 """
 
 import argparse
@@ -17,6 +19,7 @@ import os
 from pathlib import Path
 import re
 import ssl
+import struct
 import sys
 import time
 from urllib.parse import urlsplit
@@ -70,7 +73,7 @@ def parse_args(argv=None):
     parser.add_argument("--output-manifest", "--output_manifest", required=True, type=Path)
     parser.add_argument("--server", "--server-url", "--server_url", default="http://localhost:9000",
                         help="HTTP(S) origin, /v1 base URL, or full chat-completions URL")
-    parser.add_argument("--model-name", "--model", default="nvidia-nemotron-transcribe-hr9a")
+    parser.add_argument("--model-name", "--model", default="nvidia-nemotron-3p5-transcribe")
     parser.add_argument("--prompt", help="Fallback instruction when a row has no prompt")
     parser.add_argument("--language-code", "--language", help="Language hint; timestamps require English")
     add_boolean(parser, "verbatim-transcripts", ("--verbatim_transcrtipts",))
@@ -150,7 +153,61 @@ def build_prompt(row, args):
     return " ".join(clauses)
 
 
+def audio_format(path):
+    """The container the server accepts, from the file's magic bytes: wav, flac or ogg (Opus)."""
+    with path.open("rb") as audio:
+        head = audio.read(64)
+    if head[:4] in (b"RIFF", b"RF64") and head[8:12] == b"WAVE":
+        return "wav"
+    if head[:4] == b"fLaC":
+        return "flac"
+    if head[:4] == b"OggS" and b"OpusHead" in head:
+        return "ogg"
+    raise ValueError("unsupported audio format: send WAV, FLAC or Ogg Opus")
+
+
+def flac_duration(path):
+    with path.open("rb") as audio:
+        head = audio.read(42)  # "fLaC" + block header + 34-byte STREAMINFO
+    if len(head) < 42 or head[4] & 0x7F != 0:
+        raise ValueError("FLAC file has no STREAMINFO block")
+    info = int.from_bytes(head[18:26], "big")
+    sample_rate, total_samples = info >> 44, info & ((1 << 36) - 1)
+    if not sample_rate or not total_samples:
+        raise ValueError("FLAC STREAMINFO does not record the sample rate and length")
+    return total_samples / sample_rate
+
+
+def opus_duration(path):
+    """48 kHz granule position of the last Ogg page, less the OpusHead pre-skip."""
+    with path.open("rb") as audio:
+        head = audio.read(4096)
+        start = head.find(b"OpusHead")
+        if start < 0 or len(head) < start + 12:
+            raise ValueError("Ogg file has no Opus header")
+        pre_skip = struct.unpack_from("<H", head, start + 10)[0]
+        size = os.fstat(audio.fileno()).st_size
+        audio.seek(max(0, size - 65536))
+        tail = audio.read()
+    last = tail.rfind(b"OggS")
+    if last < 0 or len(tail) < last + 14:
+        raise ValueError("Ogg file has no final page")
+    granule = struct.unpack_from("<q", tail, last + 6)[0]
+    if granule <= pre_skip:
+        raise ValueError("audio is empty")
+    return (granule - pre_skip) / 48000
+
+
 def audio_info(path, max_seconds):
+    """(duration, container) after a local check; the server decodes and validates again."""
+    container = audio_format(path)
+    if container != "wav":
+        duration = flac_duration(path) if container == "flac" else opus_duration(path)
+        if duration < 0.02:
+            raise ValueError("audio must contain at least 20 milliseconds of signal")
+        if duration > max_seconds:
+            raise ValueError("audio duration {:.3f}s exceeds {:.3f}s limit".format(duration, max_seconds))
+        return duration, container
     with wave.open(str(path), "rb") as audio:
         if audio.getsampwidth() != 2 or audio.getcomptype() != "NONE":
             raise ValueError("input must be 16-bit PCM WAV; convert unsupported encodings explicitly first")
@@ -170,10 +227,11 @@ def audio_info(path, max_seconds):
             if not chunk:
                 raise ValueError("WAV data is truncated")
             remaining -= len(chunk)
-    return duration
+    return duration, "wav"
 
 
-def body_parts(prompt, args):
+def body_parts(prompt, args, container="wav"):
+    # ASR options are top-level fields next to model and messages.
     options = {"word_timestamps": args.word_timestamps}
     if args.language_code:
         options["language"] = args.language_code
@@ -181,11 +239,12 @@ def body_parts(prompt, args):
         options["seed"] = args.seed
     if args.subtitle_format:
         options["subtitle_format"] = args.subtitle_format
+    fields = "".join("," + json.dumps(key) + ":" + json.dumps(value) for key, value in options.items())
     # Build valid JSON around the only streamed value, the base64 audio string.
-    prefix = ('{"model":' + json.dumps(args.model_name) + ',"n3nt":' + json.dumps(options)
+    prefix = ('{"model":' + json.dumps(args.model_name) + fields
               + ',"messages":[{"role":"user","content":[{"type":"text","text":'
               + json.dumps(prompt) + '},{"type":"input_audio","input_audio":{"data":"').encode("utf-8")
-    suffix = b'","format":"wav"}}]}]}'
+    suffix = ('","format":' + json.dumps(container) + '}}]}]}').encode("utf-8")
     return prefix, suffix
 
 
@@ -203,9 +262,9 @@ def streamed_body(audio, size, prefix, suffix):
     yield suffix
 
 
-def post_audio(path, prompt, args, timings=None):
+def post_audio(path, prompt, args, timings=None, container="wav"):
     timings = timings if timings is not None else {}
-    prefix, suffix = body_parts(prompt, args)
+    prefix, suffix = body_parts(prompt, args, container)
     url = urlsplit(args.endpoint)
     if url.scheme == "https":
         context = ssl.create_default_context(cafile=str(args.ssl_root_cert) if args.ssl_root_cert else None)
@@ -263,9 +322,9 @@ def parse_response(response, timestamps_requested=False, speakers_requested=Fals
         raw_text = choice["message"]["content"]
         if not isinstance(raw_text, str):
             raise ValueError("assistant content must be a string")
-        payload = response.get("n3nt", {})
+        payload = response.get("transcription", {})
         if not isinstance(payload, dict):
-            raise ValueError("n3nt response must be an object")
+            raise ValueError("transcription response must be an object")
     except (KeyError, IndexError, TypeError) as exc:
         raise ValueError("response has no assistant transcript") from exc
     warnings = []
@@ -297,7 +356,7 @@ def parse_response(response, timestamps_requested=False, speakers_requested=Fals
         warnings.append("transcript plausibility: {}".format(plausibility["verdict"]))
     text = re.sub(r"\s+", " ", SPEAKER_TAG.sub("", raw_text)).strip()
     return {"text": text, "raw_text": raw_text, "speaker_turns": speaker_turns(raw_text),
-            "words": words, "n3nt": payload, "warnings": warnings,
+            "words": words, "transcription": payload, "warnings": warnings,
             "finish_reason": choice.get("finish_reason"), "usage": response.get("usage"),
             "response_id": response.get("id")}
 
@@ -321,11 +380,12 @@ def process_row(line_number, line, manifest_dir, args):
         path = path.resolve()
         prompt = build_prompt(row, args)
         output.update(audio_filepath=str(path), effective_prompt=prompt)
-        output["audio_duration_seconds"] = audio_info(path, args.max_audio_seconds)
+        output["audio_duration_seconds"], container = audio_info(path, args.max_audio_seconds)
         output["request_started_monotonic"] = time.monotonic()
         output["request_timings"] = {}
         try:
-            response = post_audio(path, prompt, args, timings=output["request_timings"])
+            response = post_audio(path, prompt, args, timings=output["request_timings"],
+                                  container=container)
         finally:
             output["request_finished_monotonic"] = time.monotonic()
             output["request_elapsed_seconds"] = output["request_finished_monotonic"] - output["request_started_monotonic"]
