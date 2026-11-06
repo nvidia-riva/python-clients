@@ -1,15 +1,22 @@
 # SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: MIT
 
-from typing import Dict, Generator, Optional, Union, Iterable
+import logging
+import time
+from typing import Dict, Generator, Iterable, List, Optional, Union
 
+import grpc
 from grpc._channel import _MultiThreadedRendezvous
 
 import riva.client.proto.riva_tts_pb2 as rtts
 import riva.client.proto.riva_tts_pb2_grpc as rtts_srv
 from riva.client import Auth
 from riva.client.proto.riva_audio_pb2 import AudioEncoding
+from riva.client.retry import exponential_backoff, is_retryable_grpc_error, split_recovery_configuration
 import wave
+
+
+LOGGER = logging.getLogger(__name__)
 
 def parse_custom_configuration(custom_configuration: str) -> Dict[str, str]:
     """Parse a comma-separated ``key:value`` string into a dictionary.
@@ -124,8 +131,11 @@ class SpeechSynthesisService:
             if zero_shot_transcript is not None:
                 req.zero_shot_data.transcript = zero_shot_transcript
 
-        if custom_configuration:
-            for key, value in custom_configuration.items():
+        server_configuration, _, _, _ = split_recovery_configuration(
+            custom_configuration or {}
+        )
+        if server_configuration:
+            for key, value in server_configuration.items():
                 req.custom_configuration[key] = str(value)
 
         add_custom_dictionary_to_config(req, custom_dictionary)
@@ -167,7 +177,10 @@ class SpeechSynthesisService:
             zero_shot_quality: (:obj:`int`): Required quality of output audio, ranges between 1-40.
             custom_dictionary (:obj:`dict`, `optional`): Dictionary with key-value pair containing grapheme and corresponding phoneme
             custom_configuration (:obj:`Dict[str, str]`, `optional`): Free-form key/value parameters forwarded
-                to the synthesizer (e.g. ``{"exaggeration_factor": "1.5"}``). Model-specific.
+                to the synthesizer (e.g. ``{"exaggeration_factor": "1.5"}``). Set
+                ``client_auto_recover`` to ``"true"`` to enable client-side retry; use
+                ``client_max_retries`` to set the retry count. These reserved client keys are
+                not forwarded to the synthesizer.
             enable_word_time_offsets (:obj:`bool`, `optional`): If :obj:`True`, request per-word
                 start/end timestamps, returned in ``response.meta.words`` (supported by models that produce
                 word alignment, e.g. Magpie TTS).
@@ -196,8 +209,11 @@ class SpeechSynthesisService:
             req.zero_shot_data.encoding = audio_prompt_encoding
             req.zero_shot_data.quality = zero_shot_quality
 
-        if custom_configuration:
-            for key, value in custom_configuration.items():
+        server_configuration, auto_recover, max_retries, _ = split_recovery_configuration(
+            custom_configuration or {}
+        )
+        if server_configuration:
+            for key, value in server_configuration.items():
                 req.custom_configuration[key] = str(value)
 
         add_custom_dictionary_to_config(req, custom_dictionary)
@@ -217,4 +233,30 @@ class SpeechSynthesisService:
             else:
                 raise ValueError(f"Invalid text type: {type(text)}")
 
-        return self.stub.SynthesizeOnline(request_generator(text), metadata=self.auth.get_auth_metadata())
+        if not auto_recover:
+            return self.stub.SynthesizeOnline(request_generator(text), metadata=self.auth.get_auth_metadata())
+
+        def recovery_generator() -> Generator[rtts.SynthesizeSpeechResponse, None, None]:
+            segments = [text] if isinstance(text, str) else text
+            for segment in segments:
+                attempt = 0
+                while True:
+                    try:
+                        responses = self.stub.SynthesizeOnline(
+                            request_generator(segment), metadata=self.auth.get_auth_metadata()
+                        )
+                        # Do not expose a partial segment: retrying it must not duplicate audio.
+                        yield from list(responses)
+                        break
+                    except grpc.RpcError as exc:
+                        if not is_retryable_grpc_error(exc) or attempt >= max_retries:
+                            raise
+                        delay = exponential_backoff(attempt)
+                        LOGGER.info(
+                            "Streaming TTS connection lost (%s); retrying in %.2f seconds (attempt %d/%d).",
+                            exc.code(), delay, attempt + 1, max_retries,
+                        )
+                        attempt += 1
+                        time.sleep(delay)
+
+        return recovery_generator()
