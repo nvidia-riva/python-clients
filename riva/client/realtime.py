@@ -325,10 +325,11 @@ class RealtimeClientASR:
 
         # Configure speaker diarization if enabled
         if hasattr(self.args, 'speaker_diarization') and self.args.speaker_diarization:
-            session_config["speaker_diarization"] = {
-                "enable_speaker_diarization": True,
-                "max_speaker_count": getattr(self.args, 'diarization_max_speakers', 2)
-            }
+            diarization_config = {"enable_speaker_diarization": True}
+            diarization_max_speakers = getattr(self.args, 'diarization_max_speakers', 0)
+            if diarization_max_speakers > 0:
+                diarization_config["max_speaker_count"] = diarization_max_speakers
+            session_config["speaker_diarization"] = diarization_config
             overrides.append("speaker_diarization")
 
         # Configure word boosting if enabled

@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: MIT
 
+import argparse
 from io import StringIO
 from math import ceil
 from typing import Any, Generator, List, Union
@@ -8,7 +9,8 @@ from unittest.mock import patch, Mock
 
 import riva.client.proto.riva_asr_pb2 as rasr
 from riva.client import ASRService
-from riva.client.asr import print_streaming, streaming_request_generator
+from riva.client.argparse_utils import add_asr_config_argparse_parameters
+from riva.client.asr import add_speaker_diarization_to_config, print_streaming, streaming_request_generator
 
 from .helpers import set_auth_mock
 
@@ -40,6 +42,30 @@ def response_generator(chunk_size: int = STREAMING_CHUNK_SIZE) -> Generator[rasr
 
 
 STREAMING_RECOGNIZE_MOCK = Mock(return_value=response_generator(STREAMING_CHUNK_SIZE))
+
+
+def test_diarization_max_speakers_defaults_to_server_selection() -> None:
+    parser = add_asr_config_argparse_parameters(argparse.ArgumentParser())
+
+    args = parser.parse_args([])
+
+    assert args.diarization_max_speakers == 0
+
+
+def test_speaker_diarization_uses_server_default_unless_max_is_positive() -> None:
+    config = rasr.RecognitionConfig()
+
+    add_speaker_diarization_to_config(config, True, 0)
+
+    assert config.diarization_config.enable_speaker_diarization is True
+    assert config.diarization_config.max_speaker_count == 0
+    assert [field.name for field, _ in config.diarization_config.ListFields()] == [
+        "enable_speaker_diarization"
+    ]
+
+    add_speaker_diarization_to_config(config, True, 4)
+
+    assert config.diarization_config.max_speaker_count == 4
 
 
 def riva_asr_stub_init_patch(self, channel):
